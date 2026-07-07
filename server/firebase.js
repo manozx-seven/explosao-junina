@@ -27,9 +27,16 @@ function initApp() {
   initialized = true;
 }
 
+let db;
 function getDb() {
+  if (db) return db;
   initApp();
-  return admin.firestore();
+  db = admin.firestore();
+  // preferRest: usa transporte REST (HTTPS) em vez de gRPC.
+  // - Recomendado em ambientes serverless (Netlify Functions).
+  // - Permite rodar atrás de proxies corporativos que interceptam TLS.
+  db.settings({ preferRest: true, ignoreUndefinedProperties: true });
+  return db;
 }
 
 module.exports = { getDb, admin };
