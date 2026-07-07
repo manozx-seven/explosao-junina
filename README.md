@@ -70,12 +70,20 @@ que substitui o antigo `google.script.run`. Nada mais precisou mudar na interfac
    ```
    > A `FIREBASE_PRIVATE_KEY` deve ficar **entre aspas**, em uma única linha,
    > com os `\n` literais (exatamente como aparece no JSON).
-3. Crie a configuração inicial e o **primeiro usuário de coordenação**:
+3. Crie a configuração inicial e um usuário administrativo. Duas opções:
+
+   **a) Usuário DEV** (recomendado para começar — sem dados pessoais):
+   ```bash
+   node scripts/seed-dev.js
+   ```
+   Cria o login **ID `DEV` / senha `123456`** (coordenação). Use-o para administrar
+   e cadastrar as pessoas reais pela interface; remova-o quando não precisar mais.
+
+   **b) Coordenação real** (com CPF de verdade):
    ```bash
    npm run seed -- "05165322270" "Coordenação Geral"
    ```
-   O comando imprime o **ID de login** gerado (ex: `EXP202601`) e a **senha (CPF)**.
-   Guarde esses dados — é com eles que você entra como admin.
+   Imprime o **ID de login** gerado (ex: `EXP202601`) e a **senha (CPF)**.
 4. (Opcional) Rode o site inteiro localmente com o Netlify CLI:
    ```bash
    npm install -g netlify-cli
