@@ -1,0 +1,14 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  # inclui a pasta server/ no bundle das funções
+  included_files = ["server/**"]
+
+# Fallback opcional: /api -> função api
+[[redirects]]
+  from = "/api"
+  to = "/.netlify/functions/api"
+  status = 200

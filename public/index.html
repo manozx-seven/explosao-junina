@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Explosão Junina - Sistema de Avaliação</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --vermelho: #C0392B;
+  --vermelho-escuro: #922B21;
+  --vermelho-bg: #7B241C;
+  --dourado: #F39C12;
+  --dourado-claro: #F9E79F;
+  --bg: #1A1A2E;
+  --bg2: #16213E;
+  --bg3: #0F3460;
+  --card: #1E2A4A;
+  --card-hover: #253555;
+  --text: #F5F5F5;
+  --text-sec: #B0B8C8;
+  --border: #2A3A5A;
+  --success: #27AE60;
+  --warn: #E67E22;
+  --danger: #E74C3C;
+  --radius: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Barlow',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+
+/* GLOBAL TRANSITIONS */
+*, *::before, *::after { transition-property: opacity, transform, background-color, border-color, color, box-shadow; transition-duration: 0.2s; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* LOADING OVERLAY */
+.loading-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(10,10,30,.6); z-index:500; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px; opacity:0; pointer-events:none; backdrop-filter:blur(2px); transition:opacity .25s ease; }
+.loading-overlay.show { opacity:1; pointer-events:all; }
+.spinner { width:44px; height:44px; border:4px solid rgba(255,255,255,.15); border-top-color:var(--dourado); border-radius:50%; animation:spin .7s linear infinite; }
+.spinner-sm { width:18px; height:18px; border:2.5px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; display:inline-block; vertical-align:middle; }
+.loading-text { font-size:14px; color:var(--text-sec); animation:pulse 1.5s ease-in-out infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes pulse { 0%,100%{opacity:.6} 50%{opacity:1} }
+
+/* LOGIN */
+.login-page { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px; background:linear-gradient(135deg,var(--bg) 0%,var(--bg2) 50%,var(--vermelho-bg) 100%); animation:fadeIn .6s ease; }
+.login-box { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:40px 32px; width:100%; max-width:380px; text-align:center; animation:slideUp .5s ease; }
+.login-box h1 { font-size:14px; font-weight:500; color:var(--dourado); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+.login-box h2 { font-size:28px; font-weight:800; color:var(--text); margin-bottom:4px; }
+.login-box h3 { font-size:13px; color:var(--text-sec); margin-bottom:32px; font-weight:400; }
+.login-box input { width:100%; padding:14px 16px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:16px; font-family:inherit; text-align:center; letter-spacing:3px; font-weight:700; margin-bottom:12px; outline:none; transition:border .2s,box-shadow .2s; }
+.login-box input:focus { border-color:var(--dourado); box-shadow:0 0 0 3px rgba(243,156,18,.15); }
+.login-box input::placeholder { letter-spacing:1px; font-weight:400; color:var(--text-sec); font-size:14px; }
+.login-error { color:var(--danger); font-size:13px; margin-bottom:12px; display:none; animation:shake .4s ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+.input-wrapper { position:relative; }
+.input-wrapper input { padding-right:48px; }
+.eye-toggle { position:absolute; right:14px; top:50%; transform:translateY(-70%); background:none; border:none; color:var(--text-sec); cursor:pointer; font-size:18px; padding:4px; line-height:1; }
+.eye-toggle:hover { color:var(--dourado); }
+.input-hint { font-size:11px; color:var(--text-sec); margin-top:-6px; margin-bottom:12px; }
+
+/* BUTTONS */
+.btn { padding:12px 24px; border:none; border-radius:8px; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px; position:relative; overflow:hidden; transform:scale(1); }
+.btn:active { transform:scale(.97); }
+.btn-primary { background:var(--vermelho); color:#fff; }
+.btn-primary:hover { background:var(--vermelho-escuro); box-shadow:0 4px 12px rgba(192,57,43,.3); }
+.btn-gold { background:var(--dourado); color:#1a1a1a; }
+.btn-gold:hover { background:#E67E22; box-shadow:0 4px 12px rgba(243,156,18,.3); }
+.btn-outline { background:transparent; border:1px solid var(--border); color:var(--text-sec); }
+.btn-outline:hover { border-color:var(--dourado); color:var(--dourado); }
+.btn-sm { padding:8px 14px; font-size:12px; }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-success { background:var(--success); color:#fff; }
+.btn-block { width:100%; }
+.btn:disabled,.btn.loading { opacity:.7; cursor:not-allowed; pointer-events:none; }
+
+/* LAYOUT */
+.app { display:none; animation:fadeIn .4s ease; }
+.topbar { background:var(--card); border-bottom:1px solid var(--border); padding:12px 20px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; backdrop-filter:blur(10px); }
+.topbar-left { display:flex; align-items:center; gap:12px; }
+.topbar-brand { font-size:16px; font-weight:800; color:var(--dourado); }
+.topbar-sub { font-size:11px; color:var(--text-sec); }
+.topbar-user { font-size:13px; color:var(--text-sec); }
+.topbar-user strong { color:var(--dourado); }
+
+.nav { display:flex; gap:4px; padding:8px 12px; background:var(--bg2); overflow-x:auto; border-bottom:1px solid var(--border); scrollbar-width:none; }
+.nav::-webkit-scrollbar { display:none; }
+.nav-btn { padding:10px 16px; border:none; background:transparent; color:var(--text-sec); font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; border-radius:8px; white-space:nowrap; position:relative; }
+.nav-btn:hover { color:var(--text); background:rgba(255,255,255,.05); }
+.nav-btn.active { background:var(--vermelho); color:#fff; box-shadow:0 2px 8px rgba(192,57,43,.3); }
+
+/* PAGE TRANSITIONS */
+.page { display:none; padding:20px; max-width:1000px; margin:0 auto; }
+.page.active { display:block; animation:pageIn .35s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes pageIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+.page-title { font-size:22px; font-weight:800; margin-bottom:4px; }
+.page-subtitle { font-size:13px; color:var(--text-sec); margin-bottom:20px; }
+
+/* CARDS */
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:24px; }
+.stat-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
+.stat-card:hover { border-color:var(--dourado); transform:translateY(-2px); box-shadow:0 4px 16px rgba(0,0,0,.2); }
+.stat-value { font-size:28px; font-weight:800; color:var(--dourado); }
+.stat-label { font-size:12px; color:var(--text-sec); margin-top:4px; }
+
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:16px; }
+.card-title { font-size:16px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+
+/* TABLES */
+.table-wrap { overflow-x:auto; margin-bottom:16px; border-radius:8px; border:1px solid var(--border); }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { background:var(--bg2); color:var(--dourado); font-weight:600; text-align:left; padding:10px 12px; position:sticky; top:0; white-space:nowrap; }
+td { padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+tr { transition:background .15s; }
+tr:hover td { background:rgba(255,255,255,.03); }
+
+/* FORMS */
+.form-group { margin-bottom:16px; }
+.form-group label { display:block; font-size:13px; font-weight:600; color:var(--text-sec); margin-bottom:6px; }
+.form-input, .form-select { width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:inherit; font-size:14px; outline:none; }
+.form-input:focus, .form-select:focus { border-color:var(--dourado); box-shadow:0 0 0 3px rgba(243,156,18,.1); }
+.form-select { appearance:auto; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* AVALIAÇÃO GRID */
+.av-grid { display:flex; flex-direction:column; gap:8px; }
+.av-row { display:grid; grid-template-columns:40px 1fr 90px 120px; gap:8px; align-items:center; padding:10px 12px; background:var(--card); border:1px solid var(--border); border-radius:8px; }
+.av-row.ausente { opacity:.4; filter:grayscale(.5); }
+.av-check { width:28px; height:28px; accent-color:var(--success); cursor:pointer; }
+.av-presenca { width:32px; height:32px; border:2px solid var(--border); border-radius:8px; font-size:16px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; background:var(--bg); }
+.av-presenca.presente { background:var(--success); color:#fff; border-color:var(--success); }
+.av-presenca.falta { background:var(--danger); color:#fff; border-color:var(--danger); }
+.av-name { font-size:14px; font-weight:600; }
+.av-name small { display:block; font-size:11px; color:var(--text-sec); font-weight:400; }
+.av-nota { display:flex; gap:3px; }
+.av-nota button { width:28px; height:28px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text-sec); font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; }
+.av-nota button.selected { background:var(--dourado); color:#1a1a1a; border-color:var(--dourado); box-shadow:0 0 8px rgba(243,156,18,.3); }
+.av-nota button:hover { border-color:var(--dourado); transform:scale(1.1); }
+.av-obs input { width:100%; padding:6px 8px; background:var(--bg); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:12px; font-family:inherit; outline:none; }
+
+/* RANKING */
+.rank-row { display:flex; align-items:center; gap:12px; padding:12px; background:var(--card); border:1px solid var(--border); border-radius:8px; margin-bottom:8px; }
+.rank-row:hover { border-color:var(--dourado); transform:translateX(4px); }
+.rank-pos { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-weight:800; font-size:14px; flex-shrink:0; }
+.rank-1 { background:var(--dourado); color:#1a1a1a; box-shadow:0 0 12px rgba(243,156,18,.4); }
+.rank-2 { background:#BDC3C7; color:#1a1a1a; }
+.rank-3 { background:#CD7F32; color:#fff; }
+.rank-other { background:var(--bg); color:var(--text-sec); }
+.rank-info { flex:1; min-width:0; }
+.rank-name { font-weight:700; font-size:14px; }
+.rank-detail { font-size:11px; color:var(--text-sec); }
+.rank-score { text-align:right; flex-shrink:0; }
+.rank-score .big { font-size:22px; font-weight:800; color:var(--dourado); }
+.rank-score .small { font-size:11px; color:var(--text-sec); }
+
+/* BADGE */
+.badge { display:inline-block; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600; }
+.badge-item { background:var(--dourado); color:#1a1a1a; }
+.badge-brincante { background:var(--bg3); color:var(--text-sec); }
+.badge-ativado { background:var(--success); color:#fff; }
+.badge-pendente { background:var(--warn); color:#fff; }
+.badge-nao { background:var(--border); color:var(--text-sec); }
+
+/* PERFIL */
+.perfil-header { display:flex; align-items:center; gap:16px; margin-bottom:24px; }
+.perfil-avatar { width:64px; height:64px; border-radius:50%; background:var(--vermelho); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; color:#fff; flex-shrink:0; }
+.perfil-name { font-size:22px; font-weight:800; }
+.perfil-meta { font-size:13px; color:var(--text-sec); }
+
+/* PROGRESS */
+.progress { height:8px; background:var(--bg); border-radius:4px; overflow:hidden; margin-top:6px; }
+.progress-bar { height:100%; border-radius:4px; transition:width .6s cubic-bezier(0.4,0,0.2,1); }
+.progress-green { background:var(--success); }
+.progress-gold { background:var(--dourado); }
+.progress-red { background:var(--danger); }
+
+/* MODAL */
+.modal-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.7); z-index:200; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(3px); }
+.modal-overlay.show { display:flex; animation:fadeIn .2s ease; }
+.modal { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; width:100%; max-width:500px; max-height:90vh; overflow-y:auto; animation:slideUp .3s ease; }
+.modal-title { font-size:18px; font-weight:700; margin-bottom:16px; }
+
+/* TOAST */
+.toast { position:fixed; bottom:20px; right:20px; background:var(--success); color:#fff; padding:12px 20px; border-radius:8px; font-size:14px; font-weight:600; z-index:300; transform:translateY(100px); opacity:0; transition:all .35s cubic-bezier(0.4,0,0.2,1); }
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.error { background:var(--danger); }
+
+/* SKELETON */
+.skeleton { background:linear-gradient(90deg,var(--card) 25%,var(--card-hover) 50%,var(--card) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:6px; height:20px; margin-bottom:8px; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* RESPONSIVE */
+@media (max-width:600px) {
+  .av-row { grid-template-columns:30px 1fr; gap:6px; }
+  .av-nota { grid-column:1/-1; }
+  .av-obs { grid-column:1/-1; }
+  .form-row { grid-template-columns:1fr; }
+  .stats { grid-template-columns:repeat(2,1fr); }
+  .topbar { flex-direction:column; gap:4px; }
+  .perfil-header { flex-direction:column; text-align:center; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Carregando...</div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginPage" class="login-page">
+  <div class="login-box">
+    <h1>Grupo Recreativo e Folclórico</h1>
+    <h2>EXPLOSÃO JUNINA</h2>
+    <h3>Sistema de Avaliação • Temporada 2026</h3>
+    <div id="loginError" class="login-error"></div>
+    <input type="text" id="loginId" placeholder="Seu ID (ex: EXP202601)" maxlength="20" autocomplete="off">
+    <div class="input-wrapper">
+      <input type="password" id="loginCpf" placeholder="Seu CPF (somente números)" maxlength="11" autocomplete="off" inputmode="numeric">
+      <button type="button" class="eye-toggle" onclick="togglePassword()" id="eyeBtn">👁</button>
+    </div>
+    <div class="input-hint">11 dígitos, somente números</div>
+    <button class="btn btn-primary btn-block" onclick="doLogin()" id="btnLogin">Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="topbar-brand">EXPLOSÃO JUNINA</div>
+        <div class="topbar-sub">Sistema de Avaliação</div>
+      </div>
+    </div>
+    <div class="topbar-user">
+      <span id="userName"></span>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()" style="margin-left:8px;">Sair</button>
+    </div>
+  </div>
+
+  <div class="nav" id="navBar"></div>
+
+  <div id="pageDashboard" class="page">
+    <div class="page-title">Dashboard</div>
+    <div class="page-subtitle">Visão geral da temporada</div>
+    <div class="stats" id="dashStats"></div>
+  </div>
+
+  <div id="pageCadastro" class="page">
+    <div class="page-title">Brincantes</div>
+    <div class="page-subtitle">Cadastro e gerenciamento</div>
+    <button class="btn btn-gold btn-sm" onclick="showAddBrincante()" style="margin-bottom:16px;">+ Novo Brincante</button>
+    <div class="table-wrap"><table id="tblBrincantes"><thead><tr><th>ID</th><th>Nome</th><th>Fila</th><th>Tipo</th><th>Bonif.</th><th>Ações</th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <div id="pageEnsaios" class="page">
+    <div class="page-title">Ensaios</div>
+    <div class="page-subtitle">Registro de ensaios e apresentações</div>
+    <button class="btn btn-gold btn-sm" onclick="showAddEnsaio()" style="margin-bottom:16px;">+ Novo Ensaio</button>
+    <div class="table-wrap"><table id="tblEnsaios"><thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Ações</th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <div id="pageAvaliacao" class="page">
+    <div class="page-title">Avaliação</div>
+    <div class="page-subtitle">Presença e nota por ensaio</div>
+    <div class="form-group">
+      <label>Selecione o ensaio:</label>
+      <select class="form-select" id="selEnsaioAv" onchange="loadAvaliacao()"></select>
+    </div>
+    <div id="avLegenda" style="display:none;margin-bottom:12px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text-sec);line-height:1.8;">
+      <strong style="color:var(--dourado)">Como avaliar:</strong><br>
+      <span style="color:var(--success)">✓ Presente</span> / <span style="color:var(--danger)">✗ Falta</span> — Clique para alternar &nbsp;|&nbsp;
+      <strong>Nota do ensaio:</strong>
+      <span style="color:var(--danger)">1</span>=Muito fraco &nbsp;
+      <span style="color:var(--warn)">2</span>=Abaixo &nbsp;
+      <span style="color:var(--text)">3</span>=Regular &nbsp;
+      <span style="color:var(--dourado)">4</span>=Bom &nbsp;
+      <span style="color:var(--success)">5</span>=Destaque
+    </div>
+    <div id="avGrid" class="av-grid"></div>
+    <div style="margin-top:16px;text-align:right;">
+      <button class="btn btn-primary" onclick="salvarAvaliacao()" id="btnSalvarAv" disabled>Salvar Avaliação</button>
+    </div>
+  </div>
+
+  <div id="pageRanking" class="page">
+    <div class="page-title">Ranking</div>
+    <div class="page-subtitle">Classificação por desempenho</div>
+    <div id="rankList"></div>
+  </div>
+
+  <div id="pageBonificacao" class="page">
+    <div class="page-title">Bonificação</div>
+    <div class="page-subtitle">Simulação de pagamento</div>
+    <div id="bonifContent"></div>
+  </div>
+
+  <div id="pageLogs" class="page">
+    <div class="page-title">Logs</div>
+    <div class="page-subtitle">Registro de ações do sistema</div>
+    <div class="table-wrap"><table id="tblLogs"><thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Detalhes</th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <div id="pagePerfil" class="page">
+    <div class="page-title">Meu Perfil</div>
+    <div id="perfilContent"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let currentUser = null;
+let brincantesCache = [];
+let ensaiosCache = [];
+let _foraDoPeriodo = false;
+
+// ============================================================
+// LOADING OVERLAY
+// ============================================================
+function showLoading(msg) {
+  document.getElementById('loadingText').textContent = msg || 'Carregando...';
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+// Button loading state
+function btnLoading(btn, loading) {
+  if (!btn) return;
+  if (loading) {
+    btn._origText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-sm"></span>';
+    btn.classList.add('loading');
+  } else {
+    btn.innerHTML = btn._origText || btn.innerHTML;
+    btn.classList.remove('loading');
+  }
+}
+
+// ============================================================
+// SERVER CALLS (with auto-loading)
+// Chama a Netlify Function que substitui o google.script.run.
+// ============================================================
+const API_URL = '/.netlify/functions/api';
+async function srv(fn, ...args) {
+  let res;
+  try {
+    res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fn, args })
+    });
+  } catch (e) {
+    hideLoading();
+    throw new Error('Falha de conexão com o servidor');
+  }
+  let data = null;
+  const text = await res.text();
+  if (text) { try { data = JSON.parse(text); } catch (e) { data = null; } }
+  if (!res.ok || (data && data.__error)) {
+    hideLoading();
+    throw new Error((data && data.__error) || ('Erro ' + res.status));
+  }
+  return data;
+}
+
+// ============================================================
+// INPUT VALIDATION
+// ============================================================
+// ID: uppercase, alphanumeric only
+document.getElementById('loginId').addEventListener('input', function() {
+  this.value = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+});
+
+// CPF: numbers only, max 11
+document.getElementById('loginCpf').addEventListener('input', function() {
+  this.value = this.value.replace(/\D/g, '').slice(0, 11);
+});
+
+// Password toggle
+function togglePassword() {
+  const input = document.getElementById('loginCpf');
+  const btn = document.getElementById('eyeBtn');
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🔒';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+// ============================================================
+// LOGIN / LOGOUT
+// ============================================================
+async function doLogin() {
+  const id = document.getElementById('loginId').value.trim();
+  const cpf = document.getElementById('loginCpf').value.trim();
+  const errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+
+  if (!id) { errEl.textContent = 'Informe seu ID'; errEl.style.display = 'block'; return; }
+  if (cpf.length !== 11) { errEl.textContent = 'CPF deve ter 11 dígitos'; errEl.style.display = 'block'; return; }
+
+  const btn = document.getElementById('btnLogin');
+  btnLoading(btn, true);
+
+  try {
+    const res = await srv('login', id, cpf);
+    if (res.success) {
+      currentUser = res;
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      document.getElementById('userName').innerHTML = '<strong>' + res.nome + '</strong>';
+      buildNav();
+      navigateTo(res.role === 'admin' ? 'Dashboard' : 'Perfil');
+    } else {
+      errEl.textContent = res.message;
+      errEl.style.display = 'block';
+    }
+  } catch (e) {
+    errEl.textContent = 'Erro ao conectar';
+    errEl.style.display = 'block';
+  }
+  btnLoading(btn, false);
+}
+
+document.getElementById('loginCpf').addEventListener('keypress', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('loginId').addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('loginCpf').focus(); });
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('loginId').value = '';
+  document.getElementById('loginCpf').value = '';
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const adminPages = ['Dashboard','Cadastro','Ensaios','Avaliação','Ranking','Bonificação','Logs'];
+const brincPages = ['Perfil','Ranking'];
+
+function buildNav() {
+  const pages = currentUser.role === 'admin' ? adminPages : brincPages;
+  const nav = document.getElementById('navBar');
+  nav.innerHTML = pages.map(p => '<button class="nav-btn" data-page="'+p+'" onclick="navigateTo(\''+p+'\')">'+p+'</button>').join('');
+}
+
+function navigateTo(page) {
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector('.nav-btn[data-page="'+page+'"]');
+  if (btn) btn.classList.add('active');
+
+  const pageMap = {
+    'Dashboard':'pageDashboard','Cadastro':'pageCadastro','Ensaios':'pageEnsaios',
+    'Avaliação':'pageAvaliacao','Ranking':'pageRanking','Bonificação':'pageBonificacao',
+    'Logs':'pageLogs','Perfil':'pagePerfil'
+  };
+
+  // Small delay for transition smoothness
+  requestAnimationFrame(() => {
+    const el = document.getElementById(pageMap[page]);
+    if (el) el.classList.add('active');
+  });
+
+  if (page === 'Dashboard') loadDashboard();
+  if (page === 'Cadastro') { srv('getStatusAdesao').then(r => { _foraDoPeriodo = !r.dentroDoPeríodo; }); loadBrincantes(); }
+  if (page === 'Ensaios') loadEnsaios();
+  if (page === 'Avaliação') loadEnsaioSelect();
+  if (page === 'Ranking') loadRanking();
+  if (page === 'Bonificação') loadBonificacao();
+  if (page === 'Logs') loadLogs();
+  if (page === 'Perfil') loadPerfil();
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+async function loadDashboard() {
+  showLoading('Carregando dashboard...');
+  let d;
+  try { d = await srv('getDashboard'); } catch(e) { d = {totalBrincantes:0,totalEnsaios:0,mediaPresenca:0,mediaNotas:'0.0',optBonificacao:0,ativados:0}; toast('Erro dashboard: ' + e.message, true); }
+  document.getElementById('dashStats').innerHTML =
+    '<div class="stat-card"><div class="stat-value">'+d.totalBrincantes+'</div><div class="stat-label">Brincantes</div></div>'+
+    '<div class="stat-card"><div class="stat-value">'+d.totalEnsaios+'</div><div class="stat-label">Ensaios</div></div>'+
+    '<div class="stat-card"><div class="stat-value">'+d.mediaPresenca+'%</div><div class="stat-label">Presença média</div></div>'+
+    '<div class="stat-card"><div class="stat-value">'+d.mediaNotas+'</div><div class="stat-label">Nota média</div></div>'+
+    '<div class="stat-card"><div class="stat-value">'+d.optBonificacao+'</div><div class="stat-label">Opt-in bonificação</div></div>'+
+    '<div class="stat-card"><div class="stat-value">'+d.ativados+'</div><div class="stat-label">Ativados</div></div>';
+  hideLoading();
+}
+
+// ============================================================
+// BRINCANTES
+// ============================================================
+async function loadBrincantes() {
+  showLoading('Carregando brincantes...');
+  try {
+    const resultado = await srv('getBrincantes');
+    brincantesCache = resultado || [];
+  } catch(e) { brincantesCache = []; toast('Erro: ' + e.message, true); }
+  const tbody = document.querySelector('#tblBrincantes tbody');
+  if (!brincantesCache.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-sec);padding:40px">Nenhum brincante cadastrado</td></tr>'; hideLoading(); return; }
+  tbody.innerHTML = brincantesCache.map(b =>
+    '<tr>'+
+    '<td style="font-family:monospace;font-weight:700;color:var(--dourado)">'+b.ID+'</td>'+
+    '<td><strong>'+b.Nome+'</strong>'+(b.Apelido?' <span style="color:var(--text-sec)">('+b.Apelido+')</span>':'')+'</td>'+
+    '<td>'+(b.Fila||'-')+'</td>'+
+    '<td><span class="badge '+(b.Tipo==='item'?'badge-item':b.Tipo==='coordenacao'?'badge-ativado':'badge-brincante')+'">'+b.Tipo+'</span></td>'+
+    '<td>'+(b.OptBonificacao==='sim'?'<span class="badge '+(b.StatusAtivacao==='ativado'?'badge-ativado':'badge-pendente')+'">'+b.StatusAtivacao+'</span>'+(b.StatusAtivacao==='pendente'&&b.DataAdesao?'<div style="font-size:10px;color:var(--text-sec);margin-top:2px">'+calcProgresso(b.DataAdesao)+'</div>':''):'<span class="badge badge-nao">não</span>')+'</td>'+
+    '<td><button class="btn btn-outline btn-sm" onclick="showEditBrincante(\''+b.ID+'\')">Editar</button> '+
+    '<button class="btn btn-sm" style="color:var(--danger)" onclick="deleteBrincante(\''+b.ID+'\',\''+b.Nome+'\')">×</button></td></tr>'
+  ).join('');
+  hideLoading();
+}
+
+function showAddBrincante() {
+  showModal('Novo Brincante',
+    '<div class="form-row"><div class="form-group"><label>Nome completo</label><input class="form-input" id="fNome"></div>'+
+    '<div class="form-group"><label>Apelido</label><input class="form-input" id="fApelido"></div></div>'+
+    '<div class="form-group"><label>CPF (usado como senha de acesso)</label><input class="form-input" id="fCpf" placeholder="Somente números, 11 dígitos" maxlength="11" inputmode="numeric" oninput="this.value=this.value.replace(/\\D/g,\'\').slice(0,11)"></div>'+
+    '<div class="form-row"><div class="form-group"><label>Fila</label><input class="form-input" id="fFila" placeholder="Ex: A, B, C..."></div>'+
+    '<div class="form-group"><label>Posição</label><input class="form-input" id="fPosicao" placeholder="Ex: 1, 2, 3..."></div></div>'+
+    '<div class="form-row"><div class="form-group"><label>Tipo</label><select class="form-select" id="fTipo"><option value="brincante">Brincante</option><option value="item">Item</option><option value="coordenacao">Coordenação</option></select></div>'+
+    '<div class="form-group"><label>Programa de Bonificação</label><select class="form-select" id="fOpt" '+(_foraDoPeriodo?'disabled':'')+'>'+(_foraDoPeriodo?'<option value="nao">Encerrado para esta temporada</option>':'<option value="nao">Não</option><option value="sim">Sim</option>')+'</select></div></div>'+
+    '<button class="btn btn-primary btn-block" onclick="saveNewBrincante(this)">Cadastrar</button>'
+  );
+}
+
+async function saveNewBrincante(btn) {
+  const dados = {
+    nome: document.getElementById('fNome').value,
+    apelido: document.getElementById('fApelido').value,
+    cpf: document.getElementById('fCpf').value,
+    fila: document.getElementById('fFila').value,
+    posicao: document.getElementById('fPosicao').value,
+    tipo: document.getElementById('fTipo').value,
+    optBonificacao: document.getElementById('fOpt').value
+  };
+  if (!dados.nome) return toast('Preencha o nome', true);
+  btnLoading(btn, true);
+  const res = await srv('addBrincante', dados, currentUser);
+  if (res.success) { toast(res.message); closeModal(); loadBrincantes(); }
+  btnLoading(btn, false);
+}
+
+function showEditBrincante(id) {
+  const b = brincantesCache.find(x => x.ID === id);
+  if (!b) return;
+  showModal('Editar Brincante',
+    '<div class="form-row"><div class="form-group"><label>Nome</label><input class="form-input" id="eNome" value="'+b.Nome+'"></div>'+
+    '<div class="form-group"><label>Apelido</label><input class="form-input" id="eApelido" value="'+(b.Apelido||'')+'"></div></div>'+
+    '<div class="form-group"><label>CPF</label><input class="form-input" id="eCpf" value="'+(b.CPF||'')+'" maxlength="11" inputmode="numeric" oninput="this.value=this.value.replace(/\\D/g,\'\').slice(0,11)"></div>'+
+    '<div class="form-row"><div class="form-group"><label>Fila</label><input class="form-input" id="eFila" value="'+(b.Fila||'')+'"></div>'+
+    '<div class="form-group"><label>Posição</label><input class="form-input" id="ePosicao" value="'+(b.Posicao||'')+'"></div></div>'+
+    '<div class="form-row"><div class="form-group"><label>Tipo</label><select class="form-select" id="eTipo"><option value="brincante" '+(b.Tipo==='brincante'?'selected':'')+'>Brincante</option><option value="item" '+(b.Tipo==='item'?'selected':'')+'>Item</option><option value="coordenacao" '+(b.Tipo==='coordenacao'?'selected':'')+'>Coordenação</option></select></div>'+
+    '<div class="form-group"><label>Bonificação</label><select class="form-select" id="eOpt"><option value="nao" '+(b.OptBonificacao==='nao'?'selected':'')+'>Não</option><option value="sim" '+(b.OptBonificacao==='sim'?'selected':'')+'>Sim</option></select></div></div>'+
+    '<div class="form-group"><label>Status Ativação</label><select class="form-select" id="eStatus"><option value="pendente" '+(b.StatusAtivacao==='pendente'?'selected':'')+'>Pendente</option><option value="ativado" '+(b.StatusAtivacao==='ativado'?'selected':'')+'>Ativado</option><option value="nao_ativado" '+(b.StatusAtivacao==='nao_ativado'?'selected':'')+'>Não ativado</option></select></div>'+
+    '<div class="form-group"><label>Qualificação Extra (requisitos manuais)</label><select class="form-select" id="eQualif"><option value="" '+((!b.QualificacaoExtra||b.QualificacaoExtra==='')?'selected':'')+'>Não avaliado</option><option value="aprovado" '+(b.QualificacaoExtra==='aprovado'?'selected':'')+'>Aprovado</option><option value="reprovado" '+(b.QualificacaoExtra==='reprovado'?'selected':'')+'>Reprovado</option></select></div>'+
+    '<button class="btn btn-primary btn-block" onclick="saveEditBrincante(\''+id+'\',this)">Salvar</button>'
+  );
+}
+
+async function saveEditBrincante(id, btn) {
+  const dados = {
+    nome:document.getElementById('eNome').value, apelido:document.getElementById('eApelido').value,
+    cpf:document.getElementById('eCpf').value, fila:document.getElementById('eFila').value,
+    posicao:document.getElementById('ePosicao').value, tipo:document.getElementById('eTipo').value,
+    optBonificacao:document.getElementById('eOpt').value, statusAtivacao:document.getElementById('eStatus').value,
+    qualificacaoExtra:document.getElementById('eQualif').value
+  };
+  btnLoading(btn, true);
+  await srv('updateBrincante', id, dados, currentUser);
+  toast('Brincante atualizado!'); closeModal(); loadBrincantes();
+}
+
+async function deleteBrincante(id, nome) {
+  if (!confirm('Remover '+nome+'?')) return;
+  showLoading('Removendo...');
+  await srv('removeBrincante', id, currentUser);
+  toast('Brincante removido'); loadBrincantes();
+}
+
+// ============================================================
+// ENSAIOS
+// ============================================================
+async function loadEnsaios() {
+  showLoading('Carregando ensaios...');
+  try { ensaiosCache = await srv('getEnsaios') || []; } catch(e) { ensaiosCache = []; }
+  const tbody = document.querySelector('#tblEnsaios tbody');
+  if (!ensaiosCache.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-sec);padding:40px">Nenhum ensaio registrado</td></tr>'; hideLoading(); return; }
+  tbody.innerHTML = ensaiosCache.sort((a,b)=>new Date(b.Data)-new Date(a.Data)).map(e =>
+    '<tr><td><strong>'+formatDate(e.Data)+'</strong></td>'+
+    '<td><span class="badge '+(e.Tipo==='festival'?'badge-item':e.Tipo==='apresentacao'?'badge-ativado':'badge-brincante')+'">'+e.Tipo+'</span></td>'+
+    '<td>'+(e.Descricao||'-')+'</td>'+
+    '<td><button class="btn btn-outline btn-sm" onclick="goAvaliar(\''+e.ID+'\')">Avaliar</button> '+
+    '<button class="btn btn-sm" style="color:var(--danger)" onclick="delEnsaio(\''+e.ID+'\')">×</button></td></tr>'
+  ).join('');
+  hideLoading();
+}
+
+function goAvaliar(id) {
+  navigateTo('Avaliação');
+  setTimeout(() => { document.getElementById('selEnsaioAv').value = id; loadAvaliacao(); }, 400);
+}
+
+function showAddEnsaio() {
+  const today = new Date().toISOString().slice(0,10);
+  showModal('Novo Ensaio',
+    '<div class="form-group"><label>Data</label><input type="date" class="form-input" id="fEnsData" value="'+today+'"></div>'+
+    '<div class="form-group"><label>Tipo</label><select class="form-select" id="fEnsTipo"><option value="regular">Ensaio regular</option><option value="ensaiao">Ensaião</option><option value="apresentacao">Apresentação oficial</option><option value="festival">Festival Folclórico</option><option value="igreja">Apresentação Igreja (sem bonif.)</option></select></div>'+
+    '<div class="form-group"><label>Descrição (opcional)</label><input class="form-input" id="fEnsDesc"></div>'+
+    '<button class="btn btn-primary btn-block" onclick="saveNewEnsaio(this)">Registrar</button>'
+  );
+}
+
+async function saveNewEnsaio(btn) {
+  const dados = { data:document.getElementById('fEnsData').value, tipo:document.getElementById('fEnsTipo').value, descricao:document.getElementById('fEnsDesc').value };
+  if (!dados.data) return toast('Selecione a data', true);
+  btnLoading(btn, true);
+  await srv('addEnsaio', dados, currentUser);
+  toast('Ensaio registrado!'); closeModal(); loadEnsaios();
+}
+
+async function delEnsaio(id) {
+  if (!confirm('Excluir ensaio e suas avaliações?')) return;
+  showLoading('Excluindo...');
+  await srv('deleteEnsaio', id, currentUser);
+  toast('Ensaio excluído'); loadEnsaios();
+}
+
+// ============================================================
+// AVALIAÇÃO
+// ============================================================
+async function loadEnsaioSelect() {
+  showLoading('Carregando ensaios...');
+  try { const ensaios = await srv('getEnsaios') || []; ensaiosCache = ensaios; } catch(e) { ensaiosCache = []; }
+  const sel = document.getElementById('selEnsaioAv');
+  sel.innerHTML = '<option value="">-- Selecione --</option>' +
+    ensaiosCache.sort((a,b)=>new Date(b.Data)-new Date(a.Data))
+      .map(e => '<option value="'+e.ID+'">'+formatDate(e.Data)+' - '+e.Tipo+(e.Descricao?' - '+e.Descricao:'')+'</option>')
+      .join('');
+  document.getElementById('avGrid').innerHTML = '';
+  document.getElementById('btnSalvarAv').disabled = true;
+  hideLoading();
+}
+
+async function loadAvaliacao() {
+  const ensaioId = document.getElementById('selEnsaioAv').value;
+  if (!ensaioId) return;
+  showLoading('Carregando avaliações...');
+  document.getElementById('btnSalvarAv').disabled = false;
+  document.getElementById('avLegenda').style.display = 'block';
+  const [brincantes, avaliacoes] = await Promise.all([srv('getBrincantes'), srv('getAvaliacoes', {ensaioId})]).then(r => [r[0]||[], r[1]||[]]).catch(() => [[],[]]);
+  brincantesCache = brincantes;
+  const grid = document.getElementById('avGrid');
+  grid.innerHTML = brincantes
+    .filter(b => b.Tipo !== 'coordenacao')
+    .sort((a,b) => (a.Fila||'').localeCompare(b.Fila||'')||(a.Nome||'').localeCompare(b.Nome||''))
+    .map(b => {
+      const av = avaliacoes.find(a => a.BrincanteID === b.ID);
+      const presente = av ? av.Presente === 'sim' : true;
+      const nota = av ? Number(av.Nota) : 0;
+      const obs = av ? av.Observacao : '';
+      return '<div class="av-row '+(presente?'':'ausente')+'" id="av-'+b.ID+'">'+
+        '<button class="av-presenca '+(presente?'presente':'falta')+'" onclick="toggleAv(\''+b.ID+'\')">'+(presente?'✓':'✗')+'</button>'+
+        '<div class="av-name">'+(b.Apelido||b.Nome)+'<small>Fila '+(b.Fila||'?')+' • '+b.Tipo+'</small></div>'+
+        '<div class="av-nota" id="nota-'+b.ID+'">'+
+        [1,2,3,4,5].map(n => '<button class="'+(n===nota?'selected':'')+'" onclick="setNota(\''+b.ID+'\','+n+')" title="'+['','Muito fraco','Abaixo','Regular','Bom','Destaque'][n]+'">'+n+'</button>').join('')+
+        '</div><div class="av-obs"><input placeholder="Obs..." value="'+obs+'" id="obs-'+b.ID+'"></div></div>';
+    }).join('');
+  hideLoading();
+}
+
+function toggleAv(id) {
+  const row = document.getElementById('av-'+id);
+  const btn = row.querySelector('.av-presenca');
+  const isPresente = btn.classList.contains('presente');
+  if (isPresente) {
+    btn.classList.remove('presente'); btn.classList.add('falta');
+    btn.textContent = '✗'; row.classList.add('ausente');
+  } else {
+    btn.classList.remove('falta'); btn.classList.add('presente');
+    btn.textContent = '✓'; row.classList.remove('ausente');
+  }
+}
+
+function setNota(id, n) {
+  document.querySelectorAll('#nota-'+id+' button').forEach((btn,i) => btn.classList.toggle('selected', i+1===n));
+}
+
+async function salvarAvaliacao() {
+  const ensaioId = document.getElementById('selEnsaioAv').value;
+  if (!ensaioId) return;
+  const btn = document.getElementById('btnSalvarAv');
+  btnLoading(btn, true);
+  const rows = document.querySelectorAll('.av-row');
+  const avaliacoes = [];
+  rows.forEach(row => {
+    const id = row.id.replace('av-','');
+    const presente = row.querySelector('.av-presenca').classList.contains('presente');
+    const selectedBtn = row.querySelector('.av-nota button.selected');
+    const nota = selectedBtn ? parseInt(selectedBtn.textContent) : 0;
+    const obs = document.getElementById('obs-'+id).value;
+    avaliacoes.push({brincanteId:id, presente, nota, observacao:obs});
+  });
+  const res = await srv('salvarAvaliacoes', ensaioId, avaliacoes, currentUser);
+  if (res.success) toast('Avaliação salva! '+res.count+' brincantes registrados.');
+  btnLoading(btn, false);
+}
+
+// ============================================================
+// RANKING
+// ============================================================
+async function loadRanking() {
+  showLoading('Carregando ranking...');
+  let ranking;
+  try { ranking = await srv('getRanking') || []; } catch(e) { ranking = []; }
+  document.getElementById('rankList').innerHTML = ranking.map((r,i) =>
+    '<div class="rank-row"><div class="rank-pos '+(i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other')+'">'+(i+1)+'</div>'+
+    '<div class="rank-info"><div class="rank-name">'+r.nome+(r.tipo==='item'?' <span class="badge badge-item">item</span>':'')+'</div>'+
+    '<div class="rank-detail">Fila '+(r.fila||'?')+' • '+r.percPresenca+'% presença • '+r.presencas+' ensaios</div></div>'+
+    '<div class="rank-score"><div class="big">'+r.mediaNotas+'</div><div class="small">média</div></div></div>'
+  ).join('');
+  hideLoading();
+}
+
+// ============================================================
+// BONIFICAÇÃO
+// ============================================================
+async function loadBonificacao() {
+  showLoading('Calculando bonificação...');
+  let sim;
+  try { sim = await srv('getSimulacaoBonificacao'); } catch(e) { sim = {totalGeral:'0.00',lista:[],config:{valorEnsaio:0.5,valorApresentacao:1,valorFestival:5}}; }
+  document.getElementById('bonifContent').innerHTML =
+    '<div class="stats">'+
+    '<div class="stat-card"><div class="stat-value">R$ '+sim.totalGeral+'</div><div class="stat-label">Custo total estimado</div></div>'+
+    '<div class="stat-card"><div class="stat-value">'+sim.lista.length+'</div><div class="stat-label">Opt-in</div></div>'+
+    '<div class="stat-card"><div class="stat-value">'+sim.lista.filter(l=>l.elegivel).length+'</div><div class="stat-label">Ativados</div></div>'+
+    '<div class="stat-card"><div class="stat-value">R$ '+sim.config.valorEnsaio+'</div><div class="stat-label">Por ensaio</div></div></div>'+
+    '<div class="table-wrap"><table><thead><tr><th>Nome</th><th>Fila</th><th>Status</th><th>Ensaios</th><th>Apres.</th><th>Acumulado</th></tr></thead><tbody>'+
+    sim.lista.map(l =>
+      '<tr style="'+(l.elegivel?'':'opacity:.5')+'"><td>'+l.nome+'</td><td>'+(l.fila||'-')+'</td>'+
+      '<td><span class="badge '+(l.elegivel?'badge-ativado':'badge-pendente')+'">'+l.statusAtivacao+'</span></td>'+
+      '<td>'+l.ensaiosPresente+'</td><td>'+l.apresentacoesPresente+(l.festivalPresente?' + Festival':'')+'</td>'+
+      '<td style="font-weight:700;color:var(--dourado)">R$ '+l.valorAcumulado+'</td></tr>'
+    ).join('')+'</tbody></table></div>';
+  hideLoading();
+}
+
+// ============================================================
+// LOGS
+// ============================================================
+async function loadLogs() {
+  showLoading('Carregando logs...');
+  let logs;
+  try { logs = await srv('getLogs', 100) || []; } catch(e) { logs = []; }
+  const tbody = document.querySelector('#tblLogs tbody');
+  tbody.innerHTML = logs.map(l => {
+    const dt = new Date(l.dataHora);
+    const df = dt.toLocaleDateString('pt-BR')+' '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const badgeClass = l.acao.includes('EXCLU')?'badge-pendente':l.acao.includes('LOGIN')?'badge-brincante':'badge-ativado';
+    return '<tr><td style="white-space:nowrap">'+df+'</td>'+
+      '<td><strong>'+l.usuarioNome+'</strong><br><span style="color:var(--text-sec);font-size:11px">'+l.usuarioId+'</span></td>'+
+      '<td><span class="badge '+badgeClass+'">'+l.acao+'</span></td>'+
+      '<td style="font-size:12px;color:var(--text-sec)">'+l.detalhes+'</td></tr>';
+  }).join('');
+  hideLoading();
+}
+
+// ============================================================
+// PERFIL
+// ============================================================
+async function loadPerfil() {
+  const id = currentUser.id;
+  if (id === 'admin') {
+    document.getElementById('perfilContent').innerHTML = '<p>Perfil da coordenação. Use as abas acima para gerenciar.</p>';
+    return;
+  }
+  showLoading('Carregando perfil...');
+  let p;
+  try { p = await srv('getPerfilBrincante', id); } catch(e) { p = null; }
+  if (!p) { document.getElementById('perfilContent').innerHTML = '<p>Perfil não encontrado.</p>'; hideLoading(); return; }
+
+  document.getElementById('perfilContent').innerHTML =
+    '<div class="perfil-header"><div class="perfil-avatar">'+(p.Nome||'?')[0]+'</div><div>'+
+    '<div class="perfil-name">'+p.Nome+'</div>'+
+    '<div class="perfil-meta">'+(p.Apelido?p.Apelido+' • ':'')+' Fila '+(p.Fila||'?')+' • '+p.Tipo+'</div></div></div>'+
+    '<div class="stats">'+
+    '<div class="stat-card"><div class="stat-value">'+p.percPresenca+'%</div><div class="stat-label">Presença ('+p.presencas+'/'+p.totalEnsaios+')</div>'+
+    '<div class="progress"><div class="progress-bar '+(p.percPresenca>=75?'progress-green':'progress-red')+'" style="width:'+p.percPresenca+'%"></div></div></div>'+
+    '<div class="stat-card"><div class="stat-value">'+p.mediaNotas+'</div><div class="stat-label">Nota média</div>'+
+    '<div class="progress"><div class="progress-bar '+(parseFloat(p.mediaNotas)>=4?'progress-gold':'progress-red')+'" style="width:'+parseFloat(p.mediaNotas)*20+'%"></div></div></div>'+
+    '<div class="stat-card"><div class="stat-value">'+p.percNotasBoas+'%</div><div class="stat-label">Ensaios com nota ≥ 4</div>'+
+    '<div class="progress"><div class="progress-bar '+(p.percNotasBoas>=75?'progress-green':'progress-red')+'" style="width:'+p.percNotasBoas+'%"></div></div></div>'+
+    '<div class="stat-card"><div class="stat-value" style="color:'+(p.OptBonificacao==='sim'?'var(--dourado)':'var(--text-sec)')+'">R$ '+p.bonificacao+'</div>'+
+    '<div class="stat-label">Bonificação acumulada</div></div></div>'+
+    buildAlertasPerfil(p)+
+    '<div class="card"><div class="card-title">Histórico de avaliações</div>'+
+    '<div class="table-wrap"><table><thead><tr><th>Data</th><th>Tipo</th><th>Presença</th><th>Nota</th><th>Observação</th></tr></thead><tbody>'+
+    p.historico.map(h =>
+      '<tr><td>'+formatDate(h.data)+'</td><td>'+h.tipo+'</td>'+
+      '<td>'+(h.presente?'<span style="color:var(--success)">✓</span>':'<span style="color:var(--danger)">✗</span>')+'</td>'+
+      '<td style="font-weight:700;color:'+(h.nota>=4?'var(--dourado)':h.nota>=3?'var(--text)':'var(--danger)')+'">'+
+      (h.nota||'-')+'</td><td style="color:var(--text-sec)">'+(h.observacao||'-')+'</td></tr>'
+    ).join('')+'</tbody></table></div></div>';
+  hideLoading();
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function calcProgresso(dataAdesao) {
+  if (!dataAdesao) return '';
+  const inicio = new Date(dataAdesao);
+  const hoje = new Date();
+  const fim = new Date(inicio);
+  fim.setMonth(fim.getMonth() + 3);
+  const totalDias = Math.round((fim - inicio) / 86400000);
+  const diasPassados = Math.round((hoje - inicio) / 86400000);
+  if (diasPassados >= totalDias) return '✓ Período completo';
+  const diasRestantes = totalDias - diasPassados;
+  return diasRestantes + ' dias restantes';
+}
+
+function buildAlertasPerfil(p) {
+  let alertas = '';
+  const optIn = p.OptBonificacao === 'sim';
+  const ativado = p.StatusAtivacao === 'ativado';
+  const pendente = p.StatusAtivacao === 'pendente';
+  const presOk = p.percPresenca >= 75;
+  const notaOk = p.percNotasBoas >= 75;
+  const qualif = p.QualificacaoExtra;
+
+  if (!optIn) {
+    alertas += '<div style="padding:12px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;font-size:13px;color:var(--text-sec);">'+
+      'Você não está inscrito no Programa de Bonificação. Sua participação é voluntária e cultural.</div>';
+    return alertas;
+  }
+
+  // Período de ativação
+  if (pendente) {
+    alertas += '<div style="padding:12px 16px;background:var(--bg2);border-left:4px solid var(--dourado);border-radius:0 8px 8px 0;margin-bottom:12px;font-size:13px;">'+
+      '<strong style="color:var(--dourado)">Período de ativação em andamento</strong><br>'+
+      'Para ativar sua bonificação, você precisa manter:<br>'+
+      '<span style="color:'+(presOk?'var(--success)':'var(--danger)')+'">• Presença ≥ 75% (atual: '+p.percPresenca+'%)</span><br>'+
+      '<span style="color:'+(notaOk?'var(--success)':'var(--danger)')+'">• Nota ≥ 4 em pelo menos 75% dos ensaios (atual: '+p.percNotasBoas+'%)</span></div>';
+  }
+
+  // Ativado - mostrar status
+  if (ativado) {
+    // Avisos de presença
+    if (!presOk) {
+      alertas += '<div style="padding:12px 16px;background:rgba(231,76,60,.1);border-left:4px solid var(--danger);border-radius:0 8px 8px 0;margin-bottom:12px;font-size:13px;">'+
+        '<strong style="color:var(--danger)">Atenção: presença abaixo do mínimo</strong><br>'+
+        'Sua presença está em '+p.percPresenca+'%. Você precisa de pelo menos 75% para garantir a bonificação. Compareça mais aos ensaios!</div>';
+    }
+    // Avisos de nota
+    if (!notaOk) {
+      alertas += '<div style="padding:12px 16px;background:rgba(230,126,34,.1);border-left:4px solid var(--warn);border-radius:0 8px 8px 0;margin-bottom:12px;font-size:13px;">'+
+        '<strong style="color:var(--warn)">Desempenho precisa melhorar</strong><br>'+
+        'Apenas '+p.percNotasBoas+'% dos seus ensaios tiveram nota 4 ou mais. Foque nos passos e na sincronia — você consegue!</div>';
+    }
+    // Tudo OK
+    if (presOk && notaOk) {
+      alertas += '<div style="padding:12px 16px;background:rgba(39,174,96,.1);border-left:4px solid var(--success);border-radius:0 8px 8px 0;margin-bottom:12px;font-size:13px;">'+
+        '<strong style="color:var(--success)">Bom desempenho!</strong><br>'+
+        'Sua presença e avaliações estão dentro da meta. Continue assim!</div>';
+    }
+
+    // Qualificação extra
+    alertas += '<div style="padding:12px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;font-size:13px;">'+
+      '<strong style="color:var(--dourado)">Requisitos para receber a bonificação:</strong><br>'+
+      '<span style="color:'+(presOk?'var(--success)':'var(--danger)')+'">'+(presOk?'✓':'✗')+' Presença ≥ 75%</span><br>'+
+      '<span style="color:'+(notaOk?'var(--success)':'var(--danger)')+'">'+(notaOk?'✓':'✗')+' Nota ≥ 4 em 75% dos ensaios</span><br>'+
+      '<span style="color:'+(qualif==='aprovado'?'var(--success)':qualif==='reprovado'?'var(--danger)':'var(--text-sec)')+'">'+
+      (qualif==='aprovado'?'✓ Requisitos extras aprovados':qualif==='reprovado'?'✗ Requisitos extras não cumpridos':'⏳ Requisitos extras: aguardando avaliação da coordenação')+'</span><br>'+
+      '<span style="font-size:11px;color:var(--text-sec)">(Participação em atividades de arrecadação, trabalhos comunitários, devolução de figurino, conduta)</span></div>';
+  }
+
+  return alertas;
+}
+
+function formatDate(d) {
+  if (!d) return '-';
+  const dt = new Date(d);
+  if (isNaN(dt)) return d;
+  return dt.toLocaleDateString('pt-BR');
+}
+
+function showModal(title, content) {
+  document.getElementById('modalContent').innerHTML = '<div class="modal-title">'+title+'</div>'+content;
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target.id === 'modal') closeModal();
+});
+
+function toast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>

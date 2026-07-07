@@ -1,0 +1,16 @@
+{
+  "name": "explosao-junina-avaliacao",
+  "version": "1.0.0",
+  "description": "Sistema de Avaliação - Explosão Junina de Beruri (Netlify + Firebase)",
+  "private": true,
+  "scripts": {
+    "seed": "node scripts/seed.js",
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.7"
+  }
+}
