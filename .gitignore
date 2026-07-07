@@ -8,3 +8,6 @@ npm-debug.log*
 
 # Vínculo local com o Apps Script original (contém IDs pessoais)
 .clasp.json
+
+# Artefato gerado pelo netlify dev
+deno.lock

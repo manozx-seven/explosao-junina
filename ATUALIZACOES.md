@@ -63,3 +63,12 @@ Toda a fundação do projeto foi construída neste dia. Em ordem cronológica:
 - Removido o **overlay bloqueante** da navegação; primeira carga usa **skeletons**.
 - Exclusões (brincante/ensaio) atualizam a lista na hora (otimista).
 - Funções de render separadas das de load para permitir render a partir do cache.
+
+### Documentação e regras fixas
+- Criados `CONTEXTO.md` (o que é o sistema, arquitetura, regras, infra),
+  `ATUALIZACOES.md` (este histórico) e `CLAUDE.md` (regras fixas: ler o contexto
+  no início de cada sessão e registrar toda mudança aqui).
+
+### Limpeza
+- `deno.lock` (gerado pelo `netlify dev`) removido do versionamento e adicionado
+  ao `.gitignore`.
