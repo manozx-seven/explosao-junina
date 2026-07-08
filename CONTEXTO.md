@@ -72,15 +72,18 @@ Firebase Firestore  ← banco de dados
 |--------------|---------------------|--------|
 | `config`     | `app`               | mapa de configurações (valores, temporada, datas) |
 | `counters`   | `brincantes`        | `{ seq }` — sequência para gerar IDs `EXP2026xx` |
-| `brincantes` | o próprio ID (ex. `EXP202601`, `DEV`) | ID, Nome, Apelido, CPF, Fila, Posicao, Tipo, DataAdesao, OptBonificacao, StatusAtivacao, QualificacaoExtra |
-| `ensaios`    | ex. `ENS20260210_1234` | ID, Data, Tipo, Descricao, CriadoPor |
+| `brincantes` | o próprio ID (ex. `EXP202601`, `DEV`) | ID, Nome, Apelido, CPF, Fila, Posicao, Tipo, DataAdesao, DataAssinatura, OptBonificacao, StatusAtivacao (`auto`/`ativado`/`nao_elegivel`), QualificacaoExtra, StatusMembro (`ativo`/`afastado`/`desligado`), MotivoDesligamento, DataDesligamento |
+| `ensaios`    | ex. `ENS20260210_1234` | ID, Data, Tipo, Descricao, CriadoPor, HoraInicio, HoraFim, Status (`planejado`/`realizado`/`cancelado`), HoraInicioReal, HoraFimReal, ObsEvento |
 | `avaliacoes` | auto                | EnsaioID, BrincanteID, Presente, Nota, Observacao, AvaliadoPor, DataRegistro |
 | `logs`       | auto                | DataHora, UsuarioID, UsuarioNome, Acao, Detalhes |
+| `advertencias` | auto              | BrincanteID, Nivel (`verbal`/`formal`/`desligamento`/`extrema`), Motivo, Data, RegistradoPor, DataRegistro |
 
 Config padrão (chaves em `config/app`): `valorEnsaio=0.50`, `valorApresentacao=1.00`,
 `valorFestival=5.00`, `mesesAtivacao=3`, `frequenciaMinima=75`, `notaMinima=4`,
 `percentualNotaMinima=75`, `temporada=2026`, `inicioTemporada=2026-02-01`,
-`fimContagem=2026-07-31`, `fimAdesao=2026-04-30`.
+`inicioContagem=2026-05-01`, `fimContagem=2026-07-31`, `fimAdesao=2026-04-30`.
+Editável pela aba **Configurações** (admin). O evento pode ter `ValorBonificacao`
+(override opcional do valor daquele dia).
 
 ## 6. Regras de negócio
 
@@ -90,16 +93,49 @@ Config padrão (chaves em `config/app`): `valorEnsaio=0.50`, `valorApresentacao=
 - **IDs de brincante:** `EXP` + temporada + sequência (contador transacional em
   `counters/brincantes`). Ex.: `EXP202601`.
 - **Tipos de ensaio:** `regular`, `ensaiao`, `apresentacao`, `festival`, `igreja`.
+  (Na UI, "ensaio" está sendo generalizado para **evento** — a coleção no banco
+  segue chamando `ensaios`.)
+- **Tipos de atividade** (Cláusula Segunda, "l"): `arrecadacao`, `bracal`,
+  `comunitario`, `outra`. Têm presença registrada, mas **não geram bonificação**
+  nem entram na **frequência/nota de ensaios** (só ensaios/apresentações contam).
+- **Advertências/sanções** (Cláusula Sétima): `verbal` (só registra), `formal`
+  (−50%), `desligamento` (−100%), `extrema` (−100%). Vale o pior nível; o desconto
+  incide sobre o **total acumulado** da bonificação.
+- **Status do evento:** `planejado` (criado), `realizado` (chamada feita) ou
+  `cancelado` (não aconteceu). Evento `cancelado` **não conta** para frequência,
+  ranking nem bonificação. Eventos antigos sem o campo `Status` valem como
+  `planejado` (contam normalmente).
 - **Bonificação** (só conta se `OptBonificacao = sim` **e** `StatusAtivacao = ativado`):
   - festival → `valorFestival` (5,00)
   - apresentacao → `valorApresentacao` (1,00)
   - demais ensaios → `valorEnsaio` (0,50)
   - **igreja → não gera bonificação**
+  - se o evento tiver `ValorBonificacao` preenchido, ele **substitui** o valor do
+    tipo naquele dia.
+  - **só conta dentro do período de contagem** (`inicioContagem`..`fimContagem`):
+    conforme o contrato (Cláusula Sexta, IV), fev–abr é só ativação e a
+    bonificação passa a valer de maio até o Festival.
 - **Ativação** (metas para o brincante ativar a bonificação): presença ≥ 75% e
   nota ≥ 4 em pelo menos 75% dos ensaios, dentro do período de ativação
-  (`mesesAtivacao` = 3). Há também uma **Qualificação Extra** manual
-  (aprovado/reprovado) avaliada pela coordenação.
+  (`mesesAtivacao` = 3, **proporcional à data de adesão**: janela = adesão +
+  3 meses). Calculada automaticamente (`avaliarAtivacao`): `em_ativacao`,
+  `ativado`, `nao_ativado`, `nao_elegivel`. `StatusAtivacao` é override manual
+  (`auto`/`ativado`/`nao_elegivel`). Há também uma **Qualificação Extra** manual
+  (aprovado/reprovado).
+- **Situação do membro** (`StatusMembro`): `ativo`, `afastado` (temporário) ou
+  `desligado`. Desligamento por `concorrente`, `pre_festival` ou `quadrilha` zera
+  a bonificação (−100%); `voluntario` mantém o proporcional. Penalidade efetiva =
+  pior entre advertências e desligamento.
+- **Falta justificada:** ao registrar falta, marca-se se foi justificada (avisada
+  com 24h de antecedência) — campo `Justificada` na avaliação.
 - **Adesão à bonificação:** só permitida até `fimAdesao`.
+- **Chamada e avaliação:** a presença de cada brincante tem 3 estados — *não
+  marcado* (sem registro em `avaliacoes`), *presente* (`Presente=sim`) ou *falta*
+  (`Presente=nao`, com a justificativa gravada em `Observacao`). Para presentes,
+  `Observacao` guarda a obs de desempenho e `Nota` a nota (1–5). A chamada é
+  salva **por brincante** (`upsertAvaliacao`, autosave) e **fazer a chamada
+  confirma o evento** (muda `Status` de `planejado` para `realizado`). A ideia é
+  a presença ser marcada no dia; a nota pode entrar depois.
 
 ## 7. Autenticação e usuário DEV
 
@@ -108,6 +144,11 @@ Config padrão (chaves em `config/app`): `valorEnsaio=0.50`, `valorApresentacao=
 - **Usuário DEV** (acesso admin sem dados pessoais reais): `ID = DEV`,
   senha = `123456`. Criado por `scripts/seed-dev.js`. Serve para administrar e
   cadastrar as pessoas reais; pode ser removido quando houver um admin real.
+- **Sessão:** após o login, a sessão é guardada no `localStorage` do navegador e
+  restaurada ao recarregar a página. **Expira após 1 hora sem atividade**
+  (mouse/teclado/toque/scroll); um vigia no cliente faz logout automático quando
+  o tempo estoura. (Ainda é sessão só do lado do cliente — a evolução para token
+  assinado no servidor continua valendo.)
 - Observação de segurança: as funções de escrita ainda recebem o objeto `usuario`
   vindo do cliente (herdado do Apps Script). A verificação de login é no servidor,
   então CPFs não vazam ao navegador. Evolução futura: emitir token de sessão

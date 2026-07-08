@@ -49,7 +49,7 @@ svg.lucide { width:18px; height:18px; stroke-width:2; vertical-align:middle; fle
 .btn svg.lucide { width:16px; height:16px; }
 .nav-btn svg.lucide { width:16px; height:16px; }
 .stat-ic svg.lucide { width:20px; height:20px; }
-.av-presenca svg.lucide { width:18px; height:18px; }
+.av-pgroup svg.lucide { width:18px; height:18px; }
 .ic-ok { color:var(--success); display:inline-flex; }
 .ic-no { color:var(--danger); display:inline-flex; }
 .ic-wait { color:var(--text-sec); display:inline-flex; }
@@ -162,20 +162,42 @@ tr:hover td { background:rgba(255,255,255,.03); }
 .form-select { appearance:auto; }
 .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
-/* AVALIAÇÃO GRID */
+/* CHAMADA / AVALIAÇÃO */
 .av-grid { display:flex; flex-direction:column; gap:8px; }
-.av-row { display:grid; grid-template-columns:44px 1fr 96px 130px; gap:8px; align-items:center; padding:10px 12px; background:var(--card); border:1px solid var(--border); border-radius:10px; }
-.av-row.ausente { opacity:.45; filter:grayscale(.5); }
-.av-presenca { width:34px; height:34px; border:2px solid var(--border); border-radius:9px; cursor:pointer; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--text-sec); }
-.av-presenca.presente { background:var(--success); color:#fff; border-color:var(--success); }
-.av-presenca.falta { background:var(--danger); color:#fff; border-color:var(--danger); }
-.av-name { font-size:14px; font-weight:600; }
+.av-row { display:flex; align-items:center; gap:12px; padding:10px 12px; background:var(--card); border:1px solid var(--border); border-radius:10px; flex-wrap:wrap; }
+.av-row.estado-none { opacity:.72; }
+.av-row.estado-pres { border-color:rgba(47,179,96,.35); }
+.av-row.estado-falta { background:rgba(231,76,60,.06); border-color:rgba(231,76,60,.3); }
+.av-pgroup { display:flex; gap:4px; flex-shrink:0; }
+.av-pgroup button { width:38px; height:34px; border:1px solid var(--border); border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--text-sec); }
+.av-pgroup button:hover { border-color:var(--dourado); }
+.av-pgroup .on-pres { background:var(--success); color:#fff; border-color:var(--success); }
+.av-pgroup .on-falta { background:var(--danger); color:#fff; border-color:var(--danger); }
+.av-name { font-size:14px; font-weight:600; flex:1; min-width:120px; }
 .av-name small { display:block; font-size:11px; color:var(--text-sec); font-weight:400; }
+.av-dyn { display:flex; align-items:center; gap:8px; margin-left:auto; flex-wrap:wrap; justify-content:flex-end; }
 .av-nota { display:flex; gap:3px; }
 .av-nota button { width:28px; height:28px; border:1px solid var(--border); border-radius:7px; background:var(--bg); color:var(--text-sec); font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; }
 .av-nota button.selected { background:var(--dourado); color:#3a2500; border-color:var(--dourado); box-shadow:0 0 8px rgba(242,177,52,.3); }
 .av-nota button:hover { border-color:var(--dourado); transform:scale(1.1); }
-.av-obs input { width:100%; padding:6px 8px; background:var(--bg); border:1px solid var(--border); border-radius:7px; color:var(--text); font-size:12px; font-family:inherit; outline:none; }
+.av-dyn input { padding:6px 9px; background:var(--bg); border:1px solid var(--border); border-radius:7px; color:var(--text); font-size:12px; font-family:inherit; outline:none; min-width:160px; }
+.av-dyn input.justif { border-color:rgba(231,76,60,.45); }
+.av-just { font-size:11px; color:var(--text-sec); display:inline-flex; align-items:center; gap:4px; white-space:nowrap; cursor:pointer; }
+.av-just input { width:auto; min-width:0; margin:0; cursor:pointer; }
+.av-hint { font-size:12px; color:var(--text-sec); font-style:italic; }
+.av-saved { font-size:11px; color:var(--success); opacity:0; display:inline-flex; align-items:center; gap:3px; }
+.av-saved.show { opacity:1; }
+.av-saved svg.lucide { width:13px; height:13px; }
+/* Cabeçalho do evento na chamada */
+.av-ev-head { background:linear-gradient(180deg,var(--card),#191b3d); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; margin-bottom:16px; }
+.av-ev-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.av-ev-title { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:800; color:var(--dourado); text-transform:uppercase; letter-spacing:.5px; display:flex; align-items:center; gap:8px; }
+.av-ev-meta { font-size:13px; color:var(--text-sec); margin-top:3px; }
+.av-ev-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.av-progress { display:flex; gap:20px; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); font-size:12px; color:var(--text-sec); }
+.av-progress b { font-family:'Barlow Condensed',sans-serif; font-size:20px; color:var(--text); margin-left:4px; }
+.av-progress .pres b { color:var(--success); }
+.av-progress .falta b { color:var(--danger); }
 
 /* RANKING */
 .rank-row { display:flex; align-items:center; gap:12px; padding:12px 14px; background:linear-gradient(180deg,var(--card),#191b3d); border:1px solid var(--border); border-radius:11px; margin-bottom:8px; }
@@ -199,6 +221,47 @@ tr:hover td { background:rgba(255,255,255,.03); }
 .badge-ativado { background:rgba(47,179,96,.18); color:#7fe0a6; border:1px solid rgba(47,179,96,.4); }
 .badge-pendente { background:rgba(232,128,43,.18); color:#f4b183; border:1px solid rgba(232,128,43,.4); }
 .badge-nao { background:var(--border); color:var(--text-sec); }
+
+/* AGENDA / CALENDÁRIO */
+.agenda-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+.view-toggle { display:inline-flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; margin-left:auto; }
+.view-toggle button { padding:8px 12px; background:var(--bg); color:var(--text-sec); border:none; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:6px; }
+.view-toggle button.active { background:var(--dourado); color:#3a2500; }
+.cal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.cal-title { font-family:'Barlow Condensed',sans-serif; font-size:23px; font-weight:800; color:var(--dourado); text-transform:capitalize; letter-spacing:.5px; }
+.cal-nav { display:flex; gap:6px; }
+.cal-nav button { width:34px; height:34px; border:1px solid var(--border); border-radius:9px; background:var(--bg); color:var(--text-sec); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+.cal-nav button:hover { border-color:var(--dourado); color:var(--dourado); }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+.cal-dow { text-align:center; font-size:11px; font-weight:700; color:var(--text-sec); text-transform:uppercase; padding:2px 0 6px; letter-spacing:.5px; }
+.cal-cell { min-height:84px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:5px; cursor:pointer; display:flex; flex-direction:column; gap:3px; overflow:hidden; }
+.cal-cell:hover { border-color:var(--dourado); background:var(--card-hover); }
+.cal-cell.empty { background:transparent; border:none; cursor:default; }
+.cal-cell.today { border-color:var(--dourado); box-shadow:inset 0 0 0 1px var(--dourado); }
+.cal-daynum { font-size:12px; font-weight:700; color:var(--text-sec); }
+.cal-cell.today .cal-daynum { color:var(--dourado); }
+.cal-chip { font-size:10px; font-weight:700; padding:2px 5px; border-radius:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4; }
+.cal-chip:hover { filter:brightness(1.12); }
+.cal-chip.cancelado { opacity:.5; text-decoration:line-through; }
+.chip-ensaio { background:var(--bg3); color:#cfe0f5; }
+.chip-apres { background:rgba(47,179,96,.22); color:#7fe0a6; }
+.chip-festival { background:var(--dourado); color:#3a2500; }
+.chip-igreja { background:rgba(232,128,43,.22); color:#f4b183; }
+.chip-atividade { background:rgba(146,120,220,.22); color:#c9b8f5; }
+@media (max-width:640px){ .cal-cell { min-height:62px; } .cal-chip { font-size:9px; padding:1px 3px; } .cal-grid { gap:3px; } .cal-title { font-size:20px; } }
+.cal-cell-head { display:flex; align-items:center; justify-content:space-between; gap:4px; }
+.cal-today-chip { font-size:9px; font-weight:800; text-transform:uppercase; background:var(--dourado); color:#3a2500; padding:1px 5px; border-radius:20px; letter-spacing:.3px; line-height:1.5; }
+.cal-cell.selectable { user-select:none; }
+.cal-cell.selectable .cal-chip { pointer-events:none; }
+.cal-cell.sel { border-color:var(--dourado); background:rgba(242,177,52,.16); box-shadow:inset 0 0 0 1px var(--dourado); }
+.btn.sel-on { background:var(--dourado); color:#3a2500; border-color:var(--dourado); }
+.sel-bar { position:fixed; left:50%; transform:translateX(-50%); bottom:22px; z-index:200; background:var(--card); border:1px solid var(--dourado); border-radius:12px; padding:10px 14px; display:flex; align-items:center; gap:12px; box-shadow:0 12px 30px rgba(0,0,0,.5); flex-wrap:wrap; justify-content:center; }
+.sel-bar span { font-size:13px; font-weight:700; color:var(--text); }
+.batch-days { display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto; margin:4px 0 16px; }
+.batch-day-row { display:grid; grid-template-columns:1.1fr 1fr .8fr .8fr; gap:6px; align-items:center; }
+.batch-day-row .bd-date { font-size:12px; font-weight:700; color:var(--dourado); }
+.batch-day-row select, .batch-day-row input { padding:6px 7px; font-size:12px; background:var(--bg); border:1px solid var(--border); border-radius:7px; color:var(--text); font-family:inherit; outline:none; }
+@media (max-width:600px){ .batch-day-row { grid-template-columns:1fr 1fr; } }
 
 /* PERFIL */
 .perfil-header { display:flex; align-items:center; gap:16px; margin-bottom:24px; }
@@ -242,9 +305,8 @@ tr:hover td { background:rgba(255,255,255,.03); }
 
 /* RESPONSIVE */
 @media (max-width:600px) {
-  .av-row { grid-template-columns:34px 1fr; gap:6px; }
-  .av-nota { grid-column:1/-1; }
-  .av-obs { grid-column:1/-1; }
+  .av-dyn { margin-left:0; width:100%; justify-content:flex-start; }
+  .av-dyn input { min-width:0; flex:1; }
   .form-row { grid-template-columns:1fr; }
   .stats { grid-template-columns:repeat(2,1fr); }
   .topbar { flex-direction:column; gap:8px; align-items:flex-start; }
@@ -314,23 +376,35 @@ tr:hover td { background:rgba(255,255,255,.03); }
   </div>
 
   <div id="pageEnsaios" class="page">
-    <div class="page-title">Ensaios</div>
-    <div class="page-subtitle">Registro de ensaios e apresentações</div>
-    <button class="btn btn-gold btn-sm" onclick="showAddEnsaio()" style="margin-bottom:16px;"><i data-lucide="plus"></i> Novo Ensaio</button>
-    <div class="table-wrap"><table id="tblEnsaios"><thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Ações</th></tr></thead><tbody></tbody></table></div>
+    <div class="page-title">Agenda</div>
+    <div class="page-subtitle">Ensaios, apresentações e eventos da temporada</div>
+    <div class="agenda-toolbar">
+      <button class="btn btn-gold btn-sm" onclick="showAddEvento()"><i data-lucide="plus"></i> Novo evento</button>
+      <button id="agSelBtn" class="btn btn-outline btn-sm" onclick="toggleSelMode()"><i data-lucide="calendar-range"></i> Selecionar</button>
+      <div class="view-toggle">
+        <button id="agViewCal" class="active" onclick="setAgendaView('cal')"><i data-lucide="calendar-days"></i> Calendário</button>
+        <button id="agViewList" onclick="setAgendaView('lista')"><i data-lucide="list"></i> Lista</button>
+      </div>
+    </div>
+    <div id="agCalendar"></div>
+    <div id="selBar" class="sel-bar" style="display:none"></div>
+    <div id="agLista" style="display:none">
+      <div class="table-wrap"><table id="tblEnsaios"><thead><tr><th>Data</th><th>Horário</th><th>Tipo</th><th>Status</th><th>Descrição</th><th>Ações</th></tr></thead><tbody></tbody></table></div>
+    </div>
   </div>
 
   <div id="pageAvaliacao" class="page">
-    <div class="page-title">Avaliação</div>
-    <div class="page-subtitle">Presença e nota por ensaio</div>
+    <div class="page-title">Chamada e avaliação</div>
+    <div class="page-subtitle">Presença em tempo real e nota por evento</div>
     <div class="form-group">
-      <label>Selecione o ensaio:</label>
+      <label>Selecione o evento:</label>
       <select class="form-select" id="selEnsaioAv" onchange="loadAvaliacao()"></select>
     </div>
+    <div id="avHeader" style="display:none"></div>
     <div id="avLegenda" class="card" style="display:none;font-size:12px;color:var(--text-sec);line-height:1.9;">
-      <strong style="color:var(--dourado)">Como avaliar:</strong><br>
-      <span class="ic-ok"><i data-lucide="check"></i></span> Presente / <span class="ic-no"><i data-lucide="x"></i></span> Falta — clique para alternar &nbsp;|&nbsp;
-      <strong>Nota do ensaio:</strong>
+      <strong style="color:var(--dourado)">Como fazer a chamada:</strong><br>
+      <span class="ic-ok"><i data-lucide="check"></i></span> Presente / <span class="ic-no"><i data-lucide="x"></i></span> Falta — clique de novo para desmarcar. <strong>Tudo salva sozinho.</strong> &nbsp;|&nbsp;
+      <strong>Nota (só p/ presentes):</strong>
       <span style="color:var(--danger)">1</span>=Muito fraco &nbsp;
       <span style="color:var(--warn)">2</span>=Abaixo &nbsp;
       <span style="color:var(--text)">3</span>=Regular &nbsp;
@@ -338,9 +412,6 @@ tr:hover td { background:rgba(255,255,255,.03); }
       <span style="color:var(--success)">5</span>=Destaque
     </div>
     <div id="avGrid" class="av-grid"></div>
-    <div style="margin-top:16px;text-align:right;">
-      <button class="btn btn-primary" onclick="salvarAvaliacao()" id="btnSalvarAv" disabled><i data-lucide="save"></i> Salvar Avaliação</button>
-    </div>
   </div>
 
   <div id="pageRanking" class="page">
@@ -353,6 +424,12 @@ tr:hover td { background:rgba(255,255,255,.03); }
     <div class="page-title">Bonificação</div>
     <div class="page-subtitle">Simulação de pagamento</div>
     <div id="bonifContent"></div>
+  </div>
+
+  <div id="pageConfig" class="page">
+    <div class="page-title">Configurações</div>
+    <div class="page-subtitle">Valores, metas e datas da temporada</div>
+    <div id="configContent"></div>
   </div>
 
   <div id="pageLogs" class="page">
@@ -500,6 +577,7 @@ async function doLogin() {
       document.getElementById('userName').innerHTML = '<strong>' + res.nome + '</strong>';
       buildNav();
       navigateTo(res.role === 'admin' ? 'Dashboard' : 'Perfil');
+      saveSession();
     } else {
       errEl.textContent = res.message;
       errEl.style.display = 'block';
@@ -515,6 +593,7 @@ document.getElementById('loginCpf').addEventListener('keypress', e => { if (e.ke
 document.getElementById('loginId').addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('loginCpf').focus(); });
 
 function doLogout() {
+  clearSession();
   currentUser = null;
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
@@ -523,14 +602,68 @@ function doLogout() {
 }
 
 // ============================================================
+// SESSÃO — persistência + expiração por inatividade (1h)
+// ============================================================
+const SESSION_KEY = 'explosao_sessao';
+const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 hora sem atividade
+let _sessionTimer = null;
+
+function throttle(fn, wait) {
+  let last = 0;
+  return function() { const now = Date.now(); if (now - last >= wait) { last = now; fn.apply(this, arguments); } };
+}
+function saveSession() {
+  if (!currentUser) return;
+  try { localStorage.setItem(SESSION_KEY, JSON.stringify({ user: currentUser, last: Date.now() })); } catch(e) {}
+}
+function touchSession() {
+  if (!currentUser) return;
+  try {
+    const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null') || { user: currentUser };
+    s.last = Date.now();
+    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+  } catch(e) {}
+}
+function clearSession() { try { localStorage.removeItem(SESSION_KEY); } catch(e) {} }
+function expireSession() {
+  doLogout();
+  toast('Sessão expirada por inatividade. Entre novamente.', true);
+}
+function restoreSession() {
+  let s;
+  try { s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e) { s = null; }
+  if (!s || !s.user || !s.last) return false;
+  if (Date.now() - s.last > SESSION_TIMEOUT) { clearSession(); return false; }
+  currentUser = s.user;
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('userName').innerHTML = '<strong>' + currentUser.nome + '</strong>';
+  buildNav();
+  navigateTo(currentUser.role === 'admin' ? 'Dashboard' : 'Perfil');
+  touchSession();
+  return true;
+}
+function startSessionWatch() {
+  const bump = throttle(touchSession, 20000); // registra atividade no máx a cada 20s
+  ['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(ev =>
+    window.addEventListener(ev, bump, { passive: true }));
+  if (_sessionTimer) clearInterval(_sessionTimer);
+  _sessionTimer = setInterval(() => {
+    if (!currentUser) return;
+    let s; try { s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e) { s = null; }
+    if (!s || Date.now() - s.last > SESSION_TIMEOUT) expireSession();
+  }, 30000);
+}
+
+// ============================================================
 // NAVIGATION
 // ============================================================
-const adminPages = ['Dashboard','Cadastro','Ensaios','Avaliação','Ranking','Bonificação','Logs'];
+const adminPages = ['Dashboard','Cadastro','Agenda','Avaliação','Ranking','Bonificação','Configurações','Logs'];
 const brincPages = ['Perfil','Ranking'];
 const pageIcons = {
-  'Dashboard':'layout-dashboard', 'Cadastro':'users', 'Ensaios':'calendar-days',
+  'Dashboard':'layout-dashboard', 'Cadastro':'users', 'Agenda':'calendar-days',
   'Avaliação':'clipboard-check', 'Ranking':'trophy', 'Bonificação':'hand-coins',
-  'Logs':'scroll-text', 'Perfil':'user-round'
+  'Configurações':'settings', 'Logs':'scroll-text', 'Perfil':'user-round'
 };
 
 function buildNav() {
@@ -543,15 +676,16 @@ function buildNav() {
 }
 
 function navigateTo(page) {
+  if (page !== 'Agenda') exitSelMode();
   document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); });
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const btn = document.querySelector('.nav-btn[data-page="'+page+'"]');
   if (btn) btn.classList.add('active');
 
   const pageMap = {
-    'Dashboard':'pageDashboard','Cadastro':'pageCadastro','Ensaios':'pageEnsaios',
+    'Dashboard':'pageDashboard','Cadastro':'pageCadastro','Agenda':'pageEnsaios',
     'Avaliação':'pageAvaliacao','Ranking':'pageRanking','Bonificação':'pageBonificacao',
-    'Logs':'pageLogs','Perfil':'pagePerfil'
+    'Configurações':'pageConfig','Logs':'pageLogs','Perfil':'pagePerfil'
   };
 
   // Small delay for transition smoothness
@@ -563,10 +697,11 @@ function navigateTo(page) {
 
   if (page === 'Dashboard') loadDashboard();
   if (page === 'Cadastro') { srv('getStatusAdesao').then(r => { _foraDoPeriodo = !r.dentroDoPeríodo; }); loadBrincantes(); }
-  if (page === 'Ensaios') loadEnsaios();
+  if (page === 'Agenda') loadAgenda();
   if (page === 'Avaliação') loadEnsaioSelect();
   if (page === 'Ranking') loadRanking();
   if (page === 'Bonificação') loadBonificacao();
+  if (page === 'Configurações') loadConfig();
   if (page === 'Logs') loadLogs();
   if (page === 'Perfil') loadPerfil();
 }
@@ -583,7 +718,7 @@ function statCard(value, label, icon) {
 function renderDashboard(d) {
   document.getElementById('dashStats').innerHTML =
     statCard(d.totalBrincantes, 'Brincantes', 'users') +
-    statCard(d.totalEnsaios, 'Ensaios', 'calendar-days') +
+    statCard(d.totalEnsaios, 'Eventos', 'calendar-days') +
     statCard(d.mediaPresenca+'%', 'Presença média', 'calendar-check') +
     statCard(d.mediaNotas, 'Nota média', 'star') +
     statCard(d.optBonificacao, 'Opt-in bonificação', 'hand-coins') +
@@ -609,8 +744,9 @@ function renderBrincantes(list) {
     '<td><strong>'+b.Nome+'</strong>'+(b.Apelido?' <span style="color:var(--text-sec)">('+b.Apelido+')</span>':'')+'</td>'+
     '<td>'+(b.Fila||'-')+'</td>'+
     '<td><span class="badge '+(b.Tipo==='item'?'badge-item':b.Tipo==='coordenacao'?'badge-ativado':'badge-brincante')+'">'+b.Tipo+'</span></td>'+
-    '<td>'+(b.OptBonificacao==='sim'?'<span class="badge '+(b.StatusAtivacao==='ativado'?'badge-ativado':'badge-pendente')+'">'+b.StatusAtivacao+'</span>'+(b.StatusAtivacao==='pendente'&&b.DataAdesao?'<div style="font-size:10px;color:var(--text-sec);margin-top:2px">'+calcProgresso(b.DataAdesao)+'</div>':''):'<span class="badge badge-nao">não</span>')+'</td>'+
+    '<td>'+(b.OptBonificacao==='sim'?'<span class="badge badge-brincante">bonif.</span>':'<span class="badge badge-nao">não</span>')+(b.StatusMembro==='desligado'?' <span class="badge badge-nao">desligado</span>':b.StatusMembro==='afastado'?' <span class="badge badge-pendente">afastado</span>':'')+'</td>'+
     '<td style="white-space:nowrap"><button class="btn btn-outline btn-sm" onclick="showEditBrincante(\''+b.ID+'\')"><i data-lucide="pencil"></i> Editar</button> '+
+    '<button class="btn btn-icon btn-sm" title="Advertências" onclick="showAdvertencias(\''+b.ID+'\')"><i data-lucide="shield-alert"></i></button> '+
     '<button class="btn btn-icon btn-sm btn-ghost-danger" title="Remover" onclick="deleteBrincante(\''+b.ID+'\',\''+b.Nome+'\')"><i data-lucide="trash-2"></i></button></td></tr>'
   ).join('');
   icons();
@@ -634,6 +770,8 @@ function showAddBrincante() {
     '<div class="form-group"><label>Posição</label><input class="form-input" id="fPosicao" placeholder="Ex: 1, 2, 3..."></div></div>'+
     '<div class="form-row"><div class="form-group"><label>Tipo</label><select class="form-select" id="fTipo"><option value="brincante">Brincante</option><option value="item">Item</option><option value="coordenacao">Coordenação</option></select></div>'+
     '<div class="form-group"><label>Programa de Bonificação</label><select class="form-select" id="fOpt" '+(_foraDoPeriodo?'disabled':'')+'>'+(_foraDoPeriodo?'<option value="nao">Encerrado para esta temporada</option>':'<option value="nao">Não</option><option value="sim">Sim</option>')+'</select></div></div>'+
+    '<div class="form-row"><div class="form-group"><label>Data de assinatura</label><input type="date" class="form-input" id="fDataAssin" value="'+isoLocal(new Date())+'"></div>'+
+    '<div class="form-group"><label>Data de adesão à bonificação</label><input type="date" class="form-input" id="fDataAdesao" value="'+isoLocal(new Date())+'"><div class="input-hint">Início do período de ativação (3 meses).</div></div></div>'+
     '<button class="btn btn-primary btn-block" onclick="saveNewBrincante(this)">Cadastrar</button>'
   );
 }
@@ -646,7 +784,9 @@ async function saveNewBrincante(btn) {
     fila: document.getElementById('fFila').value,
     posicao: document.getElementById('fPosicao').value,
     tipo: document.getElementById('fTipo').value,
-    optBonificacao: document.getElementById('fOpt').value
+    optBonificacao: document.getElementById('fOpt').value,
+    dataAssinatura: document.getElementById('fDataAssin').value,
+    dataAdesao: document.getElementById('fDataAdesao').value
   };
   if (!dados.nome) return toast('Preencha o nome', true);
   btnLoading(btn, true);
@@ -666,176 +806,678 @@ function showEditBrincante(id) {
     '<div class="form-group"><label>Posição</label><input class="form-input" id="ePosicao" value="'+(b.Posicao||'')+'"></div></div>'+
     '<div class="form-row"><div class="form-group"><label>Tipo</label><select class="form-select" id="eTipo"><option value="brincante" '+(b.Tipo==='brincante'?'selected':'')+'>Brincante</option><option value="item" '+(b.Tipo==='item'?'selected':'')+'>Item</option><option value="coordenacao" '+(b.Tipo==='coordenacao'?'selected':'')+'>Coordenação</option></select></div>'+
     '<div class="form-group"><label>Bonificação</label><select class="form-select" id="eOpt"><option value="nao" '+(b.OptBonificacao==='nao'?'selected':'')+'>Não</option><option value="sim" '+(b.OptBonificacao==='sim'?'selected':'')+'>Sim</option></select></div></div>'+
-    '<div class="form-group"><label>Status Ativação</label><select class="form-select" id="eStatus"><option value="pendente" '+(b.StatusAtivacao==='pendente'?'selected':'')+'>Pendente</option><option value="ativado" '+(b.StatusAtivacao==='ativado'?'selected':'')+'>Ativado</option><option value="nao_ativado" '+(b.StatusAtivacao==='nao_ativado'?'selected':'')+'>Não ativado</option></select></div>'+
+    '<div class="form-row"><div class="form-group"><label>Data de assinatura</label><input type="date" class="form-input" id="eDataAssin" value="'+(b.DataAssinatura||'')+'"></div>'+
+    '<div class="form-group"><label>Data de adesão</label><input type="date" class="form-input" id="eDataAdesao" value="'+(b.DataAdesao||'')+'"></div></div>'+
+    '<div class="form-group"><label>Ativação</label><select class="form-select" id="eStatus">'+
+      '<option value="auto" '+((!b.StatusAtivacao||b.StatusAtivacao==='auto'||b.StatusAtivacao==='pendente'||b.StatusAtivacao==='nao_ativado')?'selected':'')+'>Automática (calcula pelos 3 meses + metas)</option>'+
+      '<option value="ativado" '+(b.StatusAtivacao==='ativado'?'selected':'')+'>Forçar ativado</option>'+
+      '<option value="nao_elegivel" '+(b.StatusAtivacao==='nao_elegivel'?'selected':'')+'>Forçar não elegível</option>'+
+    '</select></div>'+
     '<div class="form-group"><label>Qualificação Extra (requisitos manuais)</label><select class="form-select" id="eQualif"><option value="" '+((!b.QualificacaoExtra||b.QualificacaoExtra==='')?'selected':'')+'>Não avaliado</option><option value="aprovado" '+(b.QualificacaoExtra==='aprovado'?'selected':'')+'>Aprovado</option><option value="reprovado" '+(b.QualificacaoExtra==='reprovado'?'selected':'')+'>Reprovado</option></select></div>'+
+    '<div class="card" style="padding:14px"><div class="card-title" style="font-size:14px"><i data-lucide="user-cog"></i> Situação do membro</div>'+
+      '<div class="form-group"><label>Status</label><select class="form-select" id="eMembro" onchange="toggleDeslig(this.value)">'+
+        '<option value="ativo" '+((!b.StatusMembro||b.StatusMembro==='ativo')?'selected':'')+'>Ativo</option>'+
+        '<option value="afastado" '+(b.StatusMembro==='afastado'?'selected':'')+'>Afastado (temporário)</option>'+
+        '<option value="desligado" '+(b.StatusMembro==='desligado'?'selected':'')+'>Desligado</option>'+
+      '</select></div>'+
+      '<div id="eDesligBox" style="display:'+(b.StatusMembro==='desligado'?'block':'none')+'">'+
+        '<div class="form-group"><label>Motivo do desligamento</label><select class="form-select" id="eMotivo">'+
+          '<option value="voluntario" '+(b.MotivoDesligamento==='voluntario'?'selected':'')+'>Voluntário (mantém bonificação proporcional)</option>'+
+          '<option value="concorrente" '+(b.MotivoDesligamento==='concorrente'?'selected':'')+'>Foi para quadrilha concorrente (perde tudo)</option>'+
+          '<option value="quadrilha" '+(b.MotivoDesligamento==='quadrilha'?'selected':'')+'>Desligado pela quadrilha / sanção (perde tudo)</option>'+
+          '<option value="pre_festival" '+(b.MotivoDesligamento==='pre_festival'?'selected':'')+'>Saiu nos 15 dias pré-Festival (perde tudo)</option>'+
+          '<option value="outro" '+(b.MotivoDesligamento==='outro'?'selected':'')+'>Outro</option>'+
+        '</select></div>'+
+        '<div class="form-group"><label>Data do desligamento</label><input type="date" class="form-input" id="eDataDeslig" value="'+(b.DataDesligamento||isoLocal(new Date()))+'"></div>'+
+      '</div>'+
+    '</div>'+
     '<button class="btn btn-primary btn-block" onclick="saveEditBrincante(\''+id+'\',this)">Salvar</button>'
   );
 }
+function toggleDeslig(v) {
+  const box = document.getElementById('eDesligBox');
+  if (box) box.style.display = v === 'desligado' ? 'block' : 'none';
+}
 
 async function saveEditBrincante(id, btn) {
+  const membro = document.getElementById('eMembro').value;
   const dados = {
     nome:document.getElementById('eNome').value, apelido:document.getElementById('eApelido').value,
     cpf:document.getElementById('eCpf').value, fila:document.getElementById('eFila').value,
     posicao:document.getElementById('ePosicao').value, tipo:document.getElementById('eTipo').value,
     optBonificacao:document.getElementById('eOpt').value, statusAtivacao:document.getElementById('eStatus').value,
-    qualificacaoExtra:document.getElementById('eQualif').value
+    qualificacaoExtra:document.getElementById('eQualif').value,
+    dataAssinatura:document.getElementById('eDataAssin').value, dataAdesao:document.getElementById('eDataAdesao').value,
+    statusMembro:membro,
+    motivoDesligamento: membro==='desligado' ? document.getElementById('eMotivo').value : '',
+    dataDesligamento: membro==='desligado' ? document.getElementById('eDataDeslig').value : ''
   };
   btnLoading(btn, true);
   await srv('updateBrincante', id, dados, currentUser);
+  _cache.bonificacao=null; _cache.ranking=null; _cache.perfil=null; _cache.dashboard=null;
   toast('Brincante atualizado!'); closeModal(); loadBrincantes();
 }
 
 async function deleteBrincante(id, nome) {
-  if (!confirm('Remover '+nome+'?')) return;
+  if (!await confirmDialog({ title:'Remover brincante', message:'Remover <strong>'+nome+'</strong>? As avaliações dele também serão apagadas.', okLabel:'Remover', danger:true })) return;
   if (_cache.brincantes) { _cache.brincantes = _cache.brincantes.filter(b => b.ID !== id); brincantesCache = _cache.brincantes; renderBrincantes(brincantesCache); }
   try { await srv('removeBrincante', id, currentUser); toast('Brincante removido'); } catch(e) { toast('Erro ao remover', true); }
   loadBrincantes();
 }
 
 // ============================================================
-// ENSAIOS
+// ADVERTÊNCIAS / SANÇÕES (Cláusula Sétima)
 // ============================================================
+const NIVEL_ADV_PCT = { verbal:0, formal:50, desligamento:100, extrema:100 };
+const NIVEL_ADV_LABEL = { verbal:'Advertência verbal', formal:'Advertência formal', desligamento:'Desligamento', extrema:'Gravidade extrema' };
+function nivelBadge(nivel) {
+  const cor = nivel==='verbal'?'var(--warn)':nivel==='formal'?'var(--laranja)':'var(--danger)';
+  return '<span class="badge" style="background:'+cor+';color:#fff">'+(NIVEL_ADV_LABEL[nivel]||nivel)+'</span>';
+}
+function showAdvertencias(id) {
+  const b = (brincantesCache||[]).find(x => x.ID===id) || { ID:id, Nome:id };
+  showModal('Advertências — '+(b.Apelido||b.Nome), 'shield-alert',
+    '<div id="advBody" style="min-height:50px">'+skelList(2)+'</div>'+
+    '<div class="card" style="margin-top:6px"><div class="card-title" style="font-size:14px"><i data-lucide="plus"></i> Registrar advertência</div>'+
+      '<div class="form-group"><label>Nível</label><select class="form-select" id="fAdvNivel">'+
+        '<option value="verbal">Verbal (1ª — só registro)</option>'+
+        '<option value="formal">Formal (2ª — −50% da bonificação)</option>'+
+        '<option value="desligamento">Desligamento (3ª — −100%)</option>'+
+        '<option value="extrema">Gravidade extrema (−100% + desligamento imediato)</option>'+
+      '</select></div>'+
+      '<div class="form-group"><label>Data</label><input type="date" class="form-input" id="fAdvData" value="'+isoLocal(new Date())+'"></div>'+
+      '<div class="form-group"><label>Motivo / descrição</label><input class="form-input" id="fAdvMotivo" placeholder="Ex.: compareceu sob efeito de álcool"></div>'+
+      '<button class="btn btn-primary btn-block" onclick="saveAdvertencia(this,\''+id+'\')">Registrar</button>'+
+    '</div>');
+  loadAdvertencias(id);
+}
+async function loadAdvertencias(id) {
+  const body = document.getElementById('advBody');
+  if (!body) return;
+  try {
+    const advs = await srv('getAdvertencias', id) || [];
+    if (!advs.length) { body.innerHTML = '<p style="color:var(--text-sec);font-size:13px;padding:4px 0 8px">Nenhuma advertência registrada.</p>'; return; }
+    const pct = advs.reduce((m,a) => Math.max(m, NIVEL_ADV_PCT[a.Nivel]||0), 0);
+    body.innerHTML =
+      (pct>0?'<div class="alert '+(pct>=100?'alert-danger':'alert-warn')+'" style="margin-bottom:12px"><i data-lucide="alert-triangle"></i><div>Sanção ativa: <strong>−'+pct+'%</strong> da bonificação acumulada.</div></div>':'')+
+      advs.map(a =>
+        '<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'+
+          '<div style="flex:1">'+nivelBadge(a.Nivel)+' <span style="font-size:12px;color:var(--text-sec)">'+formatDate(a.Data)+'</span>'+
+          (a.Motivo?'<div style="font-size:13px;margin-top:4px">'+a.Motivo+'</div>':'')+
+          '<div style="font-size:11px;color:var(--text-sec);margin-top:2px">por '+a.RegistradoPor+'</div></div>'+
+          '<button class="btn btn-icon btn-sm btn-ghost-danger" title="Remover" onclick="delAdvertencia(\''+a.id+'\',\''+id+'\')"><i data-lucide="trash-2"></i></button>'+
+        '</div>').join('');
+    icons();
+  } catch(e) { body.innerHTML = '<p style="color:var(--danger);font-size:13px">Erro ao carregar.</p>'; }
+}
+async function saveAdvertencia(btn, id) {
+  const dados = { brincanteId:id, nivel:document.getElementById('fAdvNivel').value, data:document.getElementById('fAdvData').value, motivo:document.getElementById('fAdvMotivo').value };
+  if (!dados.motivo.trim()) return toast('Descreva o motivo', true);
+  btnLoading(btn, true);
+  try {
+    await srv('addAdvertencia', dados, currentUser);
+    document.getElementById('fAdvMotivo').value = '';
+    _cache.bonificacao=null; _cache.perfil=null; _cache.dashboard=null;
+    toast('Advertência registrada');
+    loadAdvertencias(id);
+  } catch(e) { toast('Erro ao registrar', true); }
+  btnLoading(btn, false);
+}
+async function delAdvertencia(advId, brincId) {
+  if (!await confirmDialog({ title:'Remover advertência', message:'Remover esta advertência? A sanção correspondente deixa de valer.', okLabel:'Remover', danger:true })) return;
+  try {
+    await srv('removeAdvertencia', advId, currentUser);
+    _cache.bonificacao=null; _cache.perfil=null; _cache.dashboard=null;
+    toast('Advertência removida');
+    showAdvertencias(brincId);
+  } catch(e) { toast('Erro ao remover', true); }
+}
+
+// ============================================================
+// AGENDA / EVENTOS
+// ============================================================
+let _agendaView = 'cal';
+let _agendaRef = new Date(); // mês exibido (usa o dia 1)
+// Seleção múltipla de dias
+let _selMode = false, _selDays = new Set(), _calDays = [], _batchDates = [];
+let _selDragging = false, _selAnchor = null, _selSnapshot = null, _selMoved = false;
+
+const TIPO_LABEL = { regular:'Ensaio regular', ensaiao:'Ensaião', apresentacao:'Apresentação', festival:'Festival', igreja:'Igreja', arrecadacao:'Arrecadação', bracal:'Trabalho braçal', comunitario:'Trabalho comunitário', outra:'Outra atividade' };
+const TIPO_OPTIONS =
+  '<optgroup label="Ensaios e apresentações">'+
+    '<option value="regular">Ensaio regular</option><option value="ensaiao">Ensaião</option>'+
+    '<option value="apresentacao">Apresentação oficial</option><option value="festival">Festival Folclórico</option>'+
+    '<option value="igreja">Apresentação Igreja (sem bonif.)</option>'+
+  '</optgroup>'+
+  '<optgroup label="Atividades do compromisso (sem bonif.)">'+
+    '<option value="arrecadacao">Arrecadação (rifa, bingo, venda...)</option>'+
+    '<option value="bracal">Trabalho braçal (montagem, transporte...)</option>'+
+    '<option value="comunitario">Trabalho comunitário</option>'+
+    '<option value="outra">Outra atividade</option>'+
+  '</optgroup>';
+const TIPOS_ATIVIDADE = ['arrecadacao','bracal','comunitario','outra'];
+function tipoChip(t) { return t==='festival'?'chip-festival':t==='apresentacao'?'chip-apres':t==='igreja'?'chip-igreja':TIPOS_ATIVIDADE.indexOf(t)>=0?'chip-atividade':'chip-ensaio'; }
+function statusBadge(s) { return s==='cancelado'?'<span class="badge badge-nao">cancelado</span>':s==='realizado'?'<span class="badge badge-ativado">realizado</span>':'<span class="badge badge-pendente">planejado</span>'; }
+function isoLocal(dt) { return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
+
+async function loadAgenda() {
+  if (_cache.ensaios) { ensaiosCache = _cache.ensaios; }
+  renderAgenda();
+  try { const r = await srv('getEnsaios') || []; _cache.ensaios = r; ensaiosCache = r; renderAgenda(); }
+  catch(e) { if (!_cache.ensaios) { ensaiosCache = []; renderAgenda(); } }
+}
+
+function setAgendaView(v) { _agendaView = v; if (v==='lista') exitSelMode(); renderAgenda(); updateSelBar(); }
+function agendaMonth(delta) { _agendaRef = new Date(_agendaRef.getFullYear(), _agendaRef.getMonth()+delta, 1); renderAgenda(); }
+function agendaToday() { _agendaRef = new Date(); renderAgenda(); }
+
+function renderAgenda() {
+  document.getElementById('agViewCal').classList.toggle('active', _agendaView==='cal');
+  document.getElementById('agViewList').classList.toggle('active', _agendaView==='lista');
+  document.getElementById('agCalendar').style.display = _agendaView==='cal'?'block':'none';
+  document.getElementById('agLista').style.display = _agendaView==='lista'?'block':'none';
+  if (_agendaView==='cal') renderCalendar(); else renderEnsaios(ensaiosCache||[]);
+}
+
+function renderCalendar() {
+  const el = document.getElementById('agCalendar');
+  const ref = _agendaRef, year = ref.getFullYear(), month = ref.getMonth();
+  const startDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const monthName = ref.toLocaleDateString('pt-BR', { month:'long', year:'numeric' });
+  const todayStr = isoLocal(new Date());
+  const dows = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+  const byDate = {};
+  (ensaiosCache||[]).forEach(e => { (byDate[e.Data] = byDate[e.Data] || []).push(e); });
+
+  _calDays = [];
+  let cells = '';
+  for (let i=0;i<startDow;i++) cells += '<div class="cal-cell empty"></div>';
+  for (let d=1; d<=daysInMonth; d++) {
+    const iso = year+'-'+String(month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    _calDays.push(iso);
+    const evs = (byDate[iso]||[]).slice().sort((a,b)=>(a.HoraInicio||'').localeCompare(b.HoraInicio||''));
+    const chips = evs.map(e =>
+      '<div class="cal-chip '+tipoChip(e.Tipo)+(e.Status==='cancelado'?' cancelado':'')+'" '+
+      'onclick="event.stopPropagation();showEventDetail(\''+e.ID+'\')" title="'+TIPO_LABEL[e.Tipo]+(e.HoraInicio?' • '+e.HoraInicio:'')+'">'+
+      (e.HoraInicio?e.HoraInicio+' ':'')+TIPO_LABEL[e.Tipo]+'</div>').join('');
+    const head = '<div class="cal-cell-head"><span class="cal-daynum">'+d+'</span>'+
+      (iso===todayStr?'<span class="cal-today-chip">hoje</span>':'')+'</div>';
+    const handlers = _selMode
+      ? 'onpointerdown="calDown(event,\''+iso+'\')" onpointerenter="calEnter(\''+iso+'\')"'
+      : 'onclick="showAddEvento(\''+iso+'\')"';
+    const cls = 'cal-cell'+(iso===todayStr?' today':'')+(_selMode?' selectable':'')+(_selDays.has(iso)?' sel':'');
+    cells += '<div class="'+cls+'" id="cell-'+iso+'" '+handlers+'>'+head+chips+'</div>';
+  }
+
+  el.innerHTML =
+    '<div class="cal-head"><div class="cal-title">'+monthName+'</div>'+
+    '<div class="cal-nav">'+
+      '<button onclick="agendaMonth(-1)" title="Mês anterior"><i data-lucide="chevron-left"></i></button>'+
+      '<button onclick="agendaToday()" title="Hoje"><i data-lucide="calendar"></i></button>'+
+      '<button onclick="agendaMonth(1)" title="Próximo mês"><i data-lucide="chevron-right"></i></button>'+
+    '</div></div>'+
+    '<div class="cal-grid">'+dows.map(w=>'<div class="cal-dow">'+w+'</div>').join('')+cells+'</div>';
+  icons();
+}
+
+// ---- Seleção múltipla de dias (modo Selecionar + clicar-arrastar) ----
+function toggleSelMode() {
+  _selMode = !_selMode;
+  if (_selMode && _agendaView !== 'cal') _agendaView = 'cal';
+  if (!_selMode) _selDays.clear();
+  const btn = document.getElementById('agSelBtn');
+  if (btn) btn.classList.toggle('sel-on', _selMode);
+  renderAgenda();
+  updateSelBar();
+}
+function exitSelMode() {
+  _selMode = false; _selDays.clear();
+  const btn = document.getElementById('agSelBtn');
+  if (btn) btn.classList.remove('sel-on');
+  updateSelBar();
+}
+function calDown(e, iso) {
+  if (!_selMode) return;
+  e.preventDefault();
+  try { e.currentTarget.releasePointerCapture(e.pointerId); } catch(_) {}
+  _selDragging = true; _selAnchor = iso; _selSnapshot = new Set(_selDays); _selMoved = false;
+}
+function calEnter(iso) {
+  if (!_selDragging) return;
+  _selMoved = true;
+  applyRange(iso);
+}
+function calUp() {
+  if (!_selDragging) return;
+  if (!_selMoved && _selAnchor) toggleSelDay(_selAnchor);
+  _selDragging = false; _selAnchor = null; _selSnapshot = null;
+  updateSelBar();
+}
+function applyRange(current) {
+  const a = _selAnchor, lo = a < current ? a : current, hi = a < current ? current : a;
+  const set = new Set(_selSnapshot);
+  _calDays.forEach(iso => { if (iso >= lo && iso <= hi) set.add(iso); });
+  _selDays = set; paintSelection(); updateSelBar();
+}
+function toggleSelDay(iso) {
+  if (_selDays.has(iso)) _selDays.delete(iso); else _selDays.add(iso);
+  paintSelection();
+}
+function paintSelection() {
+  _calDays.forEach(iso => { const c = document.getElementById('cell-'+iso); if (c) c.classList.toggle('sel', _selDays.has(iso)); });
+}
+function clearSel() { _selDays.clear(); paintSelection(); updateSelBar(); }
+function updateSelBar() {
+  const bar = document.getElementById('selBar');
+  if (!bar) return;
+  const n = _selDays.size;
+  if (!_selMode || n === 0) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  bar.innerHTML = '<span>'+n+' dia'+(n>1?'s':'')+' selecionado'+(n>1?'s':'')+'</span>'+
+    '<button class="btn btn-gold btn-sm" onclick="showBatchCreate()"><i data-lucide="calendar-plus"></i> Criar eventos</button>'+
+    '<button class="btn btn-outline btn-sm" onclick="clearSel()"><i data-lucide="x"></i> Limpar</button>';
+  icons();
+}
+
+function showBatchCreate() {
+  const dates = [..._selDays].sort();
+  if (!dates.length) return;
+  _batchDates = dates;
+  const chips = dates.map(d => '<span class="badge badge-brincante">'+formatDate(d)+'</span>').join(' ');
+  showModal('Criar eventos em '+dates.length+' dia'+(dates.length>1?'s':''), 'calendar-plus',
+    '<div style="margin-bottom:14px;display:flex;flex-wrap:wrap;gap:5px;max-height:96px;overflow-y:auto">'+chips+'</div>'+
+    '<div id="fBShared">'+
+      '<div class="form-group"><label>Tipo</label><select class="form-select" id="fBTipo">'+TIPO_OPTIONS+'</select></div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+        '<div class="form-group"><label>Início</label><input type="time" class="form-input" id="fBIni"></div>'+
+        '<div class="form-group"><label>Fim</label><input type="time" class="form-input" id="fBFim"></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="form-group"><label>Descrição (aplicada a todos, opcional)</label><input class="form-input" id="fBDesc"></div>'+
+    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-sec);cursor:pointer;margin-bottom:12px">'+
+      '<input type="checkbox" id="fBCustom" onchange="toggleBatchCustom(this.checked)" style="width:auto"> Personalizar tipo e horário de cada dia</label>'+
+    '<div class="batch-days" id="fBDays" style="display:none"></div>'+
+    '<button class="btn btn-primary btn-block" onclick="saveBatch(this)">Criar eventos</button>');
+  document.getElementById('fBTipo').value = 'regular';
+}
+function toggleBatchCustom(on) {
+  const box = document.getElementById('fBDays');
+  const shared = document.getElementById('fBShared');
+  if (!on) {
+    // Volta aos campos compartilhados (os ajustes por dia são descartados)
+    box.style.display = 'none'; shared.style.display = 'block';
+    return;
+  }
+  // Leva o que foi preenchido nos campos principais para cada dia e some com eles
+  const tipo = document.getElementById('fBTipo').value;
+  const ini = document.getElementById('fBIni').value;
+  const fim = document.getElementById('fBFim').value;
+  box.innerHTML = _batchDates.map((d,i) =>
+    '<div class="batch-day-row">'+
+      '<span class="bd-date">'+formatDate(d)+'</span>'+
+      '<select id="bd-tipo-'+i+'">'+TIPO_OPTIONS+'</select>'+
+      '<input type="time" id="bd-ini-'+i+'" value="'+ini+'">'+
+      '<input type="time" id="bd-fim-'+i+'" value="'+fim+'">'+
+    '</div>').join('');
+  box.style.display = 'flex';
+  shared.style.display = 'none';
+  _batchDates.forEach((d,i) => { document.getElementById('bd-tipo-'+i).value = tipo; });
+}
+async function saveBatch(btn) {
+  const custom = document.getElementById('fBCustom').checked;
+  const desc = document.getElementById('fBDesc').value;
+  let eventos;
+  if (custom) {
+    eventos = _batchDates.map((d,i) => ({
+      data: d,
+      tipo: document.getElementById('bd-tipo-'+i).value,
+      horaInicio: document.getElementById('bd-ini-'+i).value,
+      horaFim: document.getElementById('bd-fim-'+i).value,
+      descricao: desc,
+    }));
+  } else {
+    const tipo = document.getElementById('fBTipo').value;
+    const ini = document.getElementById('fBIni').value;
+    const fim = document.getElementById('fBFim').value;
+    eventos = _batchDates.map(d => ({ data:d, tipo, horaInicio:ini, horaFim:fim, descricao:desc }));
+  }
+  btnLoading(btn, true);
+  try {
+    await Promise.all(eventos.map(ev => srv('addEnsaio', ev, currentUser)));
+    toast(eventos.length+' evento'+(eventos.length>1?'s':'')+' criado'+(eventos.length>1?'s':'')+'!');
+    closeModal(); exitSelMode(); _cache.ensaios = null; loadAgenda();
+  } catch(e) { btnLoading(btn, false); toast('Erro ao criar eventos', true); }
+}
+
 function renderEnsaios(list) {
   const tbody = document.querySelector('#tblEnsaios tbody');
-  if (!list.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-sec);padding:40px">Nenhum ensaio registrado</td></tr>'; return; }
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-sec);padding:40px">Nenhum evento registrado</td></tr>'; return; }
   tbody.innerHTML = list.slice().sort((a,b)=>new Date(b.Data)-new Date(a.Data)).map(e =>
-    '<tr><td><strong>'+formatDate(e.Data)+'</strong></td>'+
-    '<td><span class="badge '+(e.Tipo==='festival'?'badge-item':e.Tipo==='apresentacao'?'badge-ativado':'badge-brincante')+'">'+e.Tipo+'</span></td>'+
+    '<tr'+(e.Status==='cancelado'?' style="opacity:.55"':'')+'><td><strong>'+formatDate(e.Data)+'</strong></td>'+
+    '<td>'+(e.HoraInicio?e.HoraInicio+(e.HoraFim?'–'+e.HoraFim:''):'-')+'</td>'+
+    '<td><span class="badge '+(e.Tipo==='festival'?'badge-item':e.Tipo==='apresentacao'?'badge-ativado':'badge-brincante')+'">'+TIPO_LABEL[e.Tipo]+'</span></td>'+
+    '<td>'+statusBadge(e.Status)+'</td>'+
     '<td>'+(e.Descricao||'-')+'</td>'+
     '<td style="white-space:nowrap"><button class="btn btn-outline btn-sm" onclick="goAvaliar(\''+e.ID+'\')"><i data-lucide="clipboard-check"></i> Avaliar</button> '+
+    '<button class="btn btn-icon btn-sm" title="Editar" onclick="showEditEvento(\''+e.ID+'\')"><i data-lucide="pencil"></i></button> '+
     '<button class="btn btn-icon btn-sm btn-ghost-danger" title="Excluir" onclick="delEnsaio(\''+e.ID+'\')"><i data-lucide="trash-2"></i></button></td></tr>'
   ).join('');
   icons();
 }
-async function loadEnsaios() {
-  const tbody = document.querySelector('#tblEnsaios tbody');
-  if (_cache.ensaios) { ensaiosCache = _cache.ensaios; renderEnsaios(ensaiosCache); }
-  else tbody.innerHTML = skelRows(4);
-  try { const r = await srv('getEnsaios') || []; _cache.ensaios = r; ensaiosCache = r; renderEnsaios(r); }
-  catch(e) { if (!_cache.ensaios) { ensaiosCache = []; renderEnsaios([]); } }
-}
 
 function goAvaliar(id) {
+  closeModal();
   navigateTo('Avaliação');
   setTimeout(() => { document.getElementById('selEnsaioAv').value = id; loadAvaliacao(); }, 400);
 }
 
-function showAddEnsaio() {
-  const today = new Date().toISOString().slice(0,10);
-  showModal('Novo Ensaio', 'calendar-plus',
-    '<div class="form-group"><label>Data</label><input type="date" class="form-input" id="fEnsData" value="'+today+'"></div>'+
-    '<div class="form-group"><label>Tipo</label><select class="form-select" id="fEnsTipo"><option value="regular">Ensaio regular</option><option value="ensaiao">Ensaião</option><option value="apresentacao">Apresentação oficial</option><option value="festival">Festival Folclórico</option><option value="igreja">Apresentação Igreja (sem bonif.)</option></select></div>'+
-    '<div class="form-group"><label>Descrição (opcional)</label><input class="form-input" id="fEnsDesc"></div>'+
-    '<button class="btn btn-primary btn-block" onclick="saveNewEnsaio(this)">Registrar</button>'
-  );
+// Formulário compartilhado por criar/editar. e.ID vazio = criação.
+function formEvento(e) {
+  e = e || {};
+  return '<input type="hidden" id="fEvId" value="'+(e.ID||'')+'">'+
+    '<div class="form-group"><label>Data</label><input type="date" class="form-input" id="fEvData" value="'+(e.Data||'')+'"></div>'+
+    '<div class="form-group"><label>Tipo</label><select class="form-select" id="fEvTipo">'+TIPO_OPTIONS+'</select></div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+      '<div class="form-group"><label>Início</label><input type="time" class="form-input" id="fEvIni" value="'+(e.HoraInicio||'')+'"></div>'+
+      '<div class="form-group"><label>Fim</label><input type="time" class="form-input" id="fEvFim" value="'+(e.HoraFim||'')+'"></div>'+
+    '</div>'+
+    '<div class="form-group"><label>Descrição (opcional)</label><input class="form-input" id="fEvDesc" value="'+(e.Descricao||'').replace(/"/g,'&quot;')+'"></div>'+
+    '<div class="form-group"><label>Valor da bonificação neste dia (opcional)</label><input type="number" step="0.01" min="0" class="form-input" id="fEvValor" value="'+(e.ValorBonificacao||'')+'"><div class="input-hint">Deixe vazio para usar o valor padrão do tipo.</div></div>';
 }
 
-async function saveNewEnsaio(btn) {
-  const dados = { data:document.getElementById('fEnsData').value, tipo:document.getElementById('fEnsTipo').value, descricao:document.getElementById('fEnsDesc').value };
+function showAddEvento(dateIso) {
+  const data = dateIso || isoLocal(new Date());
+  showModal('Novo Evento', 'calendar-plus', formEvento({ Data:data }) +
+    '<button class="btn btn-primary btn-block" onclick="saveEvento(this)">Registrar</button>');
+  document.getElementById('fEvTipo').value = 'regular';
+}
+
+function showEditEvento(id) {
+  const e = (ensaiosCache||[]).find(x => x.ID===id);
+  if (!e) return;
+  showModal('Editar Evento', 'pencil', formEvento(e) +
+    '<button class="btn btn-primary btn-block" onclick="saveEvento(this)">Salvar</button>');
+  document.getElementById('fEvTipo').value = e.Tipo || 'regular';
+}
+
+async function saveEvento(btn) {
+  const id = document.getElementById('fEvId').value;
+  const dados = {
+    data: document.getElementById('fEvData').value,
+    tipo: document.getElementById('fEvTipo').value,
+    horaInicio: document.getElementById('fEvIni').value,
+    horaFim: document.getElementById('fEvFim').value,
+    descricao: document.getElementById('fEvDesc').value,
+    valorBonificacao: document.getElementById('fEvValor').value,
+  };
   if (!dados.data) return toast('Selecione a data', true);
   btnLoading(btn, true);
-  await srv('addEnsaio', dados, currentUser);
-  toast('Ensaio registrado!'); closeModal(); loadEnsaios();
+  try {
+    if (id) await srv('updateEvento', id, dados, currentUser);
+    else await srv('addEnsaio', dados, currentUser);
+    toast(id ? 'Evento atualizado!' : 'Evento criado!');
+    closeModal(); _cache.ensaios = null; loadAgenda();
+  } catch(e) { btnLoading(btn, false); toast('Erro ao salvar', true); }
+}
+
+function showEventDetail(id) {
+  const e = (ensaiosCache||[]).find(x => x.ID===id);
+  if (!e) return;
+  const horario = e.HoraInicio ? e.HoraInicio+(e.HoraFim?' – '+e.HoraFim:'') : 'Sem horário definido';
+  showModal(TIPO_LABEL[e.Tipo], 'calendar',
+    '<div style="color:var(--text-sec);font-size:14px;line-height:2;margin-bottom:18px">'+
+      '<div><strong style="color:var(--text)">Data:</strong> '+formatDate(e.Data)+'</div>'+
+      '<div><strong style="color:var(--text)">Horário:</strong> '+horario+'</div>'+
+      '<div><strong style="color:var(--text)">Status:</strong> '+statusBadge(e.Status)+'</div>'+
+      (e.ValorBonificacao?'<div><strong style="color:var(--text)">Bonificação neste dia:</strong> R$ '+e.ValorBonificacao+'</div>':'')+
+      (e.Descricao?'<div><strong style="color:var(--text)">Descrição:</strong> '+e.Descricao+'</div>':'')+
+      (e.ObsEvento?'<div><strong style="color:var(--text)">Observação:</strong> '+e.ObsEvento+'</div>':'')+
+    '</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      '<button class="btn btn-primary btn-sm" onclick="goAvaliar(\''+e.ID+'\')"><i data-lucide="clipboard-check"></i> Fazer chamada</button>'+
+      '<button class="btn btn-outline btn-sm" onclick="showEditEvento(\''+e.ID+'\')"><i data-lucide="pencil"></i> Editar</button>'+
+      '<button class="btn btn-outline btn-sm btn-ghost-danger" onclick="delEnsaio(\''+e.ID+'\')"><i data-lucide="trash-2"></i> Excluir</button>'+
+    '</div>');
 }
 
 async function delEnsaio(id) {
-  if (!confirm('Excluir ensaio e suas avaliações?')) return;
-  if (_cache.ensaios) { _cache.ensaios = _cache.ensaios.filter(e => e.ID !== id); ensaiosCache = _cache.ensaios; renderEnsaios(ensaiosCache); }
-  try { await srv('deleteEnsaio', id, currentUser); toast('Ensaio excluído'); } catch(e) { toast('Erro ao excluir', true); }
-  loadEnsaios();
+  if (!await confirmDialog({ title:'Excluir evento', message:'Excluir este evento e todas as avaliações dele?', okLabel:'Excluir', danger:true })) return;
+  closeModal();
+  if (_cache.ensaios) { _cache.ensaios = _cache.ensaios.filter(e => e.ID !== id); ensaiosCache = _cache.ensaios; renderAgenda(); }
+  try { await srv('deleteEnsaio', id, currentUser); toast('Evento excluído'); } catch(e) { toast('Erro ao excluir', true); }
+  loadAgenda();
 }
 
 // ============================================================
 // AVALIAÇÃO
 // ============================================================
+let _avEvento = null;      // evento (ensaio) atualmente aberto na chamada
+let _avBrincantes = [];    // lista de brincantes carregada
+let _avState = {};         // brincanteId -> { presente:'sim'|'nao'|null, nota, texto }
+const NOTA_TIT = ['','Muito fraco','Abaixo','Regular','Bom','Destaque'];
+
 async function loadEnsaioSelect() {
   const sel = document.getElementById('selEnsaioAv');
   const fill = list => {
     sel.innerHTML = '<option value="">-- Selecione --</option>' +
       list.slice().sort((a,b)=>new Date(b.Data)-new Date(a.Data))
-        .map(e => '<option value="'+e.ID+'">'+formatDate(e.Data)+' - '+e.Tipo+(e.Descricao?' - '+e.Descricao:'')+'</option>')
+        .map(e => '<option value="'+e.ID+'">'+formatDate(e.Data)+' · '+TIPO_LABEL[e.Tipo]+(e.Status==='cancelado'?' (cancelado)':'')+(e.Descricao?' · '+e.Descricao:'')+'</option>')
         .join('');
   };
   document.getElementById('avGrid').innerHTML = '';
-  document.getElementById('btnSalvarAv').disabled = true;
+  document.getElementById('avHeader').style.display = 'none';
+  document.getElementById('avLegenda').style.display = 'none';
   if (_cache.ensaios) { ensaiosCache = _cache.ensaios; fill(ensaiosCache); }
   try { const ensaios = await srv('getEnsaios') || []; _cache.ensaios = ensaios; ensaiosCache = ensaios; fill(ensaios); } catch(e) {}
 }
 
-function renderAvaliacao(brincantes, avaliacoes) {
+// ---- Renderização da grade (3 estados: não marcado / presente / falta) ----
+function avRowClass(id) {
+  const s = _avState[id] || {};
+  return s.presente === 'sim' ? 'estado-pres' : s.presente === 'nao' ? 'estado-falta' : 'estado-none';
+}
+function avDynHtml(b) {
+  const s = _avState[b.ID] || { presente:null, nota:0, texto:'' };
+  const saved = '<span class="av-saved" id="st-'+b.ID+'"><i data-lucide="check"></i> salvo</span>';
+  if (s.presente === 'sim') {
+    return '<div class="av-nota" id="nota-'+b.ID+'">'+
+      [1,2,3,4,5].map(n => '<button class="'+(n===Number(s.nota)?'selected':'')+'" onclick="setNota(\''+b.ID+'\','+n+')" title="'+NOTA_TIT[n]+'">'+n+'</button>').join('')+
+      '</div>'+
+      '<input placeholder="Obs. de desempenho..." value="'+(s.texto||'').replace(/"/g,'&quot;')+'" onchange="setTexto(\''+b.ID+'\',this.value)">'+saved;
+  }
+  if (s.presente === 'nao') {
+    return '<label class="av-just"><input type="checkbox" '+(s.justificada?'checked':'')+' onchange="setJustif(\''+b.ID+'\',this.checked)"> justificada</label>'+
+      '<input class="justif" placeholder="Motivo da falta..." value="'+(s.texto||'').replace(/"/g,'&quot;')+'" onchange="setTexto(\''+b.ID+'\',this.value)">'+saved;
+  }
+  return '<span class="av-hint">não marcado</span>'+saved;
+}
+function renderAvaliacao(brincantes) {
   const grid = document.getElementById('avGrid');
-  grid.innerHTML = brincantes
-    .filter(b => b.Tipo !== 'coordenacao')
-    .sort((a,b) => (a.Fila||'').localeCompare(b.Fila||'')||(a.Nome||'').localeCompare(b.Nome||''))
-    .map(b => {
-      const av = avaliacoes.find(a => a.BrincanteID === b.ID);
-      const presente = av ? av.Presente === 'sim' : true;
-      const nota = av ? Number(av.Nota) : 0;
-      const obs = av ? av.Observacao : '';
-      return '<div class="av-row '+(presente?'':'ausente')+'" id="av-'+b.ID+'">'+
-        '<button class="av-presenca '+(presente?'presente':'falta')+'" onclick="toggleAv(\''+b.ID+'\')"><i data-lucide="'+(presente?'check':'x')+'"></i></button>'+
-        '<div class="av-name">'+(b.Apelido||b.Nome)+'<small>Fila '+(b.Fila||'?')+' • '+b.Tipo+'</small></div>'+
-        '<div class="av-nota" id="nota-'+b.ID+'">'+
-        [1,2,3,4,5].map(n => '<button class="'+(n===nota?'selected':'')+'" onclick="setNota(\''+b.ID+'\','+n+')" title="'+['','Muito fraco','Abaixo','Regular','Bom','Destaque'][n]+'">'+n+'</button>').join('')+
-        '</div><div class="av-obs"><input placeholder="Obs..." value="'+obs+'" id="obs-'+b.ID+'"></div></div>';
-    }).join('');
+  const lista = brincantes.filter(b => b.Tipo !== 'coordenacao')
+    .sort((a,b) => (a.Fila||'').localeCompare(b.Fila||'')||(a.Nome||'').localeCompare(b.Nome||''));
+  grid.innerHTML = lista.map(b => {
+    const s = _avState[b.ID] || {};
+    return '<div class="av-row '+avRowClass(b.ID)+'" id="av-'+b.ID+'">'+
+      '<div class="av-pgroup">'+
+        '<button class="'+(s.presente==='sim'?'on-pres':'')+'" onclick="setPresenca(\''+b.ID+'\',\'sim\')" title="Presente"><i data-lucide="check"></i></button>'+
+        '<button class="'+(s.presente==='nao'?'on-falta':'')+'" onclick="setPresenca(\''+b.ID+'\',\'nao\')" title="Falta"><i data-lucide="x"></i></button>'+
+      '</div>'+
+      '<div class="av-name">'+(b.Apelido||b.Nome)+'<small>Fila '+(b.Fila||'?')+' • '+b.Tipo+'</small></div>'+
+      '<div class="av-dyn" id="dyn-'+b.ID+'">'+avDynHtml(b)+'</div>'+
+    '</div>';
+  }).join('');
   icons();
 }
+function refreshRow(id) {
+  const b = _avBrincantes.find(x => x.ID===id) || { ID:id };
+  const row = document.getElementById('av-'+id);
+  if (!row) return;
+  const s = _avState[id] || {};
+  row.className = 'av-row '+avRowClass(id);
+  const btns = row.querySelectorAll('.av-pgroup button');
+  btns[0].className = s.presente==='sim'?'on-pres':'';
+  btns[1].className = s.presente==='nao'?'on-falta':'';
+  document.getElementById('dyn-'+id).innerHTML = avDynHtml(b);
+  icons();
+}
+
 async function loadAvaliacao() {
   const ensaioId = document.getElementById('selEnsaioAv').value;
-  if (!ensaioId) return;
-  document.getElementById('btnSalvarAv').disabled = false;
-  document.getElementById('avLegenda').style.display = 'block';
   const grid = document.getElementById('avGrid');
+  if (!ensaioId) { grid.innerHTML = ''; document.getElementById('avHeader').style.display='none'; document.getElementById('avLegenda').style.display='none'; return; }
+  _avEvento = (ensaiosCache||[]).find(e => e.ID===ensaioId) || { ID:ensaioId, Tipo:'regular', Status:'planejado', Data:'' };
+  document.getElementById('avLegenda').style.display = 'block';
   const ck = 'av_' + ensaioId;
-  if (_cache.brincantes && _cache[ck]) { brincantesCache = _cache.brincantes; renderAvaliacao(_cache.brincantes, _cache[ck]); }
+  const build = (brincantes, avaliacoes) => {
+    _avBrincantes = brincantes;
+    _avState = {};
+    avaliacoes.forEach(a => { _avState[a.BrincanteID] = { presente:a.Presente, nota:Number(a.Nota)||0, texto:a.Observacao||'', justificada:a.Justificada===true }; });
+    renderAvHeader();
+    renderAvaliacao(brincantes);
+  };
+  if (_cache.brincantes && _cache[ck]) { brincantesCache = _cache.brincantes; build(_cache.brincantes, _cache[ck]); }
   else grid.innerHTML = skelList(6);
   try {
     const [brincantes, avaliacoes] = await Promise.all([srv('getBrincantes'), srv('getAvaliacoes', {ensaioId})]).then(r => [r[0]||[], r[1]||[]]);
     _cache.brincantes = brincantes; brincantesCache = brincantes; _cache[ck] = avaliacoes;
-    renderAvaliacao(brincantes, avaliacoes);
+    build(brincantes, avaliacoes);
   } catch(e) { if (!_cache[ck]) grid.innerHTML = '<div style="color:var(--text-sec);padding:20px;text-align:center">Não foi possível carregar.</div>'; }
 }
 
-function toggleAv(id) {
-  const row = document.getElementById('av-'+id);
-  const btn = row.querySelector('.av-presenca');
-  const isPresente = btn.classList.contains('presente');
-  if (isPresente) {
-    btn.classList.remove('presente'); btn.classList.add('falta');
-    btn.innerHTML = '<i data-lucide="x"></i>'; row.classList.add('ausente');
-  } else {
-    btn.classList.remove('falta'); btn.classList.add('presente');
-    btn.innerHTML = '<i data-lucide="check"></i>'; row.classList.remove('ausente');
-  }
-  icons();
+// ---- Interação + autosave ----
+function setPresenca(id, val) {
+  const s = _avState[id] || { presente:null, nota:0, texto:'', justificada:false };
+  const prev = s.presente;
+  s.presente = (prev === val) ? null : val;
+  if (s.presente !== prev) s.texto = '';        // troca de estado limpa o texto
+  if (s.presente !== 'sim') s.nota = 0;          // nota só vale para presentes
+  if (s.presente !== 'nao') s.justificada = false; // justificada só p/ falta
+  _avState[id] = s;
+  refreshRow(id);
+  updateAvProgress();
+  autosaveAv(id);
 }
-
+function setJustif(id, checked) {
+  const s = _avState[id] || { presente:'nao', nota:0, texto:'', justificada:false };
+  s.justificada = !!checked; _avState[id] = s;
+  autosaveAv(id);
+}
 function setNota(id, n) {
-  document.querySelectorAll('#nota-'+id+' button').forEach((btn,i) => btn.classList.toggle('selected', i+1===n));
+  const s = _avState[id] || { presente:'sim', nota:0, texto:'' };
+  if (s.presente !== 'sim') return;
+  s.nota = (Number(s.nota) === n) ? 0 : n;
+  _avState[id] = s;
+  document.querySelectorAll('#nota-'+id+' button').forEach((btn,i) => btn.classList.toggle('selected', i+1===Number(s.nota)));
+  autosaveAv(id);
+}
+function setTexto(id, v) {
+  const s = _avState[id] || { presente:null, nota:0, texto:'' };
+  s.texto = v; _avState[id] = s;
+  autosaveAv(id);
+}
+function flashSaved(id) {
+  const el = document.getElementById('st-'+id);
+  if (!el) return;
+  el.classList.add('show');
+  setTimeout(() => { const e2 = document.getElementById('st-'+id); if (e2) e2.classList.remove('show'); }, 1200);
+}
+async function autosaveAv(id) {
+  const ensaioId = _avEvento ? _avEvento.ID : document.getElementById('selEnsaioAv').value;
+  if (!ensaioId) return;
+  const s = _avState[id] || { presente:null };
+  let patch;
+  if (s.presente === 'sim') patch = { presente:'sim', nota:s.nota||0, observacao:s.texto||'' };
+  else if (s.presente === 'nao') patch = { presente:'nao', justificativa:s.texto||'', justificada: !!s.justificada };
+  else patch = { presente:null };
+  try {
+    await srv('upsertAvaliacao', ensaioId, id, patch, currentUser);
+    flashSaved(id);
+    // Fazer a chamada confirma que o evento aconteceu: planejado -> realizado.
+    if (s.presente && _avEvento && _avEvento.Status === 'planejado') {
+      _avEvento.Status = 'realizado';
+      syncEventoCache(); renderAvHeader();
+      srv('updateEvento', ensaioId, { status:'realizado' }, currentUser).catch(()=>{});
+    }
+    _cache.dashboard=null; _cache.ranking=null; _cache.bonificacao=null; _cache.perfil=null;
+    delete _cache['av_'+ensaioId];
+  } catch(e) { toast('Erro ao salvar', true); }
 }
 
-async function salvarAvaliacao() {
-  const ensaioId = document.getElementById('selEnsaioAv').value;
-  if (!ensaioId) return;
-  const btn = document.getElementById('btnSalvarAv');
+// ---- Cabeçalho do evento (confirmação embutida) ----
+function syncEventoCache() {
+  if (!_avEvento) return;
+  const e = (ensaiosCache||[]).find(x => x.ID===_avEvento.ID);
+  if (e) { e.Status=_avEvento.Status; e.HoraInicioReal=_avEvento.HoraInicioReal; e.HoraFimReal=_avEvento.HoraFimReal; e.ObsEvento=_avEvento.ObsEvento; }
+}
+function renderAvHeader() {
+  const el = document.getElementById('avHeader');
+  if (!_avEvento) { el.style.display='none'; return; }
+  const e = _avEvento;
+  const plan = e.HoraInicio ? e.HoraInicio+(e.HoraFim?'–'+e.HoraFim:'') : 'sem horário';
+  const real = (e.HoraInicioReal||e.HoraFimReal) ? ' · real '+(e.HoraInicioReal||'?')+(e.HoraFimReal?'–'+e.HoraFimReal:'') : '';
+  const cancel = e.Status === 'cancelado';
+  el.style.display = 'block';
+  el.className = 'av-ev-head';
+  el.innerHTML =
+    '<div class="av-ev-top"><div>'+
+      '<div class="av-ev-title"><i data-lucide="calendar-check"></i> '+TIPO_LABEL[e.Tipo]+'</div>'+
+      '<div class="av-ev-meta">'+formatDate(e.Data)+' · '+plan+real+' · '+statusBadge(e.Status)+(e.ObsEvento?' · '+e.ObsEvento:'')+'</div>'+
+    '</div><div class="av-ev-actions">'+
+      (cancel
+        ? '<button class="btn btn-outline btn-sm" onclick="reativarEvento()"><i data-lucide="rotate-ccw"></i> Reativar</button>'
+        : '<button class="btn btn-outline btn-sm" onclick="showAjustarEvento()"><i data-lucide="clock"></i> Ajustar</button>'+
+          '<button class="btn btn-outline btn-sm btn-ghost-danger" onclick="marcarNaoAconteceu()"><i data-lucide="calendar-x"></i> Não aconteceu</button>')+
+    '</div></div>'+
+    '<div class="av-progress" id="avProgress"></div>';
+  icons();
+  updateAvProgress();
+}
+function updateAvProgress() {
+  const el = document.getElementById('avProgress');
+  if (!el || !_avBrincantes) return;
+  const total = _avBrincantes.filter(b => b.Tipo!=='coordenacao').length;
+  let marcados=0, pres=0, faltas=0;
+  Object.values(_avState).forEach(s => { if (s.presente){ marcados++; if (s.presente==='sim') pres++; else faltas++; } });
+  el.innerHTML = '<div class="pres">Presentes<b>'+pres+'</b></div><div class="falta">Faltas<b>'+faltas+'</b></div><div>Marcados<b>'+marcados+'/'+total+'</b></div>';
+}
+function showAjustarEvento() {
+  const e = _avEvento;
+  showModal('Ajustar evento', 'clock',
+    '<p style="color:var(--text-sec);font-size:13px;margin-bottom:14px">Registre o que realmente aconteceu (horário real, observações). Não altera a bonificação.</p>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+      '<div class="form-group"><label>Início real</label><input type="time" class="form-input" id="fAjIni" value="'+(e.HoraInicioReal||e.HoraInicio||'')+'"></div>'+
+      '<div class="form-group"><label>Fim real</label><input type="time" class="form-input" id="fAjFim" value="'+(e.HoraFimReal||e.HoraFim||'')+'"></div>'+
+    '</div>'+
+    '<div class="form-group"><label>Observação</label><input class="form-input" id="fAjObs" placeholder="Ex.: terminou mais cedo por chuva" value="'+(e.ObsEvento||'').replace(/"/g,'&quot;')+'"></div>'+
+    '<button class="btn btn-primary btn-block" onclick="saveAjuste(this)">Salvar ajuste</button>');
+}
+async function saveAjuste(btn) {
+  const dados = { horaInicioReal:document.getElementById('fAjIni').value, horaFimReal:document.getElementById('fAjFim').value, obsEvento:document.getElementById('fAjObs').value };
   btnLoading(btn, true);
-  const rows = document.querySelectorAll('.av-row');
-  const avaliacoes = [];
-  rows.forEach(row => {
-    const id = row.id.replace('av-','');
-    const presente = row.querySelector('.av-presenca').classList.contains('presente');
-    const selectedBtn = row.querySelector('.av-nota button.selected');
-    const nota = selectedBtn ? parseInt(selectedBtn.textContent) : 0;
-    const obs = document.getElementById('obs-'+id).value;
-    avaliacoes.push({brincanteId:id, presente, nota, observacao:obs});
-  });
-  const res = await srv('salvarAvaliacoes', ensaioId, avaliacoes, currentUser);
-  if (res.success) {
-    delete _cache['av_'+ensaioId]; delete _cache.dashboard; delete _cache.ranking; delete _cache.bonificacao; delete _cache.perfil;
-    toast('Avaliação salva! '+res.count+' brincantes registrados.');
-  }
-  btnLoading(btn, false);
+  try {
+    await srv('updateEvento', _avEvento.ID, dados, currentUser);
+    Object.assign(_avEvento, { HoraInicioReal:dados.horaInicioReal, HoraFimReal:dados.horaFimReal, ObsEvento:dados.obsEvento });
+    syncEventoCache(); closeModal(); renderAvHeader(); toast('Ajuste salvo');
+  } catch(e) { btnLoading(btn, false); toast('Erro ao salvar', true); }
+}
+async function marcarNaoAconteceu() {
+  if (!await confirmDialog({ title:'Evento não realizado', message:'Marcar este evento como <strong>não realizado</strong>? Ele deixa de contar para frequência e bonificação.', okLabel:'Não aconteceu', danger:true })) return;
+  try {
+    await srv('updateEvento', _avEvento.ID, { status:'cancelado' }, currentUser);
+    _avEvento.Status = 'cancelado'; syncEventoCache(); renderAvHeader();
+    _cache.dashboard=null; _cache.ranking=null; _cache.bonificacao=null;
+    toast('Evento marcado como não realizado');
+  } catch(e) { toast('Erro', true); }
+}
+async function reativarEvento() {
+  try {
+    await srv('updateEvento', _avEvento.ID, { status:'realizado' }, currentUser);
+    _avEvento.Status = 'realizado'; syncEventoCache(); renderAvHeader();
+    _cache.dashboard=null; _cache.ranking=null; _cache.bonificacao=null;
+    toast('Evento reativado');
+  } catch(e) { toast('Erro', true); }
 }
 
 // ============================================================
@@ -860,6 +1502,11 @@ async function loadRanking() {
 // ============================================================
 // BONIFICAÇÃO
 // ============================================================
+const ATIV_LABEL = { ativado:'ativado', em_ativacao:'em ativação', nao_ativado:'não ativado', nao_elegivel:'não elegível', sem_adesao:'sem adesão', sem_bonificacao:'sem bonif.', pendente:'pendente', auto:'automático' };
+function ativBadge(status) {
+  const cls = status==='ativado'?'badge-ativado':status==='em_ativacao'?'badge-pendente':'badge-nao';
+  return '<span class="badge '+cls+'">'+(ATIV_LABEL[status]||status)+'</span>';
+}
 function renderBonificacao(sim) {
   document.getElementById('bonifContent').innerHTML =
     '<div class="stats">'+
@@ -867,12 +1514,13 @@ function renderBonificacao(sim) {
     statCard(sim.lista.length, 'Opt-in', 'users')+
     statCard(sim.lista.filter(l=>l.elegivel).length, 'Ativados', 'badge-check')+
     statCard('R$ '+sim.config.valorEnsaio, 'Por ensaio', 'coins')+'</div>'+
-    '<div class="table-wrap"><table><thead><tr><th>Nome</th><th>Fila</th><th>Status</th><th>Ensaios</th><th>Apres.</th><th>Acumulado</th></tr></thead><tbody>'+
+    '<div class="table-wrap"><table><thead><tr><th>Nome</th><th>Fila</th><th>Status</th><th>Ensaios</th><th>Apres.</th><th>Sanção</th><th>Acumulado</th></tr></thead><tbody>'+
     sim.lista.map(l =>
       '<tr style="'+(l.elegivel?'':'opacity:.5')+'"><td>'+l.nome+'</td><td>'+(l.fila||'-')+'</td>'+
-      '<td><span class="badge '+(l.elegivel?'badge-ativado':'badge-pendente')+'">'+l.statusAtivacao+'</span></td>'+
+      '<td>'+ativBadge(l.statusAtivacao)+'</td>'+
       '<td>'+l.ensaiosPresente+'</td><td>'+l.apresentacoesPresente+(l.festivalPresente?' + Festival':'')+'</td>'+
-      '<td style="font-weight:700;color:var(--dourado)">R$ '+l.valorAcumulado+'</td></tr>'
+      '<td>'+(l.sancaoPct>0?'<span class="badge" style="background:var(--danger);color:#fff">−'+l.sancaoPct+'%</span>':'-')+'</td>'+
+      '<td style="font-weight:700;color:var(--dourado)">R$ '+l.valorAcumulado+(l.sancaoPct>0?'<div style="font-size:10px;color:var(--text-sec);font-weight:400">bruto R$ '+l.valorBruto+'</div>':'')+'</td></tr>'
     ).join('')+'</tbody></table></div>';
   icons();
 }
@@ -881,6 +1529,63 @@ async function loadBonificacao() {
   else document.getElementById('bonifContent').innerHTML = skelStats(4);
   try { const sim = await srv('getSimulacaoBonificacao'); _cache.bonificacao = sim; renderBonificacao(sim); }
   catch(e) { if (!_cache.bonificacao) renderBonificacao({totalGeral:'0.00',lista:[],config:{valorEnsaio:0.5,valorApresentacao:1,valorFestival:5}}); }
+}
+
+// ============================================================
+// CONFIGURAÇÕES
+// ============================================================
+function renderConfig(cfg) {
+  const num = (id,label,val,step,hint) => '<div class="form-group"><label>'+label+'</label><input type="number" step="'+(step||'0.01')+'" min="0" class="form-input" id="'+id+'" value="'+(val!=null?val:'')+'">'+(hint?'<div class="input-hint">'+hint+'</div>':'')+'</div>';
+  const date = (id,label,val,hint) => '<div class="form-group"><label>'+label+'</label><input type="date" class="form-input" id="'+id+'" value="'+(val||'')+'">'+(hint?'<div class="input-hint">'+hint+'</div>':'')+'</div>';
+  document.getElementById('configContent').innerHTML =
+    '<div class="alert alert-warn" style="margin-bottom:16px"><i data-lucide="alert-triangle" style="color:var(--warn)"></i><div>Alterar estes valores <strong>recalcula a bonificação de todos</strong> retroativamente (ranking, perfis e simulação). Confira antes de salvar.</div></div>'+
+    '<div class="card"><div class="card-title"><i data-lucide="coins"></i> Valores da bonificação</div>'+
+      '<div class="form-row">'+num('cfgVEnsaio','Por ensaio (R$)',cfg.valorEnsaio)+num('cfgVApres','Por apresentação (R$)',cfg.valorApresentacao)+'</div>'+
+      num('cfgVFest','Bônus Festival (R$)',cfg.valorFestival,'0.01','Apresentações para a Igreja nunca geram bonificação (regra fixa do contrato).')+
+    '</div>'+
+    '<div class="card"><div class="card-title"><i data-lucide="target"></i> Metas de ativação e desempenho</div>'+
+      '<div class="form-row">'+num('cfgFreq','Frequência mínima (%)',cfg.frequenciaMinima,'1')+num('cfgNota','Nota mínima',cfg.notaMinima,'1')+'</div>'+
+      '<div class="form-row">'+num('cfgPercNota','% de ensaios com nota ≥ mínima',cfg.percentualNotaMinima,'1')+num('cfgMeses','Meses de ativação',cfg.mesesAtivacao,'1')+'</div>'+
+    '</div>'+
+    '<div class="card"><div class="card-title"><i data-lucide="calendar"></i> Datas da temporada</div>'+
+      '<div class="form-row">'+date('cfgIniTemp','Início da temporada',cfg.inicioTemporada,'Quando começam os ensaios.')+date('cfgIniCont','Início da contagem da bonificação',cfg.inicioContagem,'Antes disso conta só para ativação.')+'</div>'+
+      '<div class="form-row">'+date('cfgFimCont','Fim da contagem (Festival)',cfg.fimContagem)+date('cfgFimAdesao','Fim da adesão ao programa',cfg.fimAdesao)+'</div>'+
+      num('cfgTemporada','Ano da temporada',cfg.temporada,'1')+
+    '</div>'+
+    '<div style="text-align:right"><button class="btn btn-primary" onclick="saveConfig(this)"><i data-lucide="save"></i> Salvar configurações</button></div>';
+  icons();
+}
+async function loadConfig() {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  if (_cache.config) renderConfig(_cache.config);
+  else document.getElementById('configContent').innerHTML = skelStats(4);
+  try { const cfg = await srv('getConfig') || {}; _cache.config = cfg; renderConfig(cfg); }
+  catch(e) { if (!_cache.config) document.getElementById('configContent').innerHTML = '<p style="color:var(--text-sec)">Não foi possível carregar as configurações.</p>'; }
+}
+async function saveConfig(btn) {
+  const mapa = {
+    valorEnsaio: document.getElementById('cfgVEnsaio').value,
+    valorApresentacao: document.getElementById('cfgVApres').value,
+    valorFestival: document.getElementById('cfgVFest').value,
+    frequenciaMinima: document.getElementById('cfgFreq').value,
+    notaMinima: document.getElementById('cfgNota').value,
+    percentualNotaMinima: document.getElementById('cfgPercNota').value,
+    mesesAtivacao: document.getElementById('cfgMeses').value,
+    inicioTemporada: document.getElementById('cfgIniTemp').value,
+    inicioContagem: document.getElementById('cfgIniCont').value,
+    fimContagem: document.getElementById('cfgFimCont').value,
+    fimAdesao: document.getElementById('cfgFimAdesao').value,
+    temporada: document.getElementById('cfgTemporada').value,
+  };
+  if (!await confirmDialog({ title:'Salvar configurações', message:'Isso pode <strong>recalcular a bonificação de todos</strong> retroativamente. Deseja continuar?', okLabel:'Salvar' })) return;
+  btnLoading(btn, true);
+  try {
+    await srv('updateConfigMap', mapa, currentUser);
+    _cache.config = mapa;
+    _cache.dashboard=null; _cache.ranking=null; _cache.bonificacao=null; _cache.perfil=null;
+    toast('Configurações salvas!');
+  } catch(e) { toast('Erro ao salvar', true); }
+  btnLoading(btn, false);
 }
 
 // ============================================================
@@ -924,16 +1629,37 @@ function renderPerfil(p) {
     '<div class="progress"><div class="progress-bar '+(p.percNotasBoas>=75?'progress-green':'progress-red')+'" style="width:'+p.percNotasBoas+'%"></div></div></div>'+
     '<div class="stat-card"><span class="stat-ic"><i data-lucide="hand-coins"></i></span><div class="stat-value" style="color:'+(p.OptBonificacao==='sim'?'var(--dourado)':'var(--text-sec)')+'">R$ '+p.bonificacao+'</div>'+
     '<div class="stat-label">Bonificação acumulada</div></div></div>'+
+    (p.OptBonificacao==='sim'?buildAtivacaoCard(p.ativacao):'')+
     buildAlertasPerfil(p)+
     '<div class="card"><div class="card-title"><i data-lucide="history"></i> Histórico de avaliações</div>'+
     '<div class="table-wrap"><table><thead><tr><th>Data</th><th>Tipo</th><th>Presença</th><th>Nota</th><th>Observação</th></tr></thead><tbody>'+
     p.historico.map(h =>
-      '<tr><td>'+formatDate(h.data)+'</td><td>'+h.tipo+'</td>'+
-      '<td>'+(h.presente?'<span class="ic-ok"><i data-lucide="check"></i></span>':'<span class="ic-no"><i data-lucide="x"></i></span>')+'</td>'+
+      '<tr><td>'+formatDate(h.data)+'</td><td>'+(TIPO_LABEL[h.tipo]||h.tipo)+'</td>'+
+      '<td>'+(h.presente?'<span class="ic-ok"><i data-lucide="check"></i></span>':'<span class="ic-no"><i data-lucide="x"></i></span>'+(h.justificada?' <span style="font-size:10px;color:var(--text-sec)">justif.</span>':''))+'</td>'+
       '<td style="font-weight:700;color:'+(h.nota>=4?'var(--dourado)':h.nota>=3?'var(--text)':'var(--danger)')+'">'+
       (h.nota||'-')+'</td><td style="color:var(--text-sec)">'+(h.observacao||'-')+'</td></tr>'
     ).join('')+'</tbody></table></div></div>';
   icons();
+}
+function buildAtivacaoCard(a) {
+  if (!a) return '';
+  const map = {
+    ativado: ['check-circle-2','var(--success)','Ativado','Você cumpriu o período de ativação e já acumula bonificação.'],
+    em_ativacao: ['clock','var(--warn)','Em período de ativação','Você está nos 3 meses iniciais. Cumpra 75% de presença e nota ≥ 4 em 75% dos ensaios para ativar. Ainda não acumula bonificação.'],
+    nao_ativado: ['x-circle','var(--danger)','Não ativado','Você não cumpriu as metas no período de ativação. Segue na quadrilha, mas sem bonificação nesta temporada.'],
+    nao_elegivel: ['ban','var(--text-sec)','Não elegível','A adesão foi tarde demais para completar a ativação antes do Festival.'],
+    sem_adesao: ['calendar-x','var(--text-sec)','Sem data de adesão','A coordenação precisa registrar sua data de adesão para calcular o período de ativação.'],
+    sem_bonificacao: ['info','var(--text-sec)','Fora do programa','Você não aderiu ao Programa de Bonificação.']
+  };
+  const m = map[a.status] || map.sem_bonificacao;
+  let extra = '';
+  if (a.ativacaoFim) {
+    extra = '<div style="font-size:12px;color:var(--text-sec);margin-top:8px">Janela de ativação até <strong>'+formatDate(a.ativacaoFim)+'</strong>';
+    if (a.freq!==undefined) extra += ' &nbsp;•&nbsp; presença '+a.freq+'% '+(a.freqOk?'✓':'✗')+' &nbsp;•&nbsp; nota boa '+a.notaPct+'% '+(a.notaOk?'✓':'✗');
+    extra += '</div>';
+  }
+  return '<div class="card"><div class="card-title" style="color:'+m[1]+'"><i data-lucide="'+m[0]+'"></i> Ativação: '+m[2]+'</div>'+
+    '<div style="font-size:13px;color:var(--text-sec);line-height:1.5">'+m[3]+'</div>'+extra+'</div>';
 }
 async function loadPerfil() {
   const id = currentUser.id;
@@ -968,6 +1694,11 @@ function calcProgresso(dataAdesao) {
 
 function buildAlertasPerfil(p) {
   let alertas = '';
+  if (p.sancaoPct > 0) {
+    alertas += '<div class="alert alert-danger"><i data-lucide="shield-alert" style="color:var(--danger)"></i><div>'+
+      '<strong style="color:var(--danger)">Sanção ativa: −'+p.sancaoPct+'%</strong><br>'+
+      'Sua bonificação está reduzida por advertência registrada pela coordenação.</div></div>';
+  }
   const optIn = p.OptBonificacao === 'sim';
   const ativado = p.StatusAtivacao === 'ativado';
   const pendente = p.StatusAtivacao === 'pendente';
@@ -1046,8 +1777,36 @@ function closeModal() {
 }
 
 document.getElementById('modal').addEventListener('click', e => {
-  if (e.target.id === 'modal') closeModal();
+  if (e.target.id === 'modal') { if (_confirmResolve) resolveConfirm(false); else closeModal(); }
 });
+
+// Confirmação in-app (substitui o confirm() do navegador). Retorna Promise<boolean>.
+let _confirmResolve = null;
+function confirmDialog(opts) {
+  opts = opts || {};
+  const title = opts.title || 'Confirmar';
+  const message = opts.message || 'Tem certeza?';
+  const okLabel = opts.okLabel || 'Confirmar';
+  const cancelLabel = opts.cancelLabel || 'Cancelar';
+  const icon = opts.icon || (opts.danger ? 'alert-triangle' : 'help-circle');
+  return new Promise(resolve => {
+    _confirmResolve = resolve;
+    document.getElementById('modalContent').innerHTML =
+      '<div class="modal-title"><i data-lucide="'+icon+'"></i>'+title+'</div>'+
+      '<p style="color:var(--text-sec);font-size:14px;line-height:1.6;margin-bottom:22px">'+message+'</p>'+
+      '<div style="display:flex;gap:10px;justify-content:flex-end">'+
+        '<button class="btn btn-outline" onclick="resolveConfirm(false)">'+cancelLabel+'</button>'+
+        '<button class="btn '+(opts.danger?'btn-danger':'btn-primary')+'" onclick="resolveConfirm(true)">'+okLabel+'</button>'+
+      '</div>';
+    document.getElementById('modal').classList.add('show');
+    icons();
+  });
+}
+function resolveConfirm(v) {
+  const r = _confirmResolve; _confirmResolve = null;
+  closeModal();
+  if (r) r(v);
+}
 
 function toast(msg, isError) {
   const t = document.getElementById('toast');
@@ -1057,8 +1816,15 @@ function toast(msg, isError) {
   setTimeout(() => t.classList.remove('show'), 3500);
 }
 
+// Encerra o arraste de seleção mesmo se soltar fora do calendário
+window.addEventListener('pointerup', calUp);
+
 // Render inicial dos ícones (tela de login)
 icons();
+
+// Sessão: tenta restaurar login salvo (expira após 1h sem atividade)
+startSessionWatch();
+restoreSession();
 </script>
 </body>
 </html>

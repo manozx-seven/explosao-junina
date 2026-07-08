@@ -6,6 +6,201 @@
 
 ---
 
+## 2026-07-08 — Alinhamento com o contrato · Fases C, D e E
+
+### Fase C — Adesão/assinatura + ativação proporcional e automática
+- Brincante ganhou **`DataAssinatura`** e a **`DataAdesao`** virou editável
+  (nos formulários de novo/editar). Início do período de ativação = data de adesão.
+- Novo helper `avaliarAtivacao` (`server/handlers.js`): calcula o status de
+  ativação **automaticamente** — janela = adesão + `mesesAtivacao`; exige 75% de
+  presença e nota ≥ 4 em 75% dos ensaios da janela. Status possíveis:
+  `em_ativacao`, `ativado`, `nao_ativado`, `nao_elegivel` (adesão tarde demais),
+  `sem_adesao`, `sem_bonificacao`. `StatusAtivacao` deixou de ser "pendente/ativado"
+  manual e virou **override**: `auto` (padrão, calcula), `ativado` (força),
+  `nao_elegivel` (força). A elegibilidade da bonificação em `getPerfilBrincante` e
+  `getSimulacaoBonificacao` passou a usar o cálculo. O **Perfil** ganhou um card de
+  ativação (janela, presença/nota da janela, status).
+
+### Fase D — Situação do membro + desligamento
+- Brincante ganhou **`StatusMembro`** (`ativo`/`afastado`/`desligado`),
+  **`MotivoDesligamento`** e **`DataDesligamento`** (editáveis no formulário, com
+  seção "Situação do membro"). Motivos conforme Cláusula Oitava.
+- **Desligamento com perda integral** (`penalidadeDesligamento_`): motivos
+  `concorrente`, `pre_festival` e `quadrilha` zeram a bonificação (−100%). A
+  penalidade efetiva é o **pior entre advertências e desligamento**
+  (`penalidadeTotal_`). A tabela de brincantes mostra badge de desligado/afastado.
+
+### Fase E — Falta justificada × injustificada
+- Avaliação ganhou **`Justificada`** (booleano, só para faltas). `upsertAvaliacao`
+  aceita `justificada`; `getAvaliacoes` retorna o campo. Na **chamada**, ao marcar
+  falta aparece um checkbox **"justificada"** (avisou 24h) ao lado do motivo, com
+  autosave. O **Perfil** marca as faltas justificadas no histórico.
+
+## 2026-07-08 — Alinhamento com o contrato · Fase B (advertências) + atividades
+
+### Advertências / sanções (Cláusula Sétima)
+- Nova coleção **`advertencias`** (`{BrincanteID, Nivel, Motivo, Data, RegistradoPor,
+  DataRegistro}`). Níveis: **verbal** (só registra), **formal** (−50%),
+  **desligamento** (−100%), **gravidade extrema** (−100%). Vale o **pior nível**.
+- Backend (`server/handlers.js`): `getAdvertencias`, `addAdvertencia`,
+  `removeAdvertencia` + helper `penalidadeDasAdvs_`. A sanção é aplicada como
+  **desconto sobre o total acumulado** (decisão do usuário) em
+  `getSimulacaoBonificacao` (novos campos `valorBruto`, `sancaoPct`) e
+  `getPerfilBrincante` (`bonificacaoBruta`, `sancaoPct`, `advertencias`).
+- Frontend: botão **Advertências** na linha do brincante → modal que lista, mostra
+  a sanção ativa, registra (nível/data/motivo) e remove. A tela de **Bonificação**
+  ganhou coluna **Sanção** (mostra −% e o bruto); o **Perfil** exibe aviso quando
+  há sanção.
+
+### Atividades do compromisso (Cláusula Segunda, "l")
+- Novos tipos de evento: **arrecadação, trabalho braçal, trabalho comunitário,
+  outra atividade** (agrupados no seletor). Aparecem na agenda (chip roxo) e na
+  chamada, com **presença registrada** normalmente.
+- Essas atividades **não geram bonificação** (`valorBonifEvento_` retorna 0) e
+  **não entram na frequência/nota de ensaios**: novo helper `eventosMetrica_`
+  exclui atividades (e cancelados) do cálculo em `getDashboard`, `getRanking` e
+  `getPerfilBrincante`. Assim a presença é acompanhada sem distorcer o 75%.
+
+## 2026-07-08 — Alinhamento com o contrato · Fase A (config + valor por dia + período)
+
+Início do alinhamento do sistema ao **Termo de Compromisso do Brincante** (contrato
+adicionado ao projeto: `Contratos Explosao Junina Final.docx`). Roadmap acordado:
+A) config + valor por evento + período de contagem (esta entrada); B) advertências/
+sanções; C) adesão/assinatura + ativação proporcional e automática; D) status de
+membro + desligamento com motivos; E) atividades externas + falta justificada.
+
+### Aba Configurações (`public/index.html`)
+- Nova aba **Configurações** (só admin) para editar pela interface o que antes só
+  dava via script no banco: **valores** da bonificação, **metas** (frequência,
+  nota, % nota, meses de ativação) e **datas** (início da temporada, início da
+  contagem, fim da contagem, fim da adesão, ano). Aviso destacado de que alterar
+  recalcula a bonificação de todos retroativamente. Confirmação in-app ao salvar.
+
+### Backend (`server/handlers.js`, `netlify/functions/api.js`)
+- `DEFAULT_CONFIG` ganhou **`inicioContagem`** (padrão `2026-05-01`): início da
+  contagem da bonificação. Fev–abr passam a valer **só como ativação**.
+- Evento ganhou **`ValorBonificacao`** (override opcional): `getEnsaios`,
+  `addEnsaio` e `updateEvento` já gravam/retornam o campo.
+- Novo helper `valorBonifEvento_` (usa o override do evento ou o valor padrão do
+  tipo; igreja = 0) e `noPeriodoBonif_` (evento dentro de `inicioContagem`..`fimContagem`).
+- **`getSimulacaoBonificacao` e `getPerfilBrincante`** agora só acumulam eventos
+  **dentro do período de contagem** e usam o **valor por evento** quando definido.
+  Corrige a inflação: antes contava todos os eventos, inclusive os de ativação.
+- Novo handler **`updateConfigMap`** (salva várias chaves de uma vez) + whitelist.
+
+### Frontend do evento
+- Formulário de evento ganhou campo opcional **"Valor da bonificação neste dia"**
+  (vazio = usa o padrão do tipo). O detalhe do evento mostra o valor quando definido.
+
+Melhorias em cima da agenda/chamada, todas em `public/index.html`.
+
+### Calendário
+- **Chip "hoje"** no canto superior direito da célula do dia atual (além da
+  borda destacada que já existia).
+- **Modo "Selecionar"** (botão novo na toolbar): permite escolher **vários dias**
+  de uma vez — clicando dia a dia ou **clicando e arrastando** um intervalo.
+  Os dias selecionados ficam destacados e aparece uma **barra flutuante** com a
+  contagem e as ações "Criar eventos" / "Limpar".
+- **Criação em lote**: um formulário cria o mesmo evento (tipo, hora início/fim,
+  descrição) em todos os dias selecionados de uma vez. Opção **"Personalizar cada
+  dia"** revela uma lista para ajustar tipo/horário por data individualmente.
+  Cria os eventos em paralelo (`addEnsaio` por data). Ao ligar "personalizar",
+  os **campos principais somem** e o que já estava preenchido é copiado para cada
+  linha (a Descrição segue compartilhada) — evita ambiguidade sobre qual valor
+  vale na criação.
+- Ao sair da aba Agenda ou trocar para a visão Lista, o modo seleção é desligado.
+
+### Confirmações in-app
+- Todas as caixas de confirmação do navegador (`confirm()`) viraram **modais do
+  próprio sistema** (`confirmDialog`, retorna Promise). Aplicado em: excluir
+  brincante, excluir evento e marcar evento como "não aconteceu". Clicar fora do
+  modal = cancelar.
+
+### Sessão persistente (login não cai ao atualizar)
+- O login agora **persiste** (localStorage) e é restaurado ao recarregar a página.
+- **Expira após 1 hora sem atividade** (mouse, teclado, toque, scroll). Um
+  vigia checa a cada 30s e, se estourou o tempo, faz logout com aviso. A cada
+  interação o "último uso" é atualizado (no máx. 1x a cada 20s).
+- `doLogout` e a expiração limpam a sessão salva.
+
+---
+
+## 2026-07-08 — Agenda de eventos + chamada (Fase 1: backend)
+
+Reformulação de Ensaios → **Agenda de eventos** e da Avaliação →
+**chamada em tempo real**. Backend na fase 1; UI do calendário na fase 2;
+chamada em tempo real na fase 3.
+
+### Fase 3 — Chamada em tempo real (`public/index.html`)
+- A aba de Avaliação virou **"Chamada e avaliação"**. Fluxo repensado para o
+  coordenador fazer a chamada ao vivo, logo após o evento.
+- **3 estados de presença** por brincante: *não marcado* (padrão) / *presente* /
+  *falta*, via dois botões (clicar de novo desmarca). Antes era binário e já
+  começava todo mundo presente.
+- **Justificativa da falta** aparece quando o brincante é marcado como falta;
+  **nota (1–5) + obs de desempenho** aparecem só para presentes. A nota fica
+  destravada da presença (pode ser lançada depois).
+- **Autosave a cada toque** via `upsertAvaliacao` (presença, nota, justificativa,
+  obs) — não há mais botão "Salvar". Cada linha mostra um "salvo" discreto.
+- **Cabeçalho do evento** com contadores ao vivo (presentes / faltas /
+  marcados) e a **confirmação embutida**: fazer a chamada muda o evento de
+  `planejado` → `realizado` automaticamente. Botões **"Ajustar"** (hora real de
+  início/fim + observação, via `updateEvento`) e **"Não aconteceu"** (cancela o
+  evento; some da frequência/bonificação). Evento cancelado mostra **"Reativar"**.
+- Ao salvar, os caches derivados (dashboard, ranking, bonificação, perfil) são
+  invalidados para refletir na hora.
+- CSS reescrito para a grade (`.av-row` em flex com 3 estados, `.av-pgroup`,
+  `.av-dyn`, `.av-saved`) e novo cabeçalho `.av-ev-*` / `.av-progress`.
+
+### Fase 2 — Agenda com calendário (`public/index.html`)
+- A seção **"Ensaios" virou "Agenda"** (menu, título, ícone). "Ensaio" agora é só
+  um dos tipos de **evento**. Rótulo do dashboard: "Ensaios" → "Eventos".
+- Nova **visão de calendário** (grade de mês em JS puro, sem biblioteca):
+  navegação mês anterior/próximo/hoje, chips coloridos por tipo, dia de hoje
+  destacado. **Clicar num dia** abre "Novo evento" com a data preenchida;
+  **clicar num chip** abre o detalhe do evento.
+- **Toggle Calendário ↔ Lista** na toolbar. A lista (tabela) ganhou colunas de
+  **Horário** e **Status**, e eventos cancelados aparecem esmaecidos.
+- **Formulário de evento** unificado (criar/editar) com data, tipo, **hora de
+  início e fim** e descrição. `saveEvento` chama `addEnsaio` (novo) ou
+  `updateEvento` (edição).
+- **Detalhe do evento** (modal) com Data/Horário/Status/Descrição/Observação e
+  ações: **Fazer chamada**, **Editar**, **Excluir**.
+- CSS novo: `.agenda-toolbar`, `.view-toggle`, `.cal-*` (calendário) e
+  `.chip-*` (cores por tipo), com ajustes responsivos p/ telas ≤640px.
+
+### Fase 1 — Modelo de evento ampliado (`server/handlers.js`)
+- `getEnsaios` agora retorna também `HoraInicio`, `HoraFim`, `Status`
+  (`planejado`/`realizado`/`cancelado`), `HoraInicioReal`, `HoraFimReal` e
+  `ObsEvento`. **Eventos antigos** não têm esses campos: `Status` ausente é
+  tratado como `planejado`, então continuam contando normalmente.
+- `addEnsaio` passou a gravar `HoraInicio`/`HoraFim` e nasce com
+  `Status: 'planejado'`.
+- **Nova função `updateEvento(id, dados, usuario)`**: edita data/tipo/descrição,
+  horários planejados, `status` (cancelar/reativar) e horários reais + observação
+  (o "ajuste" pós-evento). Substitui a ideia de uma etapa separada de confirmação:
+  cancelar = `status: 'cancelado'`; ajustar = gravar hora real/obs.
+
+### Chamada com autosave (`server/handlers.js`)
+- **Nova função `upsertAvaliacao(eventoId, brincanteId, patch, usuario)`**: salva
+  a avaliação de **um** brincante por vez (autosave a cada toque), em vez do
+  `salvarAvaliacoes` que apagava tudo e regravava. `patch` aceita
+  `presente` (`sim`/`nao`/`null`), `justificativa`, `nota`, `observacao`.
+  `presente: null` remove o registro (estado "não marcado"). `salvarAvaliacoes`
+  foi mantido por compatibilidade.
+
+### Eventos cancelados não contam (`server/handlers.js`)
+- Novo helper `filtrarCancelados_` remove eventos com `Status === 'cancelado'` e
+  as avaliações ligadas a eles. Aplicado em `getDashboard`, `getRanking`,
+  `getSimulacaoBonificacao` e `getPerfilBrincante` — evento que não aconteceu
+  não entra em frequência, ranking nem bonificação.
+
+### API
+- `netlify/functions/api.js`: `updateEvento` e `upsertAvaliacao` adicionados à
+  whitelist `PUBLICAS` (e ao `module.exports` dos handlers).
+
+---
+
 ## 2026-07-07 — Migração completa + redesign
 
 Toda a fundação do projeto foi construída neste dia. Em ordem cronológica:

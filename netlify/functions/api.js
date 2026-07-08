@@ -10,10 +10,11 @@ const PUBLICAS = new Set([
   'login',
   'getLogs',
   'getBrincantes', 'addBrincante', 'updateBrincante', 'removeBrincante',
-  'getEnsaios', 'addEnsaio', 'deleteEnsaio',
-  'getAvaliacoes', 'salvarAvaliacoes',
+  'getEnsaios', 'addEnsaio', 'updateEvento', 'deleteEnsaio',
+  'getAvaliacoes', 'salvarAvaliacoes', 'upsertAvaliacao',
+  'getAdvertencias', 'addAdvertencia', 'removeAdvertencia',
   'getDashboard', 'getPerfilBrincante', 'getRanking', 'getSimulacaoBonificacao',
-  'getConfig', 'getStatusAdesao', 'updateConfig',
+  'getConfig', 'getStatusAdesao', 'updateConfig', 'updateConfigMap',
 ]);
 
 const json = (statusCode, body) => ({
