@@ -174,6 +174,27 @@ async function addBrincante(dados, usuario) {
   return { success: true, id, message: `Brincante cadastrado! ID: ${id}` };
 }
 
+// Cadastro em lote: cria vários brincantes de uma vez (import de planilha/CSV).
+// Retorna quantos foram criados e a lista de erros por linha.
+async function addBrincantesLote(lista, usuario) {
+  const criados = [];
+  const erros = [];
+  for (const dados of (Array.isArray(lista) ? lista : [])) {
+    const nome = dados && dados.nome ? String(dados.nome).trim() : '';
+    if (!nome) { erros.push({ nome: '(sem nome)', erro: 'Nome vazio' }); continue; }
+    try {
+      const r = await addBrincante(dados, null); // sem log por linha
+      criados.push({ id: r.id, nome });
+    } catch (e) {
+      erros.push({ nome, erro: e.message || 'Erro' });
+    }
+  }
+  if (usuario) {
+    await registrarLog_(usuario.id, usuario.nome, 'CADASTRO_LOTE', `Cadastro em lote: ${criados.length} criados, ${erros.length} com erro`);
+  }
+  return { success: true, criados, erros, total: criados.length };
+}
+
 async function updateBrincante(id, dados, usuario) {
   const ref = getDb().collection('brincantes').doc(String(id).trim());
   const doc = await ref.get();
@@ -762,7 +783,7 @@ async function updateConfigMap(mapa, usuario) {
 module.exports = {
   login,
   getLogs,
-  getBrincantes, addBrincante, updateBrincante, removeBrincante,
+  getBrincantes, addBrincante, addBrincantesLote, updateBrincante, removeBrincante,
   getEnsaios, addEnsaio, updateEvento, deleteEnsaio,
   getAvaliacoes, salvarAvaliacoes, upsertAvaliacao,
   getAdvertencias, addAdvertencia, removeAdvertencia,

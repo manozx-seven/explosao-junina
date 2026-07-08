@@ -430,7 +430,10 @@ tr:hover td { background:rgba(255,255,255,.03); }
   <div id="pageCadastro" class="page">
     <div class="page-title">Brincantes</div>
     <div class="page-subtitle">Cadastro e gerenciamento</div>
-    <button class="btn btn-gold btn-sm" onclick="showAddBrincante()" style="margin-bottom:16px;"><i data-lucide="user-plus"></i> Novo Brincante</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <button class="btn btn-gold btn-sm" onclick="showAddBrincante()"><i data-lucide="user-plus"></i> Novo Brincante</button>
+      <button class="btn btn-outline btn-sm" onclick="showImportBrincantes()"><i data-lucide="upload"></i> Carregar lista</button>
+    </div>
     <div class="table-wrap"><table id="tblBrincantes"><thead><tr><th>ID</th><th>Nome</th><th>Fila</th><th>Tipo</th><th>Bonif.</th><th>Ações</th></tr></thead><tbody></tbody></table></div>
   </div>
 
@@ -915,6 +918,91 @@ async function saveEditBrincante(id, btn) {
   await srv('updateBrincante', id, dados, currentUser);
   _cache.bonificacao=null; _cache.ranking=null; _cache.perfil=null; _cache.dashboard=null;
   toast('Brincante atualizado!'); closeModal(); loadBrincantes();
+}
+
+// ============================================================
+// CADASTRO EM LOTE (importar planilha / CSV)
+// ============================================================
+let _importRows = [];
+function showImportBrincantes() {
+  _importRows = [];
+  showModal('Carregar lista de brincantes', 'upload',
+    '<div style="font-size:13px;color:var(--text-sec);line-height:1.6;margin-bottom:12px">'+
+      'Cole os dados copiados de uma planilha (Excel/Google Sheets) ou selecione um arquivo <strong>.csv</strong>.<br>'+
+      'Colunas nesta ordem: <strong>Nome</strong>, Apelido, CPF, Fila, Posição, Tipo, Bonificação (sim/não).<br>'+
+      'Só o <strong>Nome</strong> é obrigatório — uma linha por pessoa.'+
+    '</div>'+
+    '<div class="form-group"><label>Arquivo CSV (opcional)</label><input type="file" accept=".csv,text/csv,text/plain" class="form-input" id="fImpFile" onchange="importFileToTextarea(this)"></div>'+
+    '<div class="form-group"><label>Ou cole aqui</label><textarea class="form-input" id="fImpText" rows="6" placeholder="Maria Silva, Mari, 12345678900, A, 1, brincante, sim" style="resize:vertical;font-family:monospace;font-size:12px"></textarea></div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      '<button class="btn btn-outline btn-sm" onclick="baixarModeloCsv()"><i data-lucide="download"></i> Baixar modelo</button>'+
+      '<button class="btn btn-primary btn-sm" onclick="processImport()"><i data-lucide="table-2"></i> Processar</button>'+
+    '</div>'+
+    '<div id="impPreview" style="margin-top:16px"></div>'
+  );
+}
+function importFileToTextarea(input) {
+  const f = input.files && input.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = e => { document.getElementById('fImpText').value = e.target.result; processImport(); };
+  reader.readAsText(f, 'utf-8');
+}
+function parseImport(text) {
+  const linhas = text.split(/\r?\n/).filter(l => l.trim() !== '');
+  if (!linhas.length) return [];
+  const delim = text.indexOf('\t') >= 0 ? '\t' : (text.indexOf(';') >= 0 && text.indexOf(',') < 0 ? ';' : ',');
+  const rows = linhas.map(l => l.split(delim).map(c => c.trim().replace(/^"|"$/g,'')));
+  if (rows.length && /^(nome|name)$/i.test(rows[0][0] || '')) rows.shift(); // pula cabeçalho
+  return rows.map(cols => {
+    const tipoRaw = (cols[5] || '').toLowerCase();
+    const tipo = tipoRaw.indexOf('item') >= 0 ? 'item' : (tipoRaw.indexOf('coorden') >= 0 ? 'coordenacao' : 'brincante');
+    const bonRaw = (cols[6] || '').toLowerCase().trim();
+    const opt = ['sim','s','1','x','yes','y'].indexOf(bonRaw) >= 0 ? 'sim' : 'nao';
+    return {
+      nome: (cols[0] || '').trim(),
+      apelido: (cols[1] || '').trim(),
+      cpf: (cols[2] || '').replace(/\D/g, ''),
+      fila: (cols[3] || '').trim(),
+      posicao: (cols[4] || '').trim(),
+      tipo,
+      optBonificacao: opt
+    };
+  });
+}
+function processImport() {
+  const rows = parseImport(document.getElementById('fImpText').value);
+  const validos = rows.filter(r => r.nome);
+  const invalidos = rows.length - validos.length;
+  _importRows = validos;
+  const box = document.getElementById('impPreview');
+  if (!rows.length) { box.innerHTML = '<p style="color:var(--text-sec);font-size:13px">Nada para processar. Cole os dados ou selecione um arquivo.</p>'; return; }
+  const TIPO = { brincante:'Brincante', item:'Item', coordenacao:'Coordenação' };
+  box.innerHTML =
+    '<div style="font-size:13px;margin-bottom:8px"><strong style="color:var(--dourado)">'+validos.length+'</strong> pronto(s) para cadastrar'+(invalidos ? ' • <span style="color:var(--danger)">'+invalidos+' sem nome (ignorado)</span>' : '')+'</div>'+
+    '<div class="table-wrap" style="max-height:240px;overflow:auto"><table><thead><tr><th>Nome</th><th>Apelido</th><th>CPF</th><th>Fila</th><th>Pos.</th><th>Tipo</th><th>Bonif.</th></tr></thead><tbody>'+
+    validos.map(r => '<tr><td>'+r.nome+'</td><td>'+(r.apelido||'-')+'</td><td>'+(r.cpf||'-')+'</td><td>'+(r.fila||'-')+'</td><td>'+(r.posicao||'-')+'</td><td>'+TIPO[r.tipo]+'</td><td>'+(r.optBonificacao==='sim'?'sim':'não')+'</td></tr>').join('')+
+    '</tbody></table></div>'+
+    (validos.length ? '<button class="btn btn-primary btn-block" style="margin-top:12px" onclick="confirmImport(this)"><i data-lucide="user-plus"></i> Cadastrar '+validos.length+' brincante'+(validos.length>1?'s':'')+'</button>' : '');
+  icons();
+}
+async function confirmImport(btn) {
+  if (!_importRows.length) return;
+  if (!await confirmDialog({ title:'Cadastrar em lote', message:'Cadastrar <strong>'+_importRows.length+'</strong> brincante(s) de uma vez?', okLabel:'Cadastrar' })) return;
+  btnLoading(btn, true);
+  try {
+    const r = await srv('addBrincantesLote', _importRows, currentUser);
+    const nErr = (r.erros || []).length;
+    toast((r.total || 0)+' cadastrado(s)'+(nErr ? ' • '+nErr+' com erro' : '')+'!', nErr > 0 && !r.total);
+    closeModal(); loadBrincantes();
+  } catch(e) { btnLoading(btn, false); toast('Erro ao cadastrar em lote', true); }
+}
+function baixarModeloCsv() {
+  const csv = 'Nome,Apelido,CPF,Fila,Posicao,Tipo,Bonificacao\nMaria Silva,Mari,12345678900,A,1,brincante,sim\nJoao Souza,,98765432100,B,2,item,nao\n';
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'modelo-brincantes.csv';
+  document.body.appendChild(a); a.click(); a.remove();
 }
 
 async function deleteBrincante(id, nome) {

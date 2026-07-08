@@ -6,6 +6,18 @@
 
 ---
 
+## 2026-07-08 — Cadastro de brincantes em lote (importar planilha/CSV)
+
+- Botão **"Carregar lista"** na aba Cadastro. Modal onde a coordenação **cola os
+  dados** de uma planilha (Excel/Google Sheets) ou seleciona um **arquivo CSV**.
+- Colunas (nesta ordem): **Nome** (obrigatório), Apelido, CPF, Fila, Posição,
+  Tipo, Bonificação (sim/não). Detecta separador (tab/;/,) e pula cabeçalho.
+- **Prévia com validação** antes de gravar (linhas sem nome são ignoradas) e botão
+  para baixar um **modelo CSV**.
+- Backend: novo handler **`addBrincantesLote(lista, usuario)`** (`server/handlers.js`
+  + whitelist) — cria todos numa requisição só, reaproveitando `addBrincante`
+  (contador transacional de IDs), e retorna criados/erros por linha.
+
 ## 2026-07-08 — Responsividade mobile (passada completa)
 
 Revisão de CSS em `public/index.html` para o app ficar confortável em celulares.

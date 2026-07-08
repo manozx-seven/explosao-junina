@@ -9,7 +9,7 @@ const handlers = require('../../server/handlers');
 const PUBLICAS = new Set([
   'login',
   'getLogs',
-  'getBrincantes', 'addBrincante', 'updateBrincante', 'removeBrincante',
+  'getBrincantes', 'addBrincante', 'addBrincantesLote', 'updateBrincante', 'removeBrincante',
   'getEnsaios', 'addEnsaio', 'updateEvento', 'deleteEnsaio',
   'getAvaliacoes', 'salvarAvaliacoes', 'upsertAvaliacao',
   'getAdvertencias', 'addAdvertencia', 'removeAdvertencia',
