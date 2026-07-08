@@ -18,6 +18,7 @@ const DEFAULT_CONFIG = {
   valorFestival: '5.00',
   mesesAtivacao: '3',
   frequenciaMinima: '75',
+  frequenciaItem: '85',
   notaMinima: '4',
   percentualNotaMinima: '75',
   temporada: '2026',
@@ -31,6 +32,13 @@ const DEFAULT_CONFIG = {
 function today() { return new Date().toISOString().slice(0, 10); }
 function nowIso() { return new Date().toISOString(); }
 function normalizaCpf(cpf) { return String(cpf || '').replace(/\D/g, '').trim().padStart(11, '0'); }
+
+// Tipos de brincante (podem acumular coordenação):
+//   brincante | item | coordenacao | brincante_coord | item_coord
+function ehCoordenacao_(t) { return t === 'coordenacao' || t === 'brincante_coord' || t === 'item_coord'; }
+function papelDanca_(t) { return (t === 'item' || t === 'item_coord') ? 'item' : ((t === 'brincante' || t === 'brincante_coord') ? 'brincante' : ''); }
+function ehDancarino_(t) { return papelDanca_(t) !== ''; } // participa de métricas/bonificação
+function ehItem_(t) { return papelDanca_(t) === 'item'; }
 
 async function getConfigMap_() {
   const snap = await getDb().collection('config').doc('app').get();
@@ -81,12 +89,13 @@ async function login(id, cpf) {
       await registrarLog_(idLimpo, b.Nome, 'LOGIN', 'Acesso ao sistema');
       return {
         success: true,
-        role: b.Tipo === 'coordenacao' ? 'admin' : 'brincante',
         nome: b.Nome,
         id: b.ID,
         apelido: b.Apelido,
         fila: b.Fila,
         tipo: b.Tipo,
+        papel: papelDanca_(b.Tipo),        // '' | 'brincante' | 'item'
+        podeCoord: ehCoordenacao_(b.Tipo), // pode entrar como coordenação
       };
     }
   }
@@ -523,7 +532,9 @@ function addMeses_(dateStr, n) {
 // ('ativado'/'nao_elegivel') sobrepõe o cálculo; 'auto' (ou vazio/legado) calcula.
 function avaliarAtivacao(brincante, ensaiosMetric, avsBrincante, config) {
   const meses = parseInt(config.mesesAtivacao || 3, 10);
-  const freqMin = parseInt(config.frequenciaMinima || 75, 10);
+  const freqMin = ehItem_(brincante.Tipo)
+    ? parseInt(config.frequenciaItem || 85, 10)
+    : parseInt(config.frequenciaMinima || 75, 10);
   const notaMin = parseFloat(config.notaMinima || 4);
   const percNota = parseInt(config.percentualNotaMinima || 75, 10);
   const fimContagem = config.fimContagem || '2026-07-31';
@@ -565,8 +576,8 @@ async function getDashboard() {
   const { ensaios } = filtrarCancelados_(ensaiosRaw, avaliacoesRaw); // contagem de eventos (inclui atividades)
   const { avaliacoes } = eventosMetrica_(ensaiosRaw, avaliacoesRaw); // presença/nota só de ensaios
 
-  const totalBrincantes = brincantes.filter((b) => b.Tipo !== 'coordenacao').length;
-  const totalCoord = brincantes.filter((b) => b.Tipo === 'coordenacao').length;
+  const totalBrincantes = brincantes.filter((b) => ehDancarino_(b.Tipo)).length;
+  const totalCoord = brincantes.filter((b) => ehCoordenacao_(b.Tipo)).length;
   const totalEnsaios = ensaios.length;
   const optBonificacao = brincantes.filter((b) => b.OptBonificacao === 'sim').length;
   const ativados = brincantes.filter((b) => b.StatusAtivacao === 'ativado').length;
@@ -655,6 +666,8 @@ async function getPerfilBrincante(brincanteId) {
     sancaoPct,
     advertencias: advs,
     ativacao,
+    papel: papelDanca_(brincante.Tipo),
+    freqMinima: ehItem_(brincante.Tipo) ? parseInt(config.frequenciaItem || 85, 10) : parseInt(config.frequenciaMinima || 75, 10),
     historico,
   };
 }
@@ -665,7 +678,7 @@ async function getPerfilBrincante(brincanteId) {
 async function getRanking() {
   const [brincantesAll, avaliacoesRaw, ensaiosRaw] = await Promise.all([getBrincantes(), getAvaliacoes(), getEnsaios()]);
   const { ensaios, avaliacoes } = eventosMetrica_(ensaiosRaw, avaliacoesRaw);
-  const brincantes = brincantesAll.filter((b) => b.Tipo !== 'coordenacao');
+  const brincantes = brincantesAll.filter((b) => ehDancarino_(b.Tipo));
   const totalEnsaios = ensaios.length;
 
   return brincantes.map((b) => {
@@ -678,7 +691,7 @@ async function getRanking() {
       id: b.ID,
       nome: b.Apelido || b.Nome,
       fila: b.Fila,
-      tipo: b.Tipo,
+      tipo: papelDanca_(b.Tipo),
       presencas,
       percPresenca: perc,
       mediaNotas: media.toFixed(1),
@@ -696,7 +709,7 @@ async function getSimulacaoBonificacao() {
   ]);
   const { ensaios, avaliacoes } = filtrarCancelados_(ensaiosRaw, avaliacoesRaw);
   const metric = eventosMetrica_(ensaiosRaw, avaliacoesRaw); // p/ ativação (só ensaios)
-  const brincantes = brincantesAll.filter((b) => b.Tipo !== 'coordenacao' && b.OptBonificacao === 'sim');
+  const brincantes = brincantesAll.filter((b) => ehDancarino_(b.Tipo) && b.OptBonificacao === 'sim');
 
   const valorEnsaio = parseFloat(config.valorEnsaio || 0.5);
   const valorApresentacao = parseFloat(config.valorApresentacao || 1.0);

@@ -633,13 +633,8 @@ async function doLogin() {
   try {
     const res = await srv('login', id, cpf);
     if (res.success) {
-      currentUser = res;
-      document.getElementById('loginPage').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      document.getElementById('userName').innerHTML = '<strong>' + res.nome + '</strong>';
-      buildNav();
-      navigateTo(res.role === 'admin' ? 'Dashboard' : 'Perfil');
-      saveSession();
+      if (res.papel && res.podeCoord) escolherPapel(res);       // papel duplo → pergunta
+      else entrarNoApp(res, res.podeCoord ? 'admin' : 'brincante');
     } else {
       errEl.textContent = res.message;
       errEl.style.display = 'block';
@@ -649,6 +644,34 @@ async function doLogin() {
     errEl.style.display = 'block';
   }
   btnLoading(btn, false);
+}
+
+// Entra no app com um papel definido (admin = coordenação; brincante = só perfil)
+function entrarNoApp(res, role) {
+  currentUser = Object.assign({}, res, { role });
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('userName').innerHTML = '<strong>' + res.nome + '</strong>';
+  buildNav();
+  navigateTo(role === 'admin' ? 'Dashboard' : 'Perfil');
+  saveSession();
+}
+// Papel duplo (coordenação + item/brincante): pergunta como entrar.
+let _loginPendente = null;
+function escolherPapel(res) {
+  _loginPendente = res;
+  const danc = res.papel === 'item' ? 'Item' : 'Brincante';
+  showModal('Como deseja entrar?', 'user-check',
+    '<p style="color:var(--text-sec);font-size:14px;margin-bottom:16px">Você tem dois papéis. Escolha como quer acessar agora:</p>'+
+    '<div style="display:flex;flex-direction:column;gap:10px">'+
+      '<button class="btn btn-primary btn-block" onclick="escolherPapelRole(\'admin\')"><i data-lucide="shield"></i> Coordenação (acesso total)</button>'+
+      '<button class="btn btn-gold btn-block" onclick="escolherPapelRole(\'brincante\')"><i data-lucide="user-round"></i> '+danc+' (meu desempenho)</button>'+
+    '</div>');
+}
+function escolherPapelRole(role) {
+  const res = _loginPendente; _loginPendente = null;
+  closeModal();
+  if (res) entrarNoApp(res, role);
 }
 
 document.getElementById('loginCpf').addEventListener('keypress', e => { if (e.key === 'Enter') doLogin(); });
@@ -721,7 +744,7 @@ function startSessionWatch() {
 // NAVIGATION
 // ============================================================
 const adminPages = ['Dashboard','Cadastro','Agenda','Avaliação','Ranking','Bonificação','Configurações','Logs'];
-const brincPages = ['Perfil','Ranking'];
+const brincPages = ['Perfil']; // brincante/item veem só o próprio desempenho
 const pageIcons = {
   'Dashboard':'layout-dashboard', 'Cadastro':'users', 'Agenda':'calendar-days',
   'Avaliação':'clipboard-check', 'Ranking':'trophy', 'Bonificação':'hand-coins',
@@ -797,6 +820,23 @@ async function loadDashboard() {
 // ============================================================
 // BRINCANTES
 // ============================================================
+// Tipos de brincante (papel de dança + possível coordenação)
+const TIPO_BRINC_LABEL = { brincante:'Brincante', item:'Item', coordenacao:'Coordenação', brincante_coord:'Brincante + Coordenação', item_coord:'Item + Coordenação' };
+function optsTipoBrincante(sel) {
+  return ['brincante','item','coordenacao','brincante_coord','item_coord']
+    .map(v => '<option value="'+v+'"'+(sel===v?' selected':'')+'>'+TIPO_BRINC_LABEL[v]+'</option>').join('');
+}
+function ehCoordTipo(t) { return t==='coordenacao'||t==='brincante_coord'||t==='item_coord'; }
+function papelDancaTipo(t) { return (t==='item'||t==='item_coord')?'item':((t==='brincante'||t==='brincante_coord')?'brincante':''); }
+function ehDancarinoTipo(t) { return papelDancaTipo(t)!==''; }
+function tipoBadge(t) {
+  const dan = papelDancaTipo(t), coord = ehCoordTipo(t);
+  let s = '';
+  if (dan) s += '<span class="badge '+(dan==='item'?'badge-item':'badge-brincante')+'">'+dan+'</span>';
+  if (coord) s += (s?' ':'')+'<span class="badge badge-ativado">coord.</span>';
+  return s || '<span class="badge badge-nao">—</span>';
+}
+
 function renderBrincantes(list) {
   const tbody = document.querySelector('#tblBrincantes tbody');
   if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-sec);padding:40px">Nenhum brincante cadastrado</td></tr>'; return; }
@@ -805,7 +845,7 @@ function renderBrincantes(list) {
     '<td style="font-family:monospace;font-weight:700;color:var(--dourado)">'+b.ID+'</td>'+
     '<td><strong>'+b.Nome+'</strong>'+(b.Apelido?' <span style="color:var(--text-sec)">('+b.Apelido+')</span>':'')+'</td>'+
     '<td>'+(b.Fila||'-')+'</td>'+
-    '<td><span class="badge '+(b.Tipo==='item'?'badge-item':b.Tipo==='coordenacao'?'badge-ativado':'badge-brincante')+'">'+b.Tipo+'</span></td>'+
+    '<td>'+tipoBadge(b.Tipo)+'</td>'+
     '<td>'+(b.OptBonificacao==='sim'?'<span class="badge badge-brincante">bonif.</span>':'<span class="badge badge-nao">não</span>')+(b.StatusMembro==='desligado'?' <span class="badge badge-nao">desligado</span>':b.StatusMembro==='afastado'?' <span class="badge badge-pendente">afastado</span>':'')+'</td>'+
     '<td style="white-space:nowrap"><button class="btn btn-outline btn-sm" onclick="showEditBrincante(\''+b.ID+'\')"><i data-lucide="pencil"></i> Editar</button> '+
     '<button class="btn btn-icon btn-sm" title="Advertências" onclick="showAdvertencias(\''+b.ID+'\')"><i data-lucide="shield-alert"></i></button> '+
@@ -830,7 +870,7 @@ function showAddBrincante() {
     '<div class="form-group"><label>CPF (usado como senha de acesso)</label><input class="form-input" id="fCpf" placeholder="Somente números, 11 dígitos" maxlength="11" inputmode="numeric" oninput="this.value=this.value.replace(/\\D/g,\'\').slice(0,11)"></div>'+
     '<div class="form-row"><div class="form-group"><label>Fila</label><input class="form-input" id="fFila" placeholder="Ex: A, B, C..."></div>'+
     '<div class="form-group"><label>Posição</label><input class="form-input" id="fPosicao" placeholder="Ex: 1, 2, 3..."></div></div>'+
-    '<div class="form-row"><div class="form-group"><label>Tipo</label><select class="form-select" id="fTipo"><option value="brincante">Brincante</option><option value="item">Item</option><option value="coordenacao">Coordenação</option></select></div>'+
+    '<div class="form-row"><div class="form-group"><label>Tipo</label><select class="form-select" id="fTipo">'+optsTipoBrincante('brincante')+'</select><div class="input-hint">Item/Brincante = dança; Coordenação = admin. Use as combinações p/ quem faz os dois.</div></div>'+
     '<div class="form-group"><label>Programa de Bonificação</label><select class="form-select" id="fOpt" '+(_foraDoPeriodo?'disabled':'')+'>'+(_foraDoPeriodo?'<option value="nao">Encerrado para esta temporada</option>':'<option value="nao">Não</option><option value="sim">Sim</option>')+'</select></div></div>'+
     '<div class="form-row"><div class="form-group"><label>Data de assinatura</label><input type="date" class="form-input" id="fDataAssin" value="'+isoLocal(new Date())+'"></div>'+
     '<div class="form-group"><label>Data de adesão à bonificação</label><input type="date" class="form-input" id="fDataAdesao" value="'+isoLocal(new Date())+'"><div class="input-hint">Início do período de ativação (3 meses).</div></div></div>'+
@@ -866,7 +906,7 @@ function showEditBrincante(id) {
     '<div class="form-group"><label>CPF</label><input class="form-input" id="eCpf" value="'+(b.CPF||'')+'" maxlength="11" inputmode="numeric" oninput="this.value=this.value.replace(/\\D/g,\'\').slice(0,11)"></div>'+
     '<div class="form-row"><div class="form-group"><label>Fila</label><input class="form-input" id="eFila" value="'+(b.Fila||'')+'"></div>'+
     '<div class="form-group"><label>Posição</label><input class="form-input" id="ePosicao" value="'+(b.Posicao||'')+'"></div></div>'+
-    '<div class="form-row"><div class="form-group"><label>Tipo</label><select class="form-select" id="eTipo"><option value="brincante" '+(b.Tipo==='brincante'?'selected':'')+'>Brincante</option><option value="item" '+(b.Tipo==='item'?'selected':'')+'>Item</option><option value="coordenacao" '+(b.Tipo==='coordenacao'?'selected':'')+'>Coordenação</option></select></div>'+
+    '<div class="form-row"><div class="form-group"><label>Tipo</label><select class="form-select" id="eTipo">'+optsTipoBrincante(b.Tipo)+'</select></div>'+
     '<div class="form-group"><label>Bonificação</label><select class="form-select" id="eOpt"><option value="nao" '+(b.OptBonificacao==='nao'?'selected':'')+'>Não</option><option value="sim" '+(b.OptBonificacao==='sim'?'selected':'')+'>Sim</option></select></div></div>'+
     '<div class="form-row"><div class="form-group"><label>Data de assinatura</label><input type="date" class="form-input" id="eDataAssin" value="'+(b.DataAssinatura||'')+'"></div>'+
     '<div class="form-group"><label>Data de adesão</label><input type="date" class="form-input" id="eDataAdesao" value="'+(b.DataAdesao||'')+'"></div></div>'+
@@ -955,8 +995,9 @@ function parseImport(text) {
   const rows = linhas.map(l => l.split(delim).map(c => c.trim().replace(/^"|"$/g,'')));
   if (rows.length && /^(nome|name)$/i.test(rows[0][0] || '')) rows.shift(); // pula cabeçalho
   return rows.map(cols => {
-    const tipoRaw = (cols[5] || '').toLowerCase();
-    const tipo = tipoRaw.indexOf('item') >= 0 ? 'item' : (tipoRaw.indexOf('coorden') >= 0 ? 'coordenacao' : 'brincante');
+    const tr = (cols[5] || '').toLowerCase();
+    const coord = tr.indexOf('coorden') >= 0, item = tr.indexOf('item') >= 0, brinc = tr.indexOf('brincante') >= 0;
+    const tipo = item ? (coord?'item_coord':'item') : (brinc ? (coord?'brincante_coord':'brincante') : (coord ? 'coordenacao' : 'brincante'));
     const bonRaw = (cols[6] || '').toLowerCase().trim();
     const opt = ['sim','s','1','x','yes','y'].indexOf(bonRaw) >= 0 ? 'sim' : 'nao';
     return {
@@ -977,11 +1018,10 @@ function processImport() {
   _importRows = validos;
   const box = document.getElementById('impPreview');
   if (!rows.length) { box.innerHTML = '<p style="color:var(--text-sec);font-size:13px">Nada para processar. Cole os dados ou selecione um arquivo.</p>'; return; }
-  const TIPO = { brincante:'Brincante', item:'Item', coordenacao:'Coordenação' };
   box.innerHTML =
     '<div style="font-size:13px;margin-bottom:8px"><strong style="color:var(--dourado)">'+validos.length+'</strong> pronto(s) para cadastrar'+(invalidos ? ' • <span style="color:var(--danger)">'+invalidos+' sem nome (ignorado)</span>' : '')+'</div>'+
     '<div class="table-wrap" style="max-height:240px;overflow:auto"><table><thead><tr><th>Nome</th><th>Apelido</th><th>CPF</th><th>Fila</th><th>Pos.</th><th>Tipo</th><th>Bonif.</th></tr></thead><tbody>'+
-    validos.map(r => '<tr><td>'+r.nome+'</td><td>'+(r.apelido||'-')+'</td><td>'+(r.cpf||'-')+'</td><td>'+(r.fila||'-')+'</td><td>'+(r.posicao||'-')+'</td><td>'+TIPO[r.tipo]+'</td><td>'+(r.optBonificacao==='sim'?'sim':'não')+'</td></tr>').join('')+
+    validos.map(r => '<tr><td>'+r.nome+'</td><td>'+(r.apelido||'-')+'</td><td>'+(r.cpf||'-')+'</td><td>'+(r.fila||'-')+'</td><td>'+(r.posicao||'-')+'</td><td>'+(TIPO_BRINC_LABEL[r.tipo]||r.tipo)+'</td><td>'+(r.optBonificacao==='sim'?'sim':'não')+'</td></tr>').join('')+
     '</tbody></table></div>'+
     (validos.length ? '<button class="btn btn-primary btn-block" style="margin-top:12px" onclick="confirmImport(this)"><i data-lucide="user-plus"></i> Cadastrar '+validos.length+' brincante'+(validos.length>1?'s':'')+'</button>' : '');
   icons();
@@ -1442,7 +1482,7 @@ function avDynHtml(b) {
 }
 function renderAvaliacao(brincantes) {
   const grid = document.getElementById('avGrid');
-  const lista = brincantes.filter(b => b.Tipo !== 'coordenacao')
+  const lista = brincantes.filter(b => ehDancarinoTipo(b.Tipo))
     .sort((a,b) => (a.Fila||'').localeCompare(b.Fila||'')||(a.Nome||'').localeCompare(b.Nome||''));
   grid.innerHTML = lista.map(b => {
     const s = _avState[b.ID] || {};
@@ -1691,8 +1731,9 @@ function renderConfig(cfg) {
       num('cfgVFest','Bônus Festival (R$)',cfg.valorFestival,'0.01','Apresentações para a Igreja nunca geram bonificação (regra fixa do contrato).')+
     '</div>'+
     '<div class="card"><div class="card-title"><i data-lucide="target"></i> Metas de ativação e desempenho</div>'+
-      '<div class="form-row">'+num('cfgFreq','Frequência mínima (%)',cfg.frequenciaMinima,'1')+num('cfgNota','Nota mínima',cfg.notaMinima,'1')+'</div>'+
-      '<div class="form-row">'+num('cfgPercNota','% de ensaios com nota ≥ mínima',cfg.percentualNotaMinima,'1')+num('cfgMeses','Meses de ativação',cfg.mesesAtivacao,'1')+'</div>'+
+      '<div class="form-row">'+num('cfgFreq','Frequência mínima (%)',cfg.frequenciaMinima,'1')+num('cfgFreqItem','Frequência mínima do Item (%)',cfg.frequenciaItem,'1')+'</div>'+
+      '<div class="form-row">'+num('cfgNota','Nota mínima',cfg.notaMinima,'1')+num('cfgPercNota','% de ensaios com nota ≥ mínima',cfg.percentualNotaMinima,'1')+'</div>'+
+      num('cfgMeses','Meses de ativação',cfg.mesesAtivacao,'1','O Item precisa de mais presença (contrato: 85%).')+
     '</div>'+
     '<div class="card"><div class="card-title"><i data-lucide="calendar"></i> Datas da temporada</div>'+
       '<div class="form-row">'+date('cfgIniTemp','Início da temporada',cfg.inicioTemporada,'Quando começam os ensaios.')+date('cfgIniCont','Início da contagem da bonificação',cfg.inicioContagem,'Antes disso conta só para ativação.')+'</div>'+
@@ -1715,6 +1756,7 @@ async function saveConfig(btn) {
     valorApresentacao: document.getElementById('cfgVApres').value,
     valorFestival: document.getElementById('cfgVFest').value,
     frequenciaMinima: document.getElementById('cfgFreq').value,
+    frequenciaItem: document.getElementById('cfgFreqItem').value,
     notaMinima: document.getElementById('cfgNota').value,
     percentualNotaMinima: document.getElementById('cfgPercNota').value,
     mesesAtivacao: document.getElementById('cfgMeses').value,
@@ -1769,7 +1811,7 @@ function renderPerfil(p) {
     '<div class="perfil-meta">'+(p.Apelido?p.Apelido+' • ':'')+' Fila '+(p.Fila||'?')+' • '+p.Tipo+'</div></div></div>'+
     '<div class="stats">'+
     '<div class="stat-card"><span class="stat-ic"><i data-lucide="calendar-check"></i></span><div class="stat-value">'+p.percPresenca+'%</div><div class="stat-label">Presença ('+p.presencas+'/'+p.totalEnsaios+')</div>'+
-    '<div class="progress"><div class="progress-bar '+(p.percPresenca>=75?'progress-green':'progress-red')+'" style="width:'+p.percPresenca+'%"></div></div></div>'+
+    '<div class="progress"><div class="progress-bar '+(p.percPresenca>=(p.freqMinima||75)?'progress-green':'progress-red')+'" style="width:'+p.percPresenca+'%"></div></div></div>'+
     '<div class="stat-card"><span class="stat-ic"><i data-lucide="star"></i></span><div class="stat-value">'+p.mediaNotas+'</div><div class="stat-label">Nota média</div>'+
     '<div class="progress"><div class="progress-bar '+(parseFloat(p.mediaNotas)>=4?'progress-gold':'progress-red')+'" style="width:'+parseFloat(p.mediaNotas)*20+'%"></div></div></div>'+
     '<div class="stat-card"><span class="stat-ic"><i data-lucide="award"></i></span><div class="stat-value">'+p.percNotasBoas+'%</div><div class="stat-label">Ensaios com nota ≥ 4</div>'+
@@ -1849,7 +1891,7 @@ function buildAlertasPerfil(p) {
   const optIn = p.OptBonificacao === 'sim';
   const ativado = p.StatusAtivacao === 'ativado';
   const pendente = p.StatusAtivacao === 'pendente';
-  const presOk = p.percPresenca >= 75;
+  const presOk = p.percPresenca >= (p.freqMinima||75);
   const notaOk = p.percNotasBoas >= 75;
   const qualif = p.QualificacaoExtra;
 
@@ -1867,7 +1909,7 @@ function buildAlertasPerfil(p) {
     alertas += '<div class="alert alert-gold"><i data-lucide="hourglass" style="color:var(--dourado)"></i><div>'+
       '<strong style="color:var(--dourado)">Período de ativação em andamento</strong><br>'+
       'Para ativar sua bonificação, você precisa manter:<br>'+
-      '<span style="color:'+(presOk?'var(--success)':'var(--danger)')+'">• Presença ≥ 75% (atual: '+p.percPresenca+'%)</span><br>'+
+      '<span style="color:'+(presOk?'var(--success)':'var(--danger)')+'">• Presença ≥ '+(p.freqMinima||75)+'% (atual: '+p.percPresenca+'%)</span><br>'+
       '<span style="color:'+(notaOk?'var(--success)':'var(--danger)')+'">• Nota ≥ 4 em pelo menos 75% dos ensaios (atual: '+p.percNotasBoas+'%)</span></div></div>';
   }
 
@@ -1877,7 +1919,7 @@ function buildAlertasPerfil(p) {
     if (!presOk) {
       alertas += '<div class="alert alert-danger"><i data-lucide="alert-triangle" style="color:var(--danger)"></i><div>'+
         '<strong style="color:var(--danger)">Atenção: presença abaixo do mínimo</strong><br>'+
-        'Sua presença está em '+p.percPresenca+'%. Você precisa de pelo menos 75% para garantir a bonificação. Compareça mais aos ensaios!</div></div>';
+        'Sua presença está em '+p.percPresenca+'%. Você precisa de pelo menos '+(p.freqMinima||75)+'% para garantir a bonificação. Compareça mais aos ensaios!</div></div>';
     }
     // Avisos de nota
     if (!notaOk) {
@@ -1895,7 +1937,7 @@ function buildAlertasPerfil(p) {
     // Qualificação extra
     alertas += '<div class="alert alert-neutral"><i data-lucide="clipboard-list" style="color:var(--dourado)"></i><div>'+
       '<strong style="color:var(--dourado)">Requisitos para receber a bonificação:</strong><br>'+
-      '<span class="checklist-line" style="color:'+(presOk?'var(--success)':'var(--danger)')+'">'+(presOk?okIco:noIco)+' Presença ≥ 75%</span>'+
+      '<span class="checklist-line" style="color:'+(presOk?'var(--success)':'var(--danger)')+'">'+(presOk?okIco:noIco)+' Presença ≥ '+(p.freqMinima||75)+'%</span>'+
       '<span class="checklist-line" style="color:'+(notaOk?'var(--success)':'var(--danger)')+'">'+(notaOk?okIco:noIco)+' Nota ≥ 4 em 75% dos ensaios</span>'+
       '<span class="checklist-line" style="color:'+(qualif==='aprovado'?'var(--success)':qualif==='reprovado'?'var(--danger)':'var(--text-sec)')+'">'+
       (qualif==='aprovado'?okIco+' Requisitos extras aprovados':qualif==='reprovado'?noIco+' Requisitos extras não cumpridos':'<span class="ic-wait"><i data-lucide="clock"></i></span> Requisitos extras: aguardando avaliação da coordenação')+'</span>'+

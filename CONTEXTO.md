@@ -87,9 +87,15 @@ Editável pela aba **Configurações** (admin). O evento pode ter `ValorBonifica
 
 ## 6. Regras de negócio
 
+- **Tipos de brincante:** `brincante`, `item` (destaque), `coordenacao`, e os
+  duplos `brincante_coord` e `item_coord` (dança **e** coordena). Não existe
+  brincante+item. Quem tem papel de dança (`ehDancarino_`) entra em métricas e
+  bonificação; coordenação pura fica de fora.
 - **Login:** ID + CPF conferidos no servidor contra a coleção `brincantes`
-  (o CPF é normalizado para 11 dígitos dos dois lados). `Tipo = coordenacao`
-  entra como **admin**; os demais como **brincante**.
+  (o CPF é normalizado para 11 dígitos dos dois lados). Coordenação entra como
+  **admin**; brincante/item veem **apenas o próprio desempenho**. Quem tem papel
+  **duplo** escolhe no login como quer entrar (coordenação ou item/brincante).
+- **Item:** frequência mínima **85%** (config `frequenciaItem`) em vez de 75%.
 - **IDs de brincante:** `EXP` + temporada + sequência (contador transacional em
   `counters/brincantes`). Ex.: `EXP202601`.
 - **Tipos de ensaio:** `regular`, `ensaiao`, `apresentacao`, `festival`, `igreja`.

@@ -6,6 +6,32 @@
 
 ---
 
+## 2026-07-08 — Papéis (item/coordenação duplos), item 85% e acesso do brincante
+
+### Tipos de brincante com papel duplo
+- O campo `Tipo` passou a aceitar 5 valores: `brincante`, `item`, `coordenacao`,
+  **`brincante_coord`** e **`item_coord`** (pessoa que dança E coordena — existe
+  no grupo). Não existe brincante+item (são exclusivos). Selects de novo/editar e
+  o import em lote reconhecem as combinações; a tabela mostra badges de papel +
+  "coord.". Helpers no back (`ehCoordenacao_/papelDanca_/ehDancarino_/ehItem_`) e
+  no front (`ehCoordTipo/papelDancaTipo/ehDancarinoTipo/tipoBadge`).
+- Métricas (dashboard, ranking, bonificação) passaram a incluir **quem dança**
+  (`ehDancarino_`) e excluir só coordenação pura.
+
+### Regra do Item (Cláusula Segunda do Termo do Item)
+- Item exige **frequência mínima de 85%** (config nova `frequenciaItem=85`,
+  editável na aba Configurações). `avaliarAtivacao` e o perfil usam 85% para item
+  e 75% para brincante; o perfil retorna `freqMinima` e ajusta textos/barras.
+
+### Acesso e login
+- **Login com papel duplo:** quem é coordenação **e** item/brincante escolhe, ao
+  entrar, se acessa como **Coordenação** (admin) ou como **Item/Brincante**
+  (só desempenho). Login puro segue direto. `login` agora retorna `papel` e
+  `podeCoord`; o front decide o papel (`entrarNoApp`/`escolherPapel`).
+- **Brincante/Item** agora veem **apenas o próprio perfil** (removido o Ranking do
+  menu deles) — desempenho, histórico (incl. atividades), presença, bonificação e
+  ativação. Cada um loga com o próprio ID e CPF (senha), como antes.
+
 ## 2026-07-08 — Cadastro de brincantes em lote (importar planilha/CSV)
 
 - Botão **"Carregar lista"** na aba Cadastro. Modal onde a coordenação **cola os
