@@ -6,6 +6,22 @@
 
 ---
 
+## 2026-07-08 — Responsividade mobile (passada completa)
+
+Revisão de CSS em `public/index.html` para o app ficar confortável em celulares.
+Breakpoints em **820px** (tablet), **600px** (celular) e **400px** (celular pequeno),
+somados aos que já existiam para o calendário (640px) e criação em lote.
+
+- **Topbar** permanece em linha, compacta: logo menor, subtítulo escondido, nome
+  do usuário truncado. **Nav** com botões menores e rolagem horizontal.
+- **Páginas** com padding reduzido; títulos menores. **Stats** em 2 colunas.
+- **Tabelas** mais densas (fonte/padding menores) — seguem rolando na horizontal
+  dentro do `.table-wrap`, sem estourar a largura da tela.
+- **Modais** ocupam quase toda a largura/altura no celular, com rolagem interna.
+- **Chamada** e **barra flutuante de seleção** ajustadas para telas estreitas;
+  removidos deslocamentos de hover que atrapalham no toque.
+- Nada de novo no backend/regra; só apresentação.
+
 ## 2026-07-08 — Alinhamento com o contrato · Fases C, D e E
 
 ### Fase C — Adesão/assinatura + ativação proporcional e automática
