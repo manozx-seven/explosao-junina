@@ -863,22 +863,66 @@ async function loadBrincantes() {
   } catch(e) { if (!_cache.brincantes) { brincantesCache = []; renderBrincantes([]); toast('Erro: ' + e.message, true); } }
 }
 
-function showAddBrincante() {
+async function showAddBrincante() {
+  if (!_cache.config) { try { _cache.config = await srv('getConfig'); } catch(e) {} }
+  const hoje = isoLocal(new Date());
   showModal('Novo Brincante', 'user-plus',
     '<div class="form-row"><div class="form-group"><label>Nome completo</label><input class="form-input" id="fNome"></div>'+
     '<div class="form-group"><label>Apelido</label><input class="form-input" id="fApelido"></div></div>'+
     '<div class="form-group"><label>CPF (usado como senha de acesso)</label><input class="form-input" id="fCpf" placeholder="Somente números, 11 dígitos" maxlength="11" inputmode="numeric" oninput="this.value=this.value.replace(/\\D/g,\'\').slice(0,11)"></div>'+
     '<div class="form-row"><div class="form-group"><label>Fila</label><input class="form-input" id="fFila" placeholder="Ex: A, B, C..."></div>'+
     '<div class="form-group"><label>Posição</label><input class="form-input" id="fPosicao" placeholder="Ex: 1, 2, 3..."></div></div>'+
-    '<div class="form-row"><div class="form-group"><label>Tipo</label><select class="form-select" id="fTipo">'+optsTipoBrincante('brincante')+'</select><div class="input-hint">Item/Brincante = dança; Coordenação = admin. Use as combinações p/ quem faz os dois.</div></div>'+
-    '<div class="form-group"><label>Programa de Bonificação</label><select class="form-select" id="fOpt" '+(_foraDoPeriodo?'disabled':'')+'>'+(_foraDoPeriodo?'<option value="nao">Encerrado para esta temporada</option>':'<option value="nao">Não</option><option value="sim">Sim</option>')+'</select></div></div>'+
-    '<div class="form-row"><div class="form-group"><label>Data de assinatura</label><input type="date" class="form-input" id="fDataAssin" value="'+isoLocal(new Date())+'"></div>'+
-    '<div class="form-group"><label>Data de adesão à bonificação</label><input type="date" class="form-input" id="fDataAdesao" value="'+isoLocal(new Date())+'"><div class="input-hint">Início do período de ativação (3 meses).</div></div></div>'+
+    '<div class="form-group"><label>Tipo</label><select class="form-select" id="fTipo">'+optsTipoBrincante('brincante')+'</select><div class="input-hint">Item/Brincante = dança; Coordenação = admin. Combinações p/ quem faz os dois.</div></div>'+
+    '<div class="form-group"><label>Data de assinatura do contrato</label><input type="date" class="form-input" id="fDataAssin" value="'+hoje+'"></div>'+
+    '<div class="form-group"><label>Programa de Bonificação</label><select class="form-select" id="fOpt" onchange="toggleAdesao()"><option value="nao">Não aderiu</option><option value="sim">Aderiu</option></select></div>'+
+    '<div class="form-group" id="boxAdesao" style="display:none">'+
+      '<label>Data de adesão à bonificação</label><input type="date" class="form-input" id="fDataAdesao" onchange="validarAdesao()" oninput="validarAdesao()">'+
+      '<div id="adesaoInfo" style="font-size:12px;margin-top:6px;line-height:1.5"></div>'+
+    '</div>'+
     '<button class="btn btn-primary btn-block" onclick="saveNewBrincante(this)">Cadastrar</button>'
   );
 }
+function toggleAdesao() {
+  const on = document.getElementById('fOpt').value === 'sim';
+  document.getElementById('boxAdesao').style.display = on ? 'block' : 'none';
+  if (on) {
+    const d = document.getElementById('fDataAdesao');
+    if (!d.value) d.value = isoLocal(new Date());
+    validarAdesao();
+  }
+}
+function addMesesJs(dateStr, n) {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setMonth(d.getMonth() + n);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+// Valida a data de adesão contra o contrato e mostra o cálculo. Retorna true se pode salvar.
+function validarAdesao() {
+  const info = document.getElementById('adesaoInfo');
+  const cfg = _cache.config || {};
+  const inicio = cfg.inicioTemporada || '2026-02-01';
+  const fimAdesao = cfg.fimAdesao || '2026-04-30';
+  const fimContagem = cfg.fimContagem || '2026-07-31';
+  const inicioContagem = cfg.inicioContagem || '2026-05-01';
+  const meses = parseInt(cfg.mesesAtivacao || 3, 10);
+  const d = document.getElementById('fDataAdesao').value;
+  if (!info) return true;
+  if (!d) { info.innerHTML = '<span style="color:var(--danger)">Informe a data de adesão.</span>'; return false; }
+  if (d < inicio || d > fimAdesao) {
+    info.innerHTML = '<span style="color:var(--danger)"><strong>Data fora do prazo de adesão.</strong> Pelo contrato, a adesão vale de '+formatDate(inicio)+' a '+formatDate(fimAdesao)+'.</span>';
+    return false;
+  }
+  const ativFim = addMesesJs(d, meses);
+  if (ativFim >= fimContagem) {
+    info.innerHTML = '<span style="color:var(--warn)">Ativação (3 meses) terminaria em <strong>'+formatDate(ativFim)+'</strong>, depois do Festival ('+formatDate(fimContagem)+'). Nesse caso o brincante fica <strong>não elegível</strong> nesta temporada — mas pode cadastrar assim mesmo.</span>';
+    return true;
+  }
+  info.innerHTML = '<span style="color:var(--success)">✓ Período de ativação: <strong>'+formatDate(d)+'</strong> → <strong>'+formatDate(ativFim)+'</strong> (3 meses). Começa a acumular bonificação após essa data (contagem a partir de '+formatDate(inicioContagem)+'), até o Festival ('+formatDate(fimContagem)+').</span>';
+  return true;
+}
 
 async function saveNewBrincante(btn) {
+  const opt = document.getElementById('fOpt').value;
   const dados = {
     nome: document.getElementById('fNome').value,
     apelido: document.getElementById('fApelido').value,
@@ -886,11 +930,12 @@ async function saveNewBrincante(btn) {
     fila: document.getElementById('fFila').value,
     posicao: document.getElementById('fPosicao').value,
     tipo: document.getElementById('fTipo').value,
-    optBonificacao: document.getElementById('fOpt').value,
+    optBonificacao: opt,
     dataAssinatura: document.getElementById('fDataAssin').value,
-    dataAdesao: document.getElementById('fDataAdesao').value
+    dataAdesao: opt === 'sim' ? document.getElementById('fDataAdesao').value : ''
   };
   if (!dados.nome) return toast('Preencha o nome', true);
+  if (opt === 'sim' && !validarAdesao()) return toast('Corrija a data de adesão à bonificação', true);
   btnLoading(btn, true);
   const res = await srv('addBrincante', dados, currentUser);
   if (res.success) { toast(res.message); closeModal(); loadBrincantes(); }
@@ -970,6 +1015,7 @@ function showImportBrincantes() {
     '<div style="font-size:13px;color:var(--text-sec);line-height:1.6;margin-bottom:12px">'+
       'Cole os dados copiados de uma planilha (Excel/Google Sheets) ou selecione um arquivo <strong>.csv</strong>.<br>'+
       'Colunas nesta ordem: <strong>Nome</strong>, Apelido, CPF, Fila, Posição, Tipo, Bonificação (sim/não).<br>'+
+      '<strong>Tipo</strong> aceita: <em>brincante</em>, <em>item</em>, <em>coordenação</em>, ou as combinações <em>item/coordenação</em> e <em>brincante/coordenação</em> (vazio = brincante).<br>'+
       'Só o <strong>Nome</strong> é obrigatório — uma linha por pessoa.'+
     '</div>'+
     '<div class="form-group"><label>Arquivo CSV (opcional)</label><input type="file" accept=".csv,text/csv,text/plain" class="form-input" id="fImpFile" onchange="importFileToTextarea(this)"></div>'+

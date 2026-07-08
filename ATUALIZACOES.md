@@ -6,6 +6,22 @@
 
 ---
 
+## 2026-07-08 — Fluxo de cadastro guiado (adesão com validação e cálculo)
+
+- **Novo brincante** reordenado: identidade → **Data de assinatura do contrato** →
+  **Programa de Bonificação** (opções "Não aderiu" / "Aderiu"). A **Data de adesão**
+  só aparece quando escolhe "Aderiu".
+- Ao digitar a data de adesão, o sistema **valida contra o contrato** e **calcula ao
+  vivo**: se a data estiver fora do prazo (`inicioTemporada`..`fimAdesao`), mostra
+  **erro** e bloqueia o cadastro; se válida, mostra o **fim do período de ativação**
+  (adesão + 3 meses) e quando passa a acumular; se a ativação terminar depois do
+  Festival, avisa que fica **não elegível** (mas permite cadastrar).
+- Backend (`addBrincante`): a trava de adesão passou a olhar a **data de adesão**
+  (não "hoje"). Assim dá para cadastrar em julho quem aderiu em fevereiro sem perder
+  o opt-in; data de adesão após o prazo derruba o opt-in automaticamente.
+- Import em lote: instrução do modal agora lista os **valores de Tipo** aceitos
+  (inclui as combinações com coordenação).
+
 ## 2026-07-08 — Papéis (item/coordenação duplos), item 85% e acesso do brincante
 
 ### Tipos de brincante com papel duplo

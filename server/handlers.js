@@ -152,9 +152,11 @@ async function getBrincantes() {
 async function addBrincante(dados, usuario) {
   const config = await getConfigMap_();
   const fimAdesao = config.fimAdesao || '2026-04-30';
-  // Bloqueia opt-in bonificação fora do período de adesão
-  if (today() > fimAdesao && dados.optBonificacao === 'sim') {
-    dados.optBonificacao = 'nao';
+  // A adesão vale pela DATA de adesão (permite cadastrar em julho quem aderiu
+  // em fevereiro). Data de adesão depois do prazo do contrato não vale como opt-in.
+  if (dados.optBonificacao === 'sim') {
+    const da = dados.dataAdesao || today();
+    if (da > fimAdesao) dados.optBonificacao = 'nao';
   }
 
   const id = await proximoId_();
