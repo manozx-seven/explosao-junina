@@ -37,7 +37,7 @@ async function main() {
     console.log('• config/app já existe — mantido como está');
   }
   const config = { ..._DEFAULT_CONFIG, ...(configSnap.exists ? configSnap.data() : {}) };
-  const temporada = config.temporada || '2026';
+  const temporada = config.temporada || '2027';
 
   // 2) Gera o próximo ID via contador (mesma lógica do backend)
   const counterRef = db.collection('counters').doc('brincantes');

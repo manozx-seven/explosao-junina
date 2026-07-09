@@ -72,7 +72,7 @@ Firebase Firestore  ← banco de dados
 |--------------|---------------------|--------|
 | `config`     | `app`               | mapa de configurações (valores, temporada, datas) |
 | `counters`   | `brincantes`        | `{ seq }` — sequência para gerar IDs `EXP2026xx` |
-| `brincantes` | o próprio ID (ex. `EXP202601`, `DEV`) | ID, Nome, Apelido, CPF, Fila, Posicao, Tipo, DataAdesao, DataAssinatura, OptBonificacao, StatusAtivacao (`auto`/`ativado`/`nao_elegivel`), QualificacaoExtra, StatusMembro (`ativo`/`afastado`/`desligado`), MotivoDesligamento, DataDesligamento |
+| `brincantes` | o próprio ID (ex. `EXP202701`, `DEV`) | ID, Nome, Apelido, CPF, Fila, Posicao, Tipo, DataNascimento, AnexoI (`sim`/vazio), AnexoII (`sim`/vazio), DataAdesao, DataAssinatura, OptBonificacao, StatusAtivacao (`auto`/`ativado`/`nao_elegivel`), QualificacaoExtra, StatusMembro (`ativo`/`afastado`/`desligado`), MotivoDesligamento, DataDesligamento |
 | `ensaios`    | ex. `ENS20260210_1234` | ID, Data, Tipo, Descricao, CriadoPor, HoraInicio, HoraFim, Status (`planejado`/`realizado`/`cancelado`), HoraInicioReal, HoraFimReal, ObsEvento |
 | `avaliacoes` | auto                | EnsaioID, BrincanteID, Presente, Nota, Observacao, AvaliadoPor, DataRegistro |
 | `logs`       | auto                | DataHora, UsuarioID, UsuarioNome, Acao, Detalhes |
@@ -80,10 +80,12 @@ Firebase Firestore  ← banco de dados
 
 Config padrão (chaves em `config/app`): `valorEnsaio=0.50`, `valorApresentacao=1.00`,
 `valorFestival=5.00`, `mesesAtivacao=3`, `frequenciaMinima=75`, `notaMinima=4`,
-`percentualNotaMinima=75`, `temporada=2026`, `inicioTemporada=2026-02-01`,
-`inicioContagem=2026-05-01`, `fimContagem=2026-07-31`, `fimAdesao=2026-04-30`.
+`percentualNotaMinima=75`, `temporada=2027`, `inicioTemporada=2027-02-01`,
+`inicioContagem=2027-05-01`, `fimContagem=2027-07-31`, `fimAdesao=2027-04-30`.
 Editável pela aba **Configurações** (admin). O evento pode ter `ValorBonificacao`
-(override opcional do valor daquele dia).
+(override opcional do valor daquele dia). Também há `frequenciaItem=85`.
+(A config **viva** no Firestore prevalece sobre esses padrões; se o banco ainda
+tiver 2026, ajustar pela aba Configurações.)
 
 ## 6. Regras de negócio
 
@@ -118,9 +120,11 @@ Editável pela aba **Configurações** (admin). O evento pode ter `ValorBonifica
   - **igreja → não gera bonificação**
   - se o evento tiver `ValorBonificacao` preenchido, ele **substitui** o valor do
     tipo naquele dia.
-  - **só conta dentro do período de contagem** (`inicioContagem`..`fimContagem`):
-    conforme o contrato (Cláusula Sexta, IV), fev–abr é só ativação e a
-    bonificação passa a valer de maio até o Festival.
+  - **começa ao fim da ativação individual** (proporcional à adesão) e vai até
+    `fimContagem`. O início individual (`bonificacaoInicio`, calculado em
+    `avaliarAtivacao`) = o maior entre `inicioContagem` (piso) e o dia seguinte ao
+    fim da ativação. Assim, quem adere em fevereiro acumula a partir de maio; em
+    março, de junho; em abril, só o Festival (Cláusula Sexta, VI do contrato).
 - **Ativação** (metas para o brincante ativar a bonificação): presença ≥ 75% e
   nota ≥ 4 em pelo menos 75% dos ensaios, dentro do período de ativação
   (`mesesAtivacao` = 3, **proporcional à data de adesão**: janela = adesão +

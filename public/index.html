@@ -389,9 +389,9 @@ tr:hover td { background:rgba(255,255,255,.03); }
       <div class="brand-mark"><i data-lucide="flame"></i></div>
       <h1>Grupo Recreativo e Folclórico</h1>
       <h2>Explosão Junina</h2>
-      <h3>Sistema de Avaliação • Temporada 2026</h3>
+      <h3>Sistema de Avaliação • Temporada 2027</h3>
       <div id="loginError" class="login-error"></div>
-      <input type="text" id="loginId" placeholder="Seu ID (ex: EXP202601)" maxlength="20" autocomplete="off">
+      <input type="text" id="loginId" placeholder="Seu ID (ex: EXP202701)" maxlength="20" autocomplete="off">
       <div class="input-wrapper">
         <input type="password" id="loginCpf" placeholder="Seu CPF (somente números)" maxlength="11" autocomplete="off" inputmode="numeric">
         <button type="button" class="eye-toggle" onclick="togglePassword()" id="eyeBtn"><i data-lucide="eye"></i></button>
@@ -873,6 +873,8 @@ async function showAddBrincante() {
     '<div class="form-row"><div class="form-group"><label>Fila</label><input class="form-input" id="fFila" placeholder="Ex: A, B, C..."></div>'+
     '<div class="form-group"><label>Posição</label><input class="form-input" id="fPosicao" placeholder="Ex: 1, 2, 3..."></div></div>'+
     '<div class="form-group"><label>Tipo</label><select class="form-select" id="fTipo">'+optsTipoBrincante('brincante')+'</select><div class="input-hint">Item/Brincante = dança; Coordenação = admin. Combinações p/ quem faz os dois.</div></div>'+
+    '<div class="form-group"><label>Data de nascimento</label><input type="date" class="form-input" id="fNasc" onchange="toggleMenor(\'f\')"><div class="input-hint" id="fIdadeHint"></div></div>'+
+    menorBoxHtml('f')+
     '<div class="form-group"><label>Data de assinatura do contrato</label><input type="date" class="form-input" id="fDataAssin" value="'+hoje+'"></div>'+
     '<div class="form-group"><label>Programa de Bonificação</label><select class="form-select" id="fOpt" onchange="toggleAdesao()"><option value="nao">Não aderiu</option><option value="sim">Aderiu</option></select></div>'+
     '<div class="form-group" id="boxAdesao" style="display:none">'+
@@ -881,6 +883,35 @@ async function showAddBrincante() {
     '</div>'+
     '<button class="btn btn-primary btn-block" onclick="saveNewBrincante(this)">Cadastrar</button>'
   );
+}
+// Bloco de anexos (aparece só p/ menor de 18). prefix = 'f' (novo) ou 'e' (editar).
+function menorBoxHtml(prefix, b) {
+  b = b || {};
+  const ck1 = (b.AnexoI === 'sim') ? ' checked' : '';
+  const ck2 = (b.AnexoII === 'sim') ? ' checked' : '';
+  return '<div class="card" id="'+prefix+'MenorBox" style="display:none;padding:12px;margin-bottom:14px">'+
+    '<div class="card-title" style="font-size:13px"><i data-lucide="shield"></i> Menor de 18 anos — anexos do contrato</div>'+
+    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:6px;cursor:pointer"><input type="checkbox" id="'+prefix+'AnexoI"'+ck1+'> Anexo I assinado (autorização do responsável legal)</label>'+
+    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:6px;cursor:pointer"><input type="checkbox" id="'+prefix+'AnexoII"'+ck2+'> Anexo II assinado (autorização de viagem)</label>'+
+  '</div>';
+}
+function idadeDe(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + 'T00:00:00'); if (isNaN(d)) return null;
+  const h = new Date(); let a = h.getFullYear() - d.getFullYear();
+  const m = h.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && h.getDate() < d.getDate())) a--;
+  return a;
+}
+function toggleMenor(prefix) {
+  const v = document.getElementById(prefix+'Nasc').value;
+  const idade = idadeDe(v);
+  const box = document.getElementById(prefix+'MenorBox');
+  const hint = document.getElementById(prefix+'IdadeHint');
+  const menor = idade !== null && idade < 18;
+  if (box) box.style.display = menor ? 'block' : 'none';
+  if (menor) icons();
+  if (hint) hint.textContent = idade === null ? '' : (idade + ' anos' + (menor ? ' — menor de idade, preencha os anexos' : ''));
 }
 function toggleAdesao() {
   const on = document.getElementById('fOpt').value === 'sim';
@@ -896,14 +927,19 @@ function addMesesJs(dateStr, n) {
   d.setMonth(d.getMonth() + n);
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
+function addDiasJs(dateStr, n) {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
 // Valida a data de adesão contra o contrato e mostra o cálculo. Retorna true se pode salvar.
 function validarAdesao() {
   const info = document.getElementById('adesaoInfo');
   const cfg = _cache.config || {};
-  const inicio = cfg.inicioTemporada || '2026-02-01';
-  const fimAdesao = cfg.fimAdesao || '2026-04-30';
-  const fimContagem = cfg.fimContagem || '2026-07-31';
-  const inicioContagem = cfg.inicioContagem || '2026-05-01';
+  const inicio = cfg.inicioTemporada || '2027-02-01';
+  const fimAdesao = cfg.fimAdesao || '2027-04-30';
+  const fimContagem = cfg.fimContagem || '2027-07-31';
+  const inicioContagem = cfg.inicioContagem || '2027-05-01';
   const meses = parseInt(cfg.mesesAtivacao || 3, 10);
   const d = document.getElementById('fDataAdesao').value;
   if (!info) return true;
@@ -914,10 +950,17 @@ function validarAdesao() {
   }
   const ativFim = addMesesJs(d, meses);
   if (ativFim >= fimContagem) {
-    info.innerHTML = '<span style="color:var(--warn)">Ativação (3 meses) terminaria em <strong>'+formatDate(ativFim)+'</strong>, depois do Festival ('+formatDate(fimContagem)+'). Nesse caso o brincante fica <strong>não elegível</strong> nesta temporada — mas pode cadastrar assim mesmo.</span>';
+    info.innerHTML = '<span style="color:var(--warn)">Ativação ('+meses+' meses) terminaria em <strong>'+formatDate(ativFim)+'</strong>, depois do Festival ('+formatDate(fimContagem)+'). Nesse caso o brincante fica <strong>não elegível</strong> nesta temporada — mas pode cadastrar assim mesmo.</span>';
     return true;
   }
-  info.innerHTML = '<span style="color:var(--success)">✓ Período de ativação: <strong>'+formatDate(d)+'</strong> → <strong>'+formatDate(ativFim)+'</strong> (3 meses). Começa a acumular bonificação após essa data (contagem a partir de '+formatDate(inicioContagem)+'), até o Festival ('+formatDate(fimContagem)+').</span>';
+  const diaApos = addDiasJs(ativFim, 1);
+  const bonIni = diaApos > inicioContagem ? diaApos : inicioContagem;
+  info.innerHTML = '<div style="color:var(--success);line-height:1.7">'+
+    '<div>✓ <strong>Início da ativação:</strong> '+formatDate(d)+'</div>'+
+    '<div><strong>Fim da ativação:</strong> '+formatDate(ativFim)+' ('+meses+' meses)</div>'+
+    '<div><strong>Começa a acumular bonificação em:</strong> '+formatDate(bonIni)+'</div>'+
+    '<div style="color:var(--text-sec);font-size:11px">Acumula até o Festival ('+formatDate(fimContagem)+'). Durante a ativação, ensaia e é avaliado normalmente, mas ainda não acumula.</div>'+
+    '</div>';
   return true;
 }
 
@@ -930,6 +973,9 @@ async function saveNewBrincante(btn) {
     fila: document.getElementById('fFila').value,
     posicao: document.getElementById('fPosicao').value,
     tipo: document.getElementById('fTipo').value,
+    dataNascimento: document.getElementById('fNasc').value,
+    anexoI: document.getElementById('fAnexoI') && document.getElementById('fAnexoI').checked ? 'sim' : '',
+    anexoII: document.getElementById('fAnexoII') && document.getElementById('fAnexoII').checked ? 'sim' : '',
     optBonificacao: opt,
     dataAssinatura: document.getElementById('fDataAssin').value,
     dataAdesao: opt === 'sim' ? document.getElementById('fDataAdesao').value : ''
@@ -951,6 +997,8 @@ function showEditBrincante(id) {
     '<div class="form-group"><label>CPF</label><input class="form-input" id="eCpf" value="'+(b.CPF||'')+'" maxlength="11" inputmode="numeric" oninput="this.value=this.value.replace(/\\D/g,\'\').slice(0,11)"></div>'+
     '<div class="form-row"><div class="form-group"><label>Fila</label><input class="form-input" id="eFila" value="'+(b.Fila||'')+'"></div>'+
     '<div class="form-group"><label>Posição</label><input class="form-input" id="ePosicao" value="'+(b.Posicao||'')+'"></div></div>'+
+    '<div class="form-group"><label>Data de nascimento</label><input type="date" class="form-input" id="eNasc" value="'+(b.DataNascimento||'')+'" onchange="toggleMenor(\'e\')"><div class="input-hint" id="eIdadeHint"></div></div>'+
+    menorBoxHtml('e', b)+
     '<div class="form-row"><div class="form-group"><label>Tipo</label><select class="form-select" id="eTipo">'+optsTipoBrincante(b.Tipo)+'</select></div>'+
     '<div class="form-group"><label>Bonificação</label><select class="form-select" id="eOpt"><option value="nao" '+(b.OptBonificacao==='nao'?'selected':'')+'>Não</option><option value="sim" '+(b.OptBonificacao==='sim'?'selected':'')+'>Sim</option></select></div></div>'+
     '<div class="form-row"><div class="form-group"><label>Data de assinatura</label><input type="date" class="form-input" id="eDataAssin" value="'+(b.DataAssinatura||'')+'"></div>'+
@@ -970,7 +1018,7 @@ function showEditBrincante(id) {
       '<div id="eDesligBox" style="display:'+(b.StatusMembro==='desligado'?'block':'none')+'">'+
         '<div class="form-group"><label>Motivo do desligamento</label><select class="form-select" id="eMotivo">'+
           '<option value="voluntario" '+(b.MotivoDesligamento==='voluntario'?'selected':'')+'>Voluntário (mantém bonificação proporcional)</option>'+
-          '<option value="concorrente" '+(b.MotivoDesligamento==='concorrente'?'selected':'')+'>Foi para quadrilha concorrente (perde tudo)</option>'+
+          '<option value="concorrente" '+(b.MotivoDesligamento==='concorrente'?'selected':'')+'>Foi para quadrilha rival (perde tudo)</option>'+
           '<option value="quadrilha" '+(b.MotivoDesligamento==='quadrilha'?'selected':'')+'>Desligado pela quadrilha / sanção (perde tudo)</option>'+
           '<option value="pre_festival" '+(b.MotivoDesligamento==='pre_festival'?'selected':'')+'>Saiu nos 15 dias pré-Festival (perde tudo)</option>'+
           '<option value="outro" '+(b.MotivoDesligamento==='outro'?'selected':'')+'>Outro</option>'+
@@ -980,6 +1028,7 @@ function showEditBrincante(id) {
     '</div>'+
     '<button class="btn btn-primary btn-block" onclick="saveEditBrincante(\''+id+'\',this)">Salvar</button>'
   );
+  toggleMenor('e');
 }
 function toggleDeslig(v) {
   const box = document.getElementById('eDesligBox');
@@ -994,6 +1043,9 @@ async function saveEditBrincante(id, btn) {
     posicao:document.getElementById('ePosicao').value, tipo:document.getElementById('eTipo').value,
     optBonificacao:document.getElementById('eOpt').value, statusAtivacao:document.getElementById('eStatus').value,
     qualificacaoExtra:document.getElementById('eQualif').value,
+    dataNascimento:document.getElementById('eNasc').value,
+    anexoI: document.getElementById('eAnexoI') && document.getElementById('eAnexoI').checked ? 'sim' : '',
+    anexoII: document.getElementById('eAnexoII') && document.getElementById('eAnexoII').checked ? 'sim' : '',
     dataAssinatura:document.getElementById('eDataAssin').value, dataAdesao:document.getElementById('eDataAdesao').value,
     statusMembro:membro,
     motivoDesligamento: membro==='desligado' ? document.getElementById('eMotivo').value : '',
@@ -1014,12 +1066,13 @@ function showImportBrincantes() {
   showModal('Carregar lista de brincantes', 'upload',
     '<div style="font-size:13px;color:var(--text-sec);line-height:1.6;margin-bottom:12px">'+
       'Cole os dados copiados de uma planilha (Excel/Google Sheets) ou selecione um arquivo <strong>.csv</strong>.<br>'+
-      'Colunas nesta ordem: <strong>Nome</strong>, Apelido, CPF, Fila, Posição, Tipo, Bonificação (sim/não).<br>'+
+      'Colunas nesta ordem: <strong>Nome</strong>, Apelido, CPF, Fila, Posição, Tipo, Bonificação (sim/não), Nascimento (AAAA-MM-DD), Anexo I (sim/não), Anexo II (sim/não).<br>'+
       '<strong>Tipo</strong> aceita: <em>brincante</em>, <em>item</em>, <em>coordenação</em>, ou as combinações <em>item/coordenação</em> e <em>brincante/coordenação</em> (vazio = brincante).<br>'+
+      '<strong>Anexo I/II</strong> valem para menores de 18 anos (autorização do responsável e de viagem).<br>'+
       'Só o <strong>Nome</strong> é obrigatório — uma linha por pessoa.'+
     '</div>'+
     '<div class="form-group"><label>Arquivo CSV (opcional)</label><input type="file" accept=".csv,text/csv,text/plain" class="form-input" id="fImpFile" onchange="importFileToTextarea(this)"></div>'+
-    '<div class="form-group"><label>Ou cole aqui</label><textarea class="form-input" id="fImpText" rows="6" placeholder="Maria Silva, Mari, 12345678900, A, 1, brincante, sim" style="resize:vertical;font-family:monospace;font-size:12px"></textarea></div>'+
+    '<div class="form-group"><label>Ou cole aqui</label><textarea class="form-input" id="fImpText" rows="6" placeholder="Maria Silva, Mari, 12345678900, A, 1, brincante, sim, 2010-05-14, sim, sim" style="resize:vertical;font-family:monospace;font-size:12px"></textarea></div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
       '<button class="btn btn-outline btn-sm" onclick="baixarModeloCsv()"><i data-lucide="download"></i> Baixar modelo</button>'+
       '<button class="btn btn-primary btn-sm" onclick="processImport()"><i data-lucide="table-2"></i> Processar</button>'+
@@ -1046,6 +1099,9 @@ function parseImport(text) {
     const tipo = item ? (coord?'item_coord':'item') : (brinc ? (coord?'brincante_coord':'brincante') : (coord ? 'coordenacao' : 'brincante'));
     const bonRaw = (cols[6] || '').toLowerCase().trim();
     const opt = ['sim','s','1','x','yes','y'].indexOf(bonRaw) >= 0 ? 'sim' : 'nao';
+    const simSet = ['sim','s','1','x','yes','y'];
+    const anexoI = simSet.indexOf((cols[8]||'').toLowerCase().trim()) >= 0 ? 'sim' : '';
+    const anexoII = simSet.indexOf((cols[9]||'').toLowerCase().trim()) >= 0 ? 'sim' : '';
     return {
       nome: (cols[0] || '').trim(),
       apelido: (cols[1] || '').trim(),
@@ -1053,7 +1109,9 @@ function parseImport(text) {
       fila: (cols[3] || '').trim(),
       posicao: (cols[4] || '').trim(),
       tipo,
-      optBonificacao: opt
+      optBonificacao: opt,
+      dataNascimento: (cols[7] || '').trim(),
+      anexoI, anexoII
     };
   });
 }
@@ -1066,8 +1124,9 @@ function processImport() {
   if (!rows.length) { box.innerHTML = '<p style="color:var(--text-sec);font-size:13px">Nada para processar. Cole os dados ou selecione um arquivo.</p>'; return; }
   box.innerHTML =
     '<div style="font-size:13px;margin-bottom:8px"><strong style="color:var(--dourado)">'+validos.length+'</strong> pronto(s) para cadastrar'+(invalidos ? ' • <span style="color:var(--danger)">'+invalidos+' sem nome (ignorado)</span>' : '')+'</div>'+
-    '<div class="table-wrap" style="max-height:240px;overflow:auto"><table><thead><tr><th>Nome</th><th>Apelido</th><th>CPF</th><th>Fila</th><th>Pos.</th><th>Tipo</th><th>Bonif.</th></tr></thead><tbody>'+
-    validos.map(r => '<tr><td>'+r.nome+'</td><td>'+(r.apelido||'-')+'</td><td>'+(r.cpf||'-')+'</td><td>'+(r.fila||'-')+'</td><td>'+(r.posicao||'-')+'</td><td>'+(TIPO_BRINC_LABEL[r.tipo]||r.tipo)+'</td><td>'+(r.optBonificacao==='sim'?'sim':'não')+'</td></tr>').join('')+
+    '<div class="table-wrap" style="max-height:240px;overflow:auto"><table><thead><tr><th>Nome</th><th>Apelido</th><th>CPF</th><th>Fila</th><th>Pos.</th><th>Tipo</th><th>Bonif.</th><th>Nasc.</th><th>Anexos</th></tr></thead><tbody>'+
+    validos.map(r => { const idade = idadeDe(r.dataNascimento); const menor = idade!==null && idade<18;
+      return '<tr><td>'+r.nome+'</td><td>'+(r.apelido||'-')+'</td><td>'+(r.cpf||'-')+'</td><td>'+(r.fila||'-')+'</td><td>'+(r.posicao||'-')+'</td><td>'+(TIPO_BRINC_LABEL[r.tipo]||r.tipo)+'</td><td>'+(r.optBonificacao==='sim'?'sim':'não')+'</td><td>'+(r.dataNascimento?formatDate(r.dataNascimento)+(menor?' <span style="color:var(--warn)">('+idade+')</span>':''):'-')+'</td><td>'+(menor?((r.anexoI==='sim'?'I':'—')+' / '+(r.anexoII==='sim'?'II':'—')):'-')+'</td></tr>'; }).join('')+
     '</tbody></table></div>'+
     (validos.length ? '<button class="btn btn-primary btn-block" style="margin-top:12px" onclick="confirmImport(this)"><i data-lucide="user-plus"></i> Cadastrar '+validos.length+' brincante'+(validos.length>1?'s':'')+'</button>' : '');
   icons();
@@ -1084,7 +1143,7 @@ async function confirmImport(btn) {
   } catch(e) { btnLoading(btn, false); toast('Erro ao cadastrar em lote', true); }
 }
 function baixarModeloCsv() {
-  const csv = 'Nome,Apelido,CPF,Fila,Posicao,Tipo,Bonificacao\nMaria Silva,Mari,12345678900,A,1,brincante,sim\nJoao Souza,,98765432100,B,2,item,nao\n';
+  const csv = 'Nome,Apelido,CPF,Fila,Posicao,Tipo,Bonificacao,Nascimento,AnexoI,AnexoII\nMaria Silva,Mari,12345678900,A,1,brincante,sim,2010-05-14,sim,sim\nJoao Souza,,98765432100,B,2,item,nao,1998-03-22,,\n';
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
   a.download = 'modelo-brincantes.csv';
@@ -1864,7 +1923,8 @@ function renderPerfil(p) {
     '<div class="progress"><div class="progress-bar '+(p.percNotasBoas>=75?'progress-green':'progress-red')+'" style="width:'+p.percNotasBoas+'%"></div></div></div>'+
     '<div class="stat-card"><span class="stat-ic"><i data-lucide="hand-coins"></i></span><div class="stat-value" style="color:'+(p.OptBonificacao==='sim'?'var(--dourado)':'var(--text-sec)')+'">R$ '+p.bonificacao+'</div>'+
     '<div class="stat-label">Bonificação acumulada</div></div></div>'+
-    (p.OptBonificacao==='sim'?buildAtivacaoCard(p.ativacao):'')+
+    (p.OptBonificacao==='sim'?buildAtivacaoCard(p.ativacao, p.DataAssinatura):'')+
+    buildDicasPerfil(p)+
     buildAlertasPerfil(p)+
     '<div class="card"><div class="card-title"><i data-lucide="history"></i> Histórico de avaliações</div>'+
     '<div class="table-wrap"><table><thead><tr><th>Data</th><th>Tipo</th><th>Presença</th><th>Nota</th><th>Observação</th></tr></thead><tbody>'+
@@ -1876,25 +1936,44 @@ function renderPerfil(p) {
     ).join('')+'</tbody></table></div></div>';
   icons();
 }
-function buildAtivacaoCard(a) {
+function buildAtivacaoCard(a, assinatura) {
   if (!a) return '';
   const map = {
     ativado: ['check-circle-2','var(--success)','Ativado','Você cumpriu o período de ativação e já acumula bonificação.'],
-    em_ativacao: ['clock','var(--warn)','Em período de ativação','Você está nos 3 meses iniciais. Cumpra 75% de presença e nota ≥ 4 em 75% dos ensaios para ativar. Ainda não acumula bonificação.'],
+    em_ativacao: ['clock','var(--warn)','Em período de ativação','Você está nos 3 meses iniciais. Cumpra a frequência mínima e nota ≥ 4 em pelo menos 75% dos ensaios para ativar. Ainda não acumula bonificação.'],
     nao_ativado: ['x-circle','var(--danger)','Não ativado','Você não cumpriu as metas no período de ativação. Segue na quadrilha, mas sem bonificação nesta temporada.'],
     nao_elegivel: ['ban','var(--text-sec)','Não elegível','A adesão foi tarde demais para completar a ativação antes do Festival.'],
     sem_adesao: ['calendar-x','var(--text-sec)','Sem data de adesão','A coordenação precisa registrar sua data de adesão para calcular o período de ativação.'],
     sem_bonificacao: ['info','var(--text-sec)','Fora do programa','Você não aderiu ao Programa de Bonificação.']
   };
   const m = map[a.status] || map.sem_bonificacao;
-  let extra = '';
-  if (a.ativacaoFim) {
-    extra = '<div style="font-size:12px;color:var(--text-sec);margin-top:8px">Janela de ativação até <strong>'+formatDate(a.ativacaoFim)+'</strong>';
-    if (a.freq!==undefined) extra += ' &nbsp;•&nbsp; presença '+a.freq+'% '+(a.freqOk?'✓':'✗')+' &nbsp;•&nbsp; nota boa '+a.notaPct+'% '+(a.notaOk?'✓':'✗');
-    extra += '</div>';
+  const lin = (lbl, val) => val ? '<div style="display:flex;justify-content:space-between;gap:12px"><span style="color:var(--text-sec)">'+lbl+'</span><strong>'+formatDate(val)+'</strong></div>' : '';
+  let criterios = '';
+  if (a.freq !== undefined) {
+    criterios = '<div style="margin-top:8px;font-size:12px">'+
+      '<span style="color:'+(a.freqOk?'var(--success)':'var(--danger)')+'">Presença '+a.freq+'% '+(a.freqOk?'✓':'✗')+'</span> &nbsp;•&nbsp; '+
+      '<span style="color:'+(a.notaOk?'var(--success)':'var(--danger)')+'">Nota ≥ 4 em '+a.notaPct+'% '+(a.notaOk?'✓':'✗')+'</span></div>';
+  }
+  let datas = '';
+  if (a.adesao || a.ativacaoFim) {
+    datas = '<div style="margin-top:10px;font-size:12px;line-height:1.9;border-top:1px solid var(--border);padding-top:8px">'+
+      lin('Assinatura do contrato', assinatura)+
+      lin('Adesão', a.adesao)+
+      lin('Fim da ativação', a.ativacaoFim)+
+      (a.bonificacaoInicio ? lin(a.ativado ? 'Acumula bonificação desde' : 'Começa a acumular em', a.bonificacaoInicio) : '')+
+      lin('Conta até (Festival)', a.fimContagem)+
+    '</div>';
   }
   return '<div class="card"><div class="card-title" style="color:'+m[1]+'"><i data-lucide="'+m[0]+'"></i> Ativação: '+m[2]+'</div>'+
-    '<div style="font-size:13px;color:var(--text-sec);line-height:1.5">'+m[3]+'</div>'+extra+'</div>';
+    '<div style="font-size:13px;color:var(--text-sec);line-height:1.5">'+m[3]+'</div>'+criterios+datas+'</div>';
+}
+function buildDicasPerfil(p) {
+  if (!p.dicas || !p.dicas.length) return '';
+  const ico = { alerta:['alert-triangle','var(--danger)'], melhorar:['trending-up','var(--warn)'], bom:['party-popper','var(--success)'] };
+  return '<div class="card"><div class="card-title"><i data-lucide="lightbulb"></i> Dicas para você</div>'+
+    p.dicas.map(d => { const i = ico[d.nivel] || ico.melhorar;
+      return '<div class="alert alert-neutral" style="margin-top:8px"><i data-lucide="'+i[0]+'" style="color:'+i[1]+'"></i><div>'+d.texto+'</div></div>'; }).join('')+
+    '</div>';
 }
 async function loadPerfil() {
   const id = currentUser.id;
@@ -1935,8 +2014,8 @@ function buildAlertasPerfil(p) {
       'Sua bonificação está reduzida por advertência registrada pela coordenação.</div></div>';
   }
   const optIn = p.OptBonificacao === 'sim';
-  const ativado = p.StatusAtivacao === 'ativado';
-  const pendente = p.StatusAtivacao === 'pendente';
+  const ativado = !!(p.ativacao && p.ativacao.ativado);
+  const pendente = !!(p.ativacao && p.ativacao.status === 'em_ativacao');
   const presOk = p.percPresenca >= (p.freqMinima||75);
   const notaOk = p.percNotasBoas >= 75;
   const qualif = p.QualificacaoExtra;

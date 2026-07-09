@@ -6,6 +6,41 @@
 
 ---
 
+## 2026-07-09 — Sistema alinhado ao contrato (datas de ativação, perfil, menor de idade)
+
+### Novos campos do brincante
+- `DataNascimento`, `AnexoI` e `AnexoII` (`sim`/vazio). No **cadastro** e na
+  **edição**, ao informar a data de nascimento, se for **menor de 18** aparece um
+  bloco para marcar **Anexo I** (autorização do responsável) e **Anexo II**
+  (viagem). O **import em lote/CSV** ganhou as colunas Nascimento, AnexoI, AnexoII
+  (modelo e prévia atualizados).
+- Backend: `normalizaBrincante_`, `addBrincante`, `updateBrincante` e o mapa de
+  campos passam a gravar/ler esses campos.
+
+### Datas de ativação e início da bonificação
+- No **cadastro guiado**, ao digitar a data de adesão o sistema destaca agora
+  **início da ativação**, **fim da ativação** e **a partir de quando começa a
+  acumular** (até o Festival).
+- `avaliarAtivacao` passou a devolver `bonificacaoInicio` = o maior entre o piso
+  `inicioContagem` e o dia seguinte ao fim da ativação individual. A **contagem
+  da bonificação** (perfil e simulação) agora começa nessa data individual, não
+  mais num piso único — alinhado ao contrato (começa ao fim da ativação de cada um).
+- **Perfil do brincante**: o card de Ativação mostra as datas (adesão, fim da
+  ativação, desde quando acumula / quando começa, e até o Festival) e os
+  critérios (presença/nota) em tempo real. Correção: os alertas usam a ativação
+  **calculada** (`ativacao.status`), não mais o override manual.
+
+### Dicas por nível (perfil)
+- Novo card **"Dicas para você"**: por nível de desempenho, o sistema orienta —
+  ex.: presença baixa → avisar faltas e procurar o líder de fila; nota baixa →
+  procurar coordenação/coreógrafos para reforço; bom desempenho → continuar e
+  ajudar os colegas. Gerado em `montarDicas_` (backend), renderizado no perfil.
+
+### Config padrão → temporada 2027
+- `DEFAULT_CONFIG` e os fallbacks do frontend passaram a 2027 (temporada, datas de
+  contagem e adesão), alinhando os padrões ao contrato revisado. A config **viva**
+  no Firestore continua mandando; se estiver 2026, ajustar pela aba Configurações.
+
 ## 2026-07-09 — Revisão dos documentos (contrato + material) na pasta "documentos explosão"
 
 Revisão dos 5 `.docx` da pasta `documentos explosão/` (backup em

@@ -21,11 +21,11 @@ const DEFAULT_CONFIG = {
   frequenciaItem: '85',
   notaMinima: '4',
   percentualNotaMinima: '75',
-  temporada: '2026',
-  inicioTemporada: '2026-02-01',
-  inicioContagem: '2026-05-01', // início da contagem da bonificação (fev–abr = só ativação)
-  fimContagem: '2026-07-31',
-  fimAdesao: '2026-04-30',
+  temporada: '2027',
+  inicioTemporada: '2027-02-01',
+  inicioContagem: '2027-05-01', // piso da contagem (fev–abr = só ativação; começa de fato ao fim da ativação de cada um)
+  fimContagem: '2027-07-31',
+  fimAdesao: '2027-04-30',
 };
 
 // ---------- helpers ----------
@@ -133,6 +133,9 @@ function normalizaBrincante_(b) {
     Fila: b.Fila || '',
     Posicao: b.Posicao || '',
     Tipo: b.Tipo || 'brincante',
+    DataNascimento: b.DataNascimento || '',
+    AnexoI: b.AnexoI || '',   // 'sim' quando o Anexo I (autorização do responsável) foi assinado
+    AnexoII: b.AnexoII || '',  // 'sim' quando o Anexo II (autorização de viagem) foi assinado
     DataAdesao: b.DataAdesao || '',
     DataAssinatura: b.DataAssinatura || '',
     OptBonificacao: b.OptBonificacao || 'nao',
@@ -168,6 +171,9 @@ async function addBrincante(dados, usuario) {
     Fila: dados.fila || '',
     Posicao: dados.posicao || '',
     Tipo: dados.tipo || 'brincante',
+    DataNascimento: dados.dataNascimento || '',
+    AnexoI: dados.anexoI ? 'sim' : '',
+    AnexoII: dados.anexoII ? 'sim' : '',
     DataAdesao: dados.dataAdesao || today(),
     DataAssinatura: dados.dataAssinatura || today(),
     OptBonificacao: dados.optBonificacao || 'nao',
@@ -215,6 +221,7 @@ async function updateBrincante(id, dados, usuario) {
     nome: 'Nome', apelido: 'Apelido', cpf: 'CPF', fila: 'Fila', posicao: 'Posicao',
     tipo: 'Tipo', optBonificacao: 'OptBonificacao', statusAtivacao: 'StatusAtivacao',
     qualificacaoExtra: 'QualificacaoExtra',
+    dataNascimento: 'DataNascimento', anexoI: 'AnexoI', anexoII: 'AnexoII',
     dataAdesao: 'DataAdesao', dataAssinatura: 'DataAssinatura',
     statusMembro: 'StatusMembro', motivoDesligamento: 'MotivoDesligamento', dataDesligamento: 'DataDesligamento',
   };
@@ -530,6 +537,19 @@ function addMeses_(dateStr, n) {
   d.setMonth(d.getMonth() + n);
   return d.toISOString().slice(0, 10);
 }
+function addDias_(dateStr, n) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+// Data em que o brincante COMEÇA a acumular bonificação: o maior entre o piso da
+// contagem (inicioContagem) e o dia seguinte ao fim da ativação individual.
+function inicioBonif_(ativacaoFim, inicioContagem) {
+  const aposAtiv = ativacaoFim ? addDias_(ativacaoFim, 1) : '';
+  if (!aposAtiv) return inicioContagem;
+  return aposAtiv > inicioContagem ? aposAtiv : inicioContagem;
+}
 // Calcula o status de ativação de um brincante. StatusAtivacao manual
 // ('ativado'/'nao_elegivel') sobrepõe o cálculo; 'auto' (ou vazio/legado) calcula.
 function avaliarAtivacao(brincante, ensaiosMetric, avsBrincante, config) {
@@ -539,19 +559,24 @@ function avaliarAtivacao(brincante, ensaiosMetric, avsBrincante, config) {
     : parseInt(config.frequenciaMinima || 75, 10);
   const notaMin = parseFloat(config.notaMinima || 4);
   const percNota = parseInt(config.percentualNotaMinima || 75, 10);
-  const fimContagem = config.fimContagem || '2026-07-31';
+  const fimContagem = config.fimContagem || '2027-07-31';
+  const inicioContagem = config.inicioContagem || '2027-05-01';
   const hoje = today();
   const adesao = brincante.DataAdesao || '';
 
   const manual = brincante.StatusAtivacao;
-  if (manual === 'ativado') return { status: 'ativado', ativado: true, override: true, adesao, ativacaoFim: addMeses_(adesao, meses) };
-  if (manual === 'nao_elegivel') return { status: 'nao_elegivel', ativado: false, override: true, adesao, ativacaoFim: '' };
+  if (manual === 'ativado') {
+    const af = addMeses_(adesao, meses);
+    return { status: 'ativado', ativado: true, override: true, adesao, ativacaoFim: af, bonificacaoInicio: inicioBonif_(af, inicioContagem), fimContagem };
+  }
+  if (manual === 'nao_elegivel') return { status: 'nao_elegivel', ativado: false, override: true, adesao, ativacaoFim: '', bonificacaoInicio: '', fimContagem };
 
-  if (brincante.OptBonificacao !== 'sim') return { status: 'sem_bonificacao', ativado: false, adesao, ativacaoFim: '' };
-  if (!adesao) return { status: 'sem_adesao', ativado: false, adesao: '', ativacaoFim: '' };
+  if (brincante.OptBonificacao !== 'sim') return { status: 'sem_bonificacao', ativado: false, adesao, ativacaoFim: '', bonificacaoInicio: '', fimContagem };
+  if (!adesao) return { status: 'sem_adesao', ativado: false, adesao: '', ativacaoFim: '', bonificacaoInicio: '', fimContagem };
 
   const ativacaoFim = addMeses_(adesao, meses);
-  if (ativacaoFim >= fimContagem) return { status: 'nao_elegivel', ativado: false, adesao, ativacaoFim };
+  const bonificacaoInicio = inicioBonif_(ativacaoFim, inicioContagem);
+  if (ativacaoFim >= fimContagem) return { status: 'nao_elegivel', ativado: false, adesao, ativacaoFim, bonificacaoInicio: '', fimContagem };
 
   const janela = ensaiosMetric.filter((e) => e.Data >= adesao && e.Data <= ativacaoFim);
   const ids = new Set(janela.map((e) => e.ID));
@@ -566,10 +591,10 @@ function avaliarAtivacao(brincante, ensaiosMetric, avsBrincante, config) {
   const notaOk = notaPct >= percNota;
 
   if (hoje <= ativacaoFim) {
-    return { status: 'em_ativacao', ativado: false, adesao, ativacaoFim, freq, freqOk, notaPct, notaOk, totalJanela };
+    return { status: 'em_ativacao', ativado: false, adesao, ativacaoFim, bonificacaoInicio, fimContagem, freq, freqOk, notaPct, notaOk, totalJanela };
   }
   const ativado = freqOk && notaOk;
-  return { status: ativado ? 'ativado' : 'nao_ativado', ativado, adesao, ativacaoFim, freq, freqOk, notaPct, notaOk, totalJanela };
+  return { status: ativado ? 'ativado' : 'nao_ativado', ativado, adesao, ativacaoFim, bonificacaoInicio, fimContagem, freq, freqOk, notaPct, notaOk, totalJanela };
 }
 
 async function getDashboard() {
@@ -629,13 +654,15 @@ async function getPerfilBrincante(brincanteId) {
 
   // Ativação (proporcional/automática) usa as métricas de ensaio.
   const ativacao = avaliarAtivacao(brincante, metric.ensaios, metric.avaliacoes, config);
+  // Contagem começa ao fim da ativação individual (proporcional à adesão), respeitando o piso.
+  const inicioBonifInd = ativacao.bonificacaoInicio || inicioContagem;
   let bonificacao = 0;
   if (brincante.OptBonificacao === 'sim' && ativacao.ativado) {
     avaliacoesNC.forEach((av) => {
       if (av.Presente === 'sim') {
         const ensaio = ensaiosNC.find((e) => e.ID === av.EnsaioID);
-        // Só conta dentro do período de contagem (fev–abr = só ativação)
-        if (ensaio && noPeriodoBonif_(ensaio, inicioContagem, fimContagem)) {
+        // Só conta a partir do início individual da bonificação, até o fim da contagem.
+        if (ensaio && noPeriodoBonif_(ensaio, inicioBonifInd, fimContagem)) {
           bonificacao += valorBonifEvento_(ensaio, valorEnsaio, valorApresentacao, valorFestival);
         }
       }
@@ -659,6 +686,8 @@ async function getPerfilBrincante(brincanteId) {
     };
   }).sort((a, b) => new Date(b.data) - new Date(a.data));
 
+  const freqMinima = ehItem_(brincante.Tipo) ? parseInt(config.frequenciaItem || 85, 10) : parseInt(config.frequenciaMinima || 75, 10);
+  const dicas = montarDicas_(percPresenca, parseFloat(mediaNotas), percNotasBoas, freqMinima, parseInt(config.percentualNotaMinima || 75, 10));
   return {
     ...brincante,
     totalEnsaios, presencas, percPresenca,
@@ -668,10 +697,44 @@ async function getPerfilBrincante(brincanteId) {
     sancaoPct,
     advertencias: advs,
     ativacao,
+    menorDeIdade: ehMenor_(brincante.DataNascimento),
+    idade: idadeAnos_(brincante.DataNascimento),
     papel: papelDanca_(brincante.Tipo),
-    freqMinima: ehItem_(brincante.Tipo) ? parseInt(config.frequenciaItem || 85, 10) : parseInt(config.frequenciaMinima || 75, 10),
+    freqMinima,
+    dicas,
     historico,
   };
+}
+
+// idade em anos a partir da data de nascimento (YYYY-MM-DD); null se vazia.
+function idadeAnos_(nasc) {
+  if (!nasc) return null;
+  const d = new Date(nasc + 'T00:00:00');
+  if (isNaN(d)) return null;
+  const h = new Date();
+  let a = h.getFullYear() - d.getFullYear();
+  const m = h.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && h.getDate() < d.getDate())) a--;
+  return a;
+}
+function ehMenor_(nasc) { const a = idadeAnos_(nasc); return a !== null && a < 18; }
+
+// Dicas por nível de desempenho (mostradas ao brincante no perfil).
+function montarDicas_(freq, media, notaPct, freqMin, notaPctMin) {
+  const dicas = [];
+  if (freq < freqMin) {
+    dicas.push({ nivel: 'alerta', texto: 'Sua presença está abaixo do mínimo (' + freqMin + '%). Avise faltas com 24h de antecedência e compareça mais — fale com o líder da sua fila.' });
+  }
+  if (media > 0 && media < 3) {
+    dicas.push({ nivel: 'alerta', texto: 'Seu desempenho está abaixo do esperado. Procure a coordenação e os coreógrafos para reforço nos passos — a quadrilha está 100% à disposição para te ajudar, sem constrangimento.' });
+  } else if (media >= 3 && media < 4) {
+    dicas.push({ nivel: 'melhorar', texto: 'Você está quase na meta. Foque em sincronia e expressão e peça dicas aos líderes de fila e coreógrafos nos ensaios.' });
+  } else if (media >= 4 && notaPct < notaPctMin) {
+    dicas.push({ nivel: 'melhorar', texto: 'Boas notas, mas ainda falta constância: mantenha nota ≥ 4 em mais ensaios. Continue firme!' });
+  } else if (media >= 4 && freq >= freqMin) {
+    dicas.push({ nivel: 'bom', texto: 'Ótimo desempenho! Você está dentro das metas. Continue assim e ajude os colegas com mais dificuldade.' });
+  }
+  return dicas;
 }
 
 // ============================================================
@@ -726,11 +789,15 @@ async function getSimulacaoBonificacao() {
   let totalGeral = 0;
   const lista = brincantes.map((b) => {
     const avs = avaliacoes.filter((a) => a.BrincanteID === b.ID);
+    const avsMetric = metric.avaliacoes.filter((a) => a.BrincanteID === b.ID);
+    const ativacao = avaliarAtivacao(b, metric.ensaios, avsMetric, config);
+    // Contagem a partir do início individual (fim da ativação), respeitando o piso.
+    const inicioBonifInd = ativacao.bonificacaoInicio || inicioContagem;
     let valor = 0, ensaiosPresente = 0, apresentacoesPresente = 0, festivalPresente = false;
     avs.forEach((av) => {
       if (av.Presente === 'sim') {
         const ensaio = ensaios.find((e) => e.ID === av.EnsaioID);
-        if (ensaio && noPeriodoBonif_(ensaio, inicioContagem, fimContagem)) {
+        if (ensaio && noPeriodoBonif_(ensaio, inicioBonifInd, fimContagem)) {
           valor += valorBonifEvento_(ensaio, valorEnsaio, valorApresentacao, valorFestival);
           if (ensaio.Tipo === 'festival') festivalPresente = true;
           else if (ensaio.Tipo === 'apresentacao') apresentacoesPresente++;
@@ -738,8 +805,6 @@ async function getSimulacaoBonificacao() {
         }
       }
     });
-    const avsMetric = metric.avaliacoes.filter((a) => a.BrincanteID === b.ID);
-    const ativacao = avaliarAtivacao(b, metric.ensaios, avsMetric, config);
     const sancaoPct = penalidadeTotal_(b, advsPor[b.ID]);
     const valorComSancao = valor * (1 - sancaoPct / 100);
     const elegivel = ativacao.ativado;
