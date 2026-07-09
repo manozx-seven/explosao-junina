@@ -6,6 +6,76 @@
 
 ---
 
+## 2026-07-09 — Revisão dos documentos (contrato + material) na pasta "documentos explosão"
+
+Revisão dos 5 `.docx` da pasta `documentos explosão/` (backup em
+`documentos explosão/_backup/`). **Nada de código mudou** — só documentos.
+
+### Contrato (`Contratos Explosao Junina Final.docx`)
+- **Terminologia:** `brincante` passou a designar todo integrante; divisão em
+  **Item Dançarino** (cordão) e **Item Destaque** (Marcador/Rei/Rainha/Noivo/
+  Noiva). Definição na Cláusula Primeira + **seleção de categoria** nos dados.
+- **Base de frequência:** 75% para Item Dançarino, **85% para Item Destaque**
+  (inclusive ativação, resgate e manutenção da bonificação) — explicitado nas
+  Cláusulas Segunda, Sexta e no Termo do Item.
+- **Cláusula Sexta renumerada** (corrigido II/III repetidos e VIII pulado →
+  agora I…X) e referência "seção II" → "seção I".
+- **Início da bonificação** deixou de ser fixo em "maio": agora inicia **ao fim
+  do período de ativação de cada um** (proporcional à adesão).
+- **Falta grave definida** (10 faltas consecutivas ou 20 alternadas
+  injustificadas = abandono, com direito a defesa); **perda de 50%** esclarecida
+  como incidente sobre o acumulado ao fim do período; **advertência formal**
+  detalhada; **desligamento pela quadrilha** condicionado ao esgotamento das
+  sanções (salvo gravidade extrema); nova falta grave: faltar a apresentação.
+- **Avaliação acolhedora** (Cláusula Quinta): caráter formativo, não punitivo,
+  com apoio reforçado a quem tem mais dificuldade.
+- **Cessão de imagem** ampliada (stories, reels, transmissões ao vivo, feed).
+- **Ativação automática pelo sistema** citada na Cláusula Sexta.
+- **Fidelidade** pode ser ajustada também **dentro da temporada** (orçamento).
+- **Coordenação** com campos (nome/função/CPF/contato) para preencher; **Anexo
+  II** passou a coletar RG/CPF do responsável (igual ao Anexo I).
+- **Termo do Item Destaque:** ensaios individuais/surpresa mais intensos, menor
+  de idade cobre Anexos I/II, exclusividade reforçada; "dobro do brincante"
+  corrigido (15 dias vs 7).
+- **"quadrilha concorrente" → "quadrilha rival"** e projeção do cenário realista
+  corrigida (80% → R$ 35 ≈ R$ 1.330).
+- **Ano:** contrato passou a **Temporada 2027**; Programa de Fidelidade para
+  **2028** (por decisão de deslocar todo o ciclo +1 ano).
+
+### Documentos de apoio (Guia, Projeto, Kit Parceiro, Arrecadação)
+- Ano deslocado **+1** (2026→2027, 2027→2028; preservados 2025 do título de
+  campeã e 2017 da fundação) e **"quadrilha concorrente" → "quadrilha rival"**.
+
+### Sincronização Projeto ↔ Projetos de Arrecadação
+- **Projeto Explosão · Eixo 4 (Captação de Recursos)** ganhou uma subseção para
+  **cada projeto** do documento de Arrecadação: 7.1 Rifas, 7.2 Bingo, 7.3 Venda
+  de Batata Frita, 7.4 Cinema na Praça, 7.5 Cine Explosão, 7.6 Arraial da
+  Explosão, 7.7 Arraial de Lançamento, 7.8 Parcerias Comerciais (mantida a tabela
+  de cotas) e 7.9 Outras Ações. Cada uma com descrição curta, remetendo ao
+  documento Projetos de Arrecadação para o detalhamento.
+- **Projetos de Arrecadação** ganhou a seção que faltava: **Parcerias Comerciais**
+  — com "O que é", **tabela de cotas** (Ouro/Prata/Bronze/Produto-Serviço, com
+  contrapartidas e perfil), **ações promocionais conjuntas** e **checklist de
+  execução**, no mesmo formato dos demais projetos.
+
+### Termo do Item Destaque agora é autossuficiente
+- O documento continua único, mas cada termo é **entregue separadamente**, então
+  o **Termo do Item Destaque** passou a ser **completo por si só**: reúne **todas
+  as cláusulas do Termo do Brincante** (Objeto, Compromissos, Quadrilha, Imagem,
+  Avaliação, Bonificação, Conduta/Sanções, Desligamento, Vigência e Disposições)
+  **+ as específicas do item** (Exclusividade, Disponibilidade/Ensaios do item,
+  Representação, Figurino, Confidencialidade, Substituição) — 16 cláusulas — com
+  **frequência 85%**, seu **próprio opt-in de bonificação** e **Anexos I e II**.
+- O **bloco de seleção de categoria saiu do Termo do Brincante** (que agora é,
+  por definição, o termo do **Item Dançarino** / cordão). No **Termo do Item
+  Destaque** entrou a **seleção de função** (Marcador/Rei/Rainha/Noivo/Noiva),
+  já assumindo que o signatário é item destaque.
+- Os dois termos ficam em páginas separadas (quebra de página entre eles).
+
+> Observação: o **sistema** ainda usa `temporada = 2026` (piloto). Se a intenção
+> for rodar o ciclo completo de bonificação já alinhado ao contrato de 2027,
+> ajustar a config depois.
+
 ## 2026-07-08 — Fluxo de cadastro guiado (adesão com validação e cálculo)
 
 - **Novo brincante** reordenado: identidade → **Data de assinatura do contrato** →

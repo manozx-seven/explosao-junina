@@ -11,3 +11,6 @@ npm-debug.log*
 
 # Artefato gerado pelo netlify dev
 deno.lock
+
+# Backups locais dos documentos (não versionar)
+documentos explosão/_backup/
