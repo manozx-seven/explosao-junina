@@ -6,6 +6,218 @@
 
 ---
 
+## 2026-07-27 — Pendências registradas e publicação de tudo no GitHub
+
+- **Novo `PENDENCIAS.md`** (raiz do repo): registro único de tudo que está em aberto —
+  configuração da temporada no Firestore, segurança (token de sessão, remover `DEV`),
+  funcionalidades adiadas (fidelidade, checklist de resgate, compartilhar desempenho),
+  **site do Sócio Torcedor** (M2–M4, sem repo/Netlify/Firebase próprios), as
+  implementações previstas nos documentos de 2027 (votação do Arraial, certificados,
+  venda de camisa, painel de transparência, sorteio digital), pendências dos documentos
+  e as decisões que dependem da coordenação.
+- `.gitignore`: passa a ignorar `__pycache__/` e `*.pyc` (cache dos geradores).
+- **Publicado na `main`** todo o trabalho que estava só local desde 09/07 — o código do
+  sistema (destino da bonificação, pagamento pós-Festival, atividades com participantes
+  designados) e todos os documentos. O push dispara o redeploy no Netlify.
+- **Fora deste push:** o *Site Sócio Torcedor* continua em pasta separada e sem
+  repositório — por decisão de arquitetura (projeto independente), ele precisa do
+  repositório e do site próprios (registrado no `PENDENCIAS.md`).
+
+## 2026-07-27 — Documentos da temporada 2027: plano de reestruturação e novo modelo de arrecadação
+
+Reorganização completa da documentação estratégica da quadrilha para a **temporada
+2027**, planejada desde o zero (trabalho começando em **agosto de 2026**). **Nada de
+código** — só documentos. Todos os prazos são **previsões**, sem datas fechadas.
+
+- **Novo: `documentos explosão/_geradores/`** — os `.docx` passam a ser **gerados por
+  script** (`kit.py` + um `gen_*.py` por documento, via `python-docx`). Padrão visual
+  único (Arial, vermelho `922B21`, grafite `2C3E50`, banners e tabelas com cabeçalho
+  colorido). Para alterar um documento, edita-se o gerador e roda-se de novo —
+  não se edita o `.docx` na mão.
+- **Excluído** `Guia Implementacao Explosao Junina.docx` — era a estratégia de entrada
+  "com a temporada em andamento"; não faz mais sentido, já que 2027 é planejada desde
+  o começo.
+- **`Projeto Explosao Junina Beruri.docx` reescrito** como **Plano de Reestruturação**
+  (não é mais proposta de agência/investimento): a virada de "movidos a emoção" para
+  gestão técnica. 15 capítulos — diagnóstico (incluindo os problemas do tema anterior),
+  princípios, **estrutura organizacional baseada no `Organograma - Explosão Junina.docx`**
+  (Diretoria, Comissão de Artes, Grupos de Produção, Equipes de Arena, fluxo de decisão),
+  tema e espetáculo, identidade visual, comunicação/redes (mostrar bastidor, correria,
+  ensaios, desenvolvimento do tema e prévias), gestão e transparência, ensaios, **o
+  sistema da Explosão** (avaliação + bonificação + sócio torcedor), captação de recursos,
+  linha do tempo (ago/2026 → pós-Festival 2027: identidade visual em jan/fev, contratos
+  em fevereiro), indicadores, riscos e visão de futuro.
+- **`Projetos Arrecadacao Explosao Junina.docx` reescrito** para o **novo modelo**:
+  vira **portfólio em stand by**. Base = repasses públicos + Sócio Torcedor; rifa, bingo,
+  venda de comidas, cinema na praça e Cine Explosão só são **acionados por decisão da
+  Diretoria** (gatilhos, rito de acionamento e comparativo de esforço/retorno). Ganhou
+  seção de ações para o público geral e perdeu o que virou documento próprio.
+- **Novos documentos** (um por frente prioritária):
+  - `Programa Socio Torcedor - Plano de Implementacao.docx` — o **carro-chefe** da
+    arrecadação: metas/cenários, ciclo mensal de operação, papéis, captação, entrega
+    de benefícios, parceiros sustentando o programa, troféus, sorteios, transparência,
+    marcos do site (M1 feito → M4) e indicadores.
+  - `Arraial da Explosao - Plano do Evento.docx` — festa **depois do Festival** (agosto
+    ou fim do ano): danças de Beruri e de fora, **competição com votação popular em
+    tempo real** (QR code, apuração e premiação na hora), troféu + certificado para
+    todos os grupos, feira com comerciantes berurienses, estrutura, equipes, cronograma
+    D-60→D+7 e o que o sistema precisa fazer.
+  - `Arraial de Lancamento - Plano do Evento.docx` — abertura da temporada (previsão
+    março): revelação de tema/itens/camisa, **prestação de contas do ano anterior**,
+    venda de camisa, sorteios (público e sócios), captação de sócios, cronograma e riscos.
+
+## 2026-07-13 — Atividades com participantes designados (chamada por grupo)
+
+Para atividades feitas por só um grupo de brincantes (ex.: entregar lembrancinhas
+de aniversário aos sócios torcedores), a chamada agora pode mostrar **só o grupo
+designado**, evitando o "branco ambíguo" de marcar presença para uns e deixar o
+resto sem nada.
+
+- **Campo novo no evento `Participantes`** (IDs separados por vírgula; vazio = todos).
+  Só é oferecido para **atividades do compromisso** (arrecadação, braçal, comunitário,
+  outra) — ensaios/apresentações seguem com todos.
+- **Formulário de evento:** ao escolher um tipo de atividade, aparece a lista de
+  brincantes (checkbox, com "Todos"/"Limpar"); marque só quem participa. Nos demais
+  tipos o campo fica oculto e grava vazio.
+- **Chamada:** quando o evento tem participantes designados, `loadAvaliacao` filtra a
+  lista (`participantesDoEvento`) — só o grupo aparece, e o contador do cabeçalho
+  reflete o grupo. Detalhe do evento mostra "Atividade de grupo: N participante(s)".
+- **Métricas inalteradas:** essas atividades continuam **sem** entrar na frequência
+  nem no valor da bonificação (decisão do usuário — "só registrar"). Ausência de quem
+  não foi designado nunca é contada.
+- Backend (`server/handlers.js`): `Participantes` em `getEnsaios`, `addEnsaio` e no
+  `campoMap` de `updateEvento`. Frontend (`public/index.html`): `formEvento`,
+  `evParticipantesHtml`/`toggleEvPartBox`/`fEvPartAll`, `ensureBrincantesCache`,
+  `saveEvento`, `participantesDoEvento` e filtro na chamada.
+
+## 2026-07-13 — Kit Parceiro (parcerias de beleza) + novo doc Programa Sócio Torcedor
+
+Edições em documentos (via `python-docx`; backup temporário do Kit Parceiro antes de
+salvar). **Nada de código.**
+
+- **Kit Parceiro** (`documentos explosão/Kit Parceiro Explosao Junina.docx`):
+  - Nova ação promocional **"Parceria com Maquiadores(as) e Cabeleireiros(as)"**
+    dentro de *Ações Promocionais Conjuntas* (produção das apresentações grátis por
+    divulgação ou pacote com desconto; contrapartida = "beleza/produção oficial da
+    Explosão por [Nome]"; portfólio/vitrine). Alinha ao contrato: nas grandes
+    apresentações a produção pode virar pacote do grupo, em vez do preço cheio individual.
+  - Menção **"Não tem um negócio? Seja Sócio Torcedor"** apontando para o documento
+    próprio do programa.
+- **Novo documento** `documentos explosão/Programa Socio Torcedor Explosao Junina.docx`
+  — **proposta inicial** (ajustável): o que é, como funciona, tabela de níveis
+  (🔥 Fogueira R$5/mês · 🎏 Bandeirinha R$10 · ⭐ Estrela do Arraial R$20; também por
+  temporada), benefícios progressivos, para onde vai o dinheiro, metas ilustrativas
+  (~100 sócios ≈ R$ 800/mês), como se tornar sócio e transparência. Mantém a identidade
+  visual e o tom dos outros materiais.
+  - Seção **"O que a quadrilha faz por você"**: carteirinha digital e física, Close
+    Friends e destaque no Instagram, **sorteios o ano todo com a mesma chance para
+    todos os níveis** (dinheiro/kits/descontos de parceiros), descontos (blusa da
+    temporada p/ todos; Estrela ganha blusa "Sócio Torcedor" com nome nas costas) e
+    acesso à planilha de gastos.
+  - **Site próprio** dos sócios descrito como "em desenvolvimento": adesão/pagamento
+    pela plataforma, painel de contribuições e finanças, e **troféus/conquistas** ao
+    longo do ano.
+  - As ações de **aniversário** (story + lembrancinha entregue pessoalmente) foram
+    **removidas do documento** a pedido do usuário — a quadrilha fará, mas é surpresa,
+    não entra no material do sócio (fica só no planejamento).
+
+## 2026-07-13 — Contrato: Cláusula Terceira (blusa/produção) + doação na bonificação
+
+Editado o `documentos explosão/Contratos Explosao Junina Final.docx` (via
+`python-docx`, backup temporário do arquivo antes de salvar). Alterações aplicadas
+**nos dois termos** (Brincante Item Dançarino e Item Destaque):
+
+- **Cláusula Terceira – Dos compromissos da quadrilha:**
+  - item **a)** passou a "Fornecer, sem custo ao brincante, o **figurino completo e a
+    blusa (camisa) do tema da temporada** para as apresentações oficiais;";
+  - novo item **b)** "Providenciar a **produção das apresentações oficiais** (montagem
+    de figurino, adereços e demais itens de palco);" (sem citar maquiagem/cabelo);
+  - os itens seguintes foram re-letrados (antigos b…h → c…i).
+- **Cláusula Sexta, VII – Condições para resgate:** novo item **d)** com a opção de
+  **doar à quadrilha**, no todo ou em parte, o valor acumulado (registrada no sistema,
+  feita ao fim da temporada quando o valor está fechado) — alinha o contrato ao
+  recurso de destino da bonificação já implementado no sistema.
+- **Não** foi alterada a arrecadação (Cláusula Segunda, "l"): a quadrilha não fica
+  amarrada a bancar tudo e ainda pode precisar da ajuda (inclusive financeira) dos
+  brincantes. Pagamento pós-Festival já estava explícito (VII, "a") — mantido.
+
+## 2026-07-13 — Bonificação: pagamento pós-Festival + liberação manual da escolha
+
+- **Configurações → "Pagamento da bonificação"** (novos campos, informativos):
+  `dataPagamentoBonif` (pagamento previsto, após o Festival), `dataPagamentoBonif2`
+  (2ª parcela — modelo 13º, opcional) e `obsPagamentoBonif` (texto livre de como
+  será pago). Aparecem no **perfil** de cada brincante para ele saber quando/como
+  vai receber.
+- **Toggle `escolhaDestinoLiberada`** (bloqueada/liberada): a coordenação ativa
+  **manualmente** quando a contagem já fechou (após o Festival) e cada um sabe
+  quanto acumulou. Enquanto **bloqueada**, o brincante vê o valor mas **não escolhe**
+  (o card do perfil mostra um aviso de cadeado com a opção registrada). Guarda no
+  servidor: `setDestinoBonificacao` recusa a troca se o toggle não estiver liberado.
+- **Perfil:** o card virou *"Bonificação: pagamento e destino"* — mostra as datas/
+  observação de pagamento e, só quando liberado, os botões Resgatar/Doar.
+- **Simulação (admin):** banner com data de pagamento, 2ª parcela/observação e o
+  status da escolha (liberada/bloqueada).
+- Backend (`server/handlers.js`): novas chaves no `DEFAULT_CONFIG`; `getPerfilBrincante`
+  e `getSimulacaoBonificacao` devolvem `pagamento` + `escolhaDestinoLiberada`; guarda
+  em `setDestinoBonificacao`. Frontend (`public/index.html`): card de Configurações,
+  `saveConfig`, `buildDestinoCard`, banner em `renderBonificacao`.
+
+## 2026-07-13 — Bonificação: resgatar ou doar à quadrilha (destino do acumulado)
+
+- Novo campo por brincante **`DestinoBonificacao`** (`resgatar` = padrão / `doar`):
+  no fim da temporada o brincante pode **resgatar** o valor acumulado ou **deixar/
+  doar à quadrilha** para ajudar ainda mais a Explosão.
+- **Auto-serviço no perfil:** o próprio brincante escolhe (card "Destino da sua
+  bonificação", com botões Resgatar/Doar). Novo handler `setDestinoBonificacao`
+  (só altera esse campo, com log) exposto na whitelist da API.
+- **Coordenação** também define no **cadastro** (dentro do bloco de adesão) e na
+  **edição** do brincante (`destinoBonificacao` no `campoMap` do `updateBrincante`).
+- **Simulação de bonificação** agora consolida: **total acumulado**, **a pagar em
+  resgates (sai do caixa)** e **doado à quadrilha (fica no caixa)**; nova coluna
+  **Destino** (resgata/doa) por brincante, com o valor de quem doa em verde.
+- Backend (`server/handlers.js`): `normalizaBrincante_`, `addBrincante`,
+  `updateBrincante`, `getSimulacaoBonificacao` (`totalResgate`/`totalDoacao`) e o
+  novo `setDestinoBonificacao`. Frontend (`public/index.html`): forms de cadastro/
+  edição, card do perfil (`buildDestinoCard`/`escolherDestino`) e `renderBonificacao`.
+- **Valores** da bonificação seguem configuráveis pela aba Configurações (sem mudança
+  no `DEFAULT_CONFIG`). *Contexto:* verba pública passa a custear a temporada; a
+  bonificação pode subir e o acumulado pode virar doação para a quadrilha.
+
+## 2026-07-10 — Avaliação: seletor visual de evento (cards por categoria e cor)
+
+- Na aba **Chamada e avaliação**, o antigo `<select>` de evento foi substituído por
+  uma **grade de cards** (`#avPicker`), mais visual e fácil de escanear.
+- Cards **agrupados por categoria**: *Ensaios* (regular, ensaião), *Apresentações*
+  (apresentação, festival, igreja) e *Atividades do compromisso* (arrecadação,
+  braçal, comunitário, outra). Cada grupo mostra a contagem.
+- **Ordem por data** (mais recente primeiro) dentro de cada categoria. Cada card tem
+  **cor por tipo** (borda/realce via `--accent` + badge reaproveitando as classes
+  `chip-*`), dia em destaque, mês/ano, horário, badge de status (planejado/realizado/
+  cancelado) e descrição.
+- Ao clicar num card, abre a chamada normalmente; surge a barra **"Trocar evento"**
+  (`avVoltar()`) para voltar à grade. Um `<select id="selEnsaioAv">` **oculto** foi
+  mantido para não quebrar `goAvaliar()` (botão "avaliar agora" do detalhe do evento).
+- Tudo em `public/index.html`: novo CSS (`.av-pick-*`, `.av-back-bar`), HTML da página
+  e funções `renderAvPicker`/`avPickCard`/`pickAvEvento`/`avVoltar`; `loadEnsaioSelect`
+  agora preenche o select oculto **e** renderiza os cards; `loadAvaliacao` alterna
+  picker↔chamada. Sem mudança no backend.
+
+## 2026-07-10 — Importação em lote com paridade total ao cadastro direto
+
+- O **import de planilha/CSV** ganhou as duas colunas que faltavam para igualar o
+  cadastro individual: **Assinatura** (data de assinatura do contrato) e **Adesão**
+  (data de adesão à bonificação). Adicionadas **no fim** da ordem de colunas, então
+  planilhas antigas (10 colunas) continuam funcionando sem alteração.
+- Atualizados no `public/index.html`: texto de instruções do modal, `placeholder`
+  do textarea, `parseImport` (lê `cols[10]`/`cols[11]` → `dataAssinatura`/`dataAdesao`),
+  a **prévia** (novas colunas "Assin." e "Adesão"; mostra "hoje" quando em branco) e
+  o **modelo CSV** de download (`baixarModeloCsv`).
+- Sem mudança no backend: `addBrincante` já lia `dados.dataAssinatura`/`dados.dataAdesao`
+  (com fallback para hoje) e valida a adesão contra `fimAdesao`. Antes, pelo lote,
+  esses campos nunca chegavam e caíam sempre no default de hoje — o que podia
+  rebaixar silenciosamente o opt-in de quem aderiu dentro do prazo. Agora a data
+  real pode ser informada na planilha.
+
 ## 2026-07-09 — Sistema alinhado ao contrato (datas de ativação, perfil, menor de idade)
 
 ### Novos campos do brincante

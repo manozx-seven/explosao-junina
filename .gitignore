@@ -14,3 +14,7 @@ deno.lock
 
 # Backups locais dos documentos (não versionar)
 documentos explosão/_backup/
+
+# Cache do Python (geradores dos documentos)
+__pycache__/
+*.pyc

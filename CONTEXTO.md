@@ -175,8 +175,13 @@ scripts/seed.js            Cria config inicial + coordenação real (por CPF)
 scripts/seed-dev.js        Cria/atualiza o usuário DEV (admin)
 scripts/gen-env.js         Gera .env a partir do serviceAccountKey.json
 legacy/                    Código.js e Index.html originais (Apps Script)
+documentos explosão/       Documentos da quadrilha (.docx): contrato, projeto,
+                           arrecadação, sócio torcedor, arraiais, kit parceiro
+documentos explosão/_geradores/  Scripts python-docx que GERAM os .docx (kit.py +
+                           gen_*.py). Editar o gerador e rodar — nunca o .docx na mão
 CONTEXTO.md                Este arquivo
 ATUALIZACOES.md            Histórico de mudanças
+PENDENCIAS.md              Tudo que está em aberto (sistema, site do sócio, documentos)
 CLAUDE.md                  Regras fixas da sessão (lidas automaticamente)
 netlify.toml               Build do Netlify (publish=public, functions dir, preferRest)
 .env / .env.example        Credenciais do Firebase (o .env real é gitignored)
