@@ -188,6 +188,29 @@ tr:hover td { background:rgba(255,255,255,.03); }
 .av-saved { font-size:11px; color:var(--success); opacity:0; display:inline-flex; align-items:center; gap:3px; }
 .av-saved.show { opacity:1; }
 .av-saved svg.lucide { width:13px; height:13px; }
+/* Seletor visual de evento (chamada) — cards por categoria */
+.av-pick-cat { margin-bottom:22px; }
+.av-pick-cat-title { font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-sec); display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.av-pick-cat-title svg.lucide { width:16px; height:16px; }
+.av-pick-cat-title .n { font-size:11px; color:var(--text-sec); background:var(--bg3); border-radius:20px; padding:1px 9px; font-family:'Inter',sans-serif; letter-spacing:0; }
+.av-pick-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
+.av-pick-card { position:relative; text-align:left; background:linear-gradient(180deg,var(--card),#191b3d); border:1px solid var(--border); border-left:5px solid var(--accent,var(--dourado)); border-radius:12px; padding:13px 14px; cursor:pointer; transition:transform .12s,border-color .12s,box-shadow .12s; overflow:hidden; }
+.av-pick-card:hover { transform:translateY(-2px); border-color:var(--accent,var(--dourado)); box-shadow:0 10px 24px rgba(0,0,0,.4); }
+.av-pick-card.cancelado { opacity:.55; }
+.av-pick-card.cancelado .av-pick-day { text-decoration:line-through; }
+.av-pick-day { font-family:'Barlow Condensed',sans-serif; font-size:26px; font-weight:800; line-height:1; color:var(--text); }
+.av-pick-day small { display:block; font-family:'Inter',sans-serif; font-size:11px; font-weight:600; color:var(--text-sec); text-transform:uppercase; letter-spacing:.5px; margin-top:2px; }
+.av-pick-type { display:inline-block; font-size:11px; font-weight:800; letter-spacing:.3px; padding:2px 8px; border-radius:6px; margin:9px 0 7px; }
+.av-pick-meta { font-size:12px; color:var(--text-sec); display:flex; align-items:center; gap:5px; }
+.av-pick-meta svg.lucide { width:13px; height:13px; }
+.av-pick-desc { font-size:12px; color:var(--text); margin-top:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.av-pick-stat { position:absolute; top:11px; right:11px; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; padding:2px 7px; border-radius:20px; }
+.av-pick-stat.realizado { background:rgba(47,179,96,.2); color:#7fe0a6; }
+.av-pick-stat.cancelado { background:rgba(231,76,60,.2); color:#f1a59d; }
+.av-pick-stat.planejado { background:var(--bg3); color:#cfe0f5; }
+.av-pick-empty { color:var(--text-sec); font-size:13px; padding:30px; text-align:center; border:1px dashed var(--border); border-radius:12px; }
+.av-back-bar { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+@media (max-width:640px){ .av-pick-grid { grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:9px; } .av-pick-day { font-size:22px; } }
 /* Cabeçalho do evento na chamada */
 .av-ev-head { background:linear-gradient(180deg,var(--card),#191b3d); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; margin-bottom:16px; }
 .av-ev-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
@@ -458,9 +481,10 @@ tr:hover td { background:rgba(255,255,255,.03); }
   <div id="pageAvaliacao" class="page">
     <div class="page-title">Chamada e avaliação</div>
     <div class="page-subtitle">Presença em tempo real e nota por evento</div>
-    <div class="form-group">
-      <label>Selecione o evento:</label>
-      <select class="form-select" id="selEnsaioAv" onchange="loadAvaliacao()"></select>
+    <select id="selEnsaioAv" onchange="loadAvaliacao()" style="display:none"></select>
+    <div id="avPicker"></div>
+    <div id="avBackBar" class="av-back-bar" style="display:none">
+      <button class="btn btn-outline btn-sm" onclick="avVoltar()"><i data-lucide="arrow-left"></i> Trocar evento</button>
     </div>
     <div id="avHeader" style="display:none"></div>
     <div id="avLegenda" class="card" style="display:none;font-size:12px;color:var(--text-sec);line-height:1.9;">
@@ -880,6 +904,8 @@ async function showAddBrincante() {
     '<div class="form-group" id="boxAdesao" style="display:none">'+
       '<label>Data de adesão à bonificação</label><input type="date" class="form-input" id="fDataAdesao" onchange="validarAdesao()" oninput="validarAdesao()">'+
       '<div id="adesaoInfo" style="font-size:12px;margin-top:6px;line-height:1.5"></div>'+
+      '<label style="margin-top:10px">Destino ao fim da temporada</label><select class="form-select" id="fDestino"><option value="resgatar">Resgatar (o brincante recebe o valor)</option><option value="doar">Doar à quadrilha (ajuda a Explosão)</option></select>'+
+      '<div class="input-hint">O próprio brincante pode mudar isso depois no perfil.</div>'+
     '</div>'+
     '<button class="btn btn-primary btn-block" onclick="saveNewBrincante(this)">Cadastrar</button>'
   );
@@ -977,6 +1003,7 @@ async function saveNewBrincante(btn) {
     anexoI: document.getElementById('fAnexoI') && document.getElementById('fAnexoI').checked ? 'sim' : '',
     anexoII: document.getElementById('fAnexoII') && document.getElementById('fAnexoII').checked ? 'sim' : '',
     optBonificacao: opt,
+    destinoBonificacao: opt === 'sim' ? document.getElementById('fDestino').value : 'resgatar',
     dataAssinatura: document.getElementById('fDataAssin').value,
     dataAdesao: opt === 'sim' ? document.getElementById('fDataAdesao').value : ''
   };
@@ -1001,6 +1028,7 @@ function showEditBrincante(id) {
     menorBoxHtml('e', b)+
     '<div class="form-row"><div class="form-group"><label>Tipo</label><select class="form-select" id="eTipo">'+optsTipoBrincante(b.Tipo)+'</select></div>'+
     '<div class="form-group"><label>Bonificação</label><select class="form-select" id="eOpt"><option value="nao" '+(b.OptBonificacao==='nao'?'selected':'')+'>Não</option><option value="sim" '+(b.OptBonificacao==='sim'?'selected':'')+'>Sim</option></select></div></div>'+
+    '<div class="form-group"><label>Destino da bonificação (fim da temporada)</label><select class="form-select" id="eDestino"><option value="resgatar" '+(b.DestinoBonificacao!=='doar'?'selected':'')+'>Resgatar (o brincante recebe)</option><option value="doar" '+(b.DestinoBonificacao==='doar'?'selected':'')+'>Doar à quadrilha</option></select></div>'+
     '<div class="form-row"><div class="form-group"><label>Data de assinatura</label><input type="date" class="form-input" id="eDataAssin" value="'+(b.DataAssinatura||'')+'"></div>'+
     '<div class="form-group"><label>Data de adesão</label><input type="date" class="form-input" id="eDataAdesao" value="'+(b.DataAdesao||'')+'"></div></div>'+
     '<div class="form-group"><label>Ativação</label><select class="form-select" id="eStatus">'+
@@ -1041,7 +1069,7 @@ async function saveEditBrincante(id, btn) {
     nome:document.getElementById('eNome').value, apelido:document.getElementById('eApelido').value,
     cpf:document.getElementById('eCpf').value, fila:document.getElementById('eFila').value,
     posicao:document.getElementById('ePosicao').value, tipo:document.getElementById('eTipo').value,
-    optBonificacao:document.getElementById('eOpt').value, statusAtivacao:document.getElementById('eStatus').value,
+    optBonificacao:document.getElementById('eOpt').value, destinoBonificacao:document.getElementById('eDestino').value, statusAtivacao:document.getElementById('eStatus').value,
     qualificacaoExtra:document.getElementById('eQualif').value,
     dataNascimento:document.getElementById('eNasc').value,
     anexoI: document.getElementById('eAnexoI') && document.getElementById('eAnexoI').checked ? 'sim' : '',
@@ -1066,13 +1094,14 @@ function showImportBrincantes() {
   showModal('Carregar lista de brincantes', 'upload',
     '<div style="font-size:13px;color:var(--text-sec);line-height:1.6;margin-bottom:12px">'+
       'Cole os dados copiados de uma planilha (Excel/Google Sheets) ou selecione um arquivo <strong>.csv</strong>.<br>'+
-      'Colunas nesta ordem: <strong>Nome</strong>, Apelido, CPF, Fila, Posição, Tipo, Bonificação (sim/não), Nascimento (AAAA-MM-DD), Anexo I (sim/não), Anexo II (sim/não).<br>'+
+      'Colunas nesta ordem: <strong>Nome</strong>, Apelido, CPF, Fila, Posição, Tipo, Bonificação (sim/não), Nascimento (AAAA-MM-DD), Anexo I (sim/não), Anexo II (sim/não), Assinatura (AAAA-MM-DD), Adesão (AAAA-MM-DD).<br>'+
       '<strong>Tipo</strong> aceita: <em>brincante</em>, <em>item</em>, <em>coordenação</em>, ou as combinações <em>item/coordenação</em> e <em>brincante/coordenação</em> (vazio = brincante).<br>'+
       '<strong>Anexo I/II</strong> valem para menores de 18 anos (autorização do responsável e de viagem).<br>'+
+      '<strong>Assinatura</strong> = data de assinatura do contrato; <strong>Adesão</strong> = data de adesão à bonificação (só p/ quem tem Bonificação = sim). Se ficarem em branco, o sistema usa a data de hoje.<br>'+
       'Só o <strong>Nome</strong> é obrigatório — uma linha por pessoa.'+
     '</div>'+
     '<div class="form-group"><label>Arquivo CSV (opcional)</label><input type="file" accept=".csv,text/csv,text/plain" class="form-input" id="fImpFile" onchange="importFileToTextarea(this)"></div>'+
-    '<div class="form-group"><label>Ou cole aqui</label><textarea class="form-input" id="fImpText" rows="6" placeholder="Maria Silva, Mari, 12345678900, A, 1, brincante, sim, 2010-05-14, sim, sim" style="resize:vertical;font-family:monospace;font-size:12px"></textarea></div>'+
+    '<div class="form-group"><label>Ou cole aqui</label><textarea class="form-input" id="fImpText" rows="6" placeholder="Maria Silva, Mari, 12345678900, A, 1, brincante, sim, 2010-05-14, sim, sim, 2027-02-10, 2027-02-10" style="resize:vertical;font-family:monospace;font-size:12px"></textarea></div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
       '<button class="btn btn-outline btn-sm" onclick="baixarModeloCsv()"><i data-lucide="download"></i> Baixar modelo</button>'+
       '<button class="btn btn-primary btn-sm" onclick="processImport()"><i data-lucide="table-2"></i> Processar</button>'+
@@ -1111,7 +1140,9 @@ function parseImport(text) {
       tipo,
       optBonificacao: opt,
       dataNascimento: (cols[7] || '').trim(),
-      anexoI, anexoII
+      anexoI, anexoII,
+      dataAssinatura: (cols[10] || '').trim(),
+      dataAdesao: (cols[11] || '').trim()
     };
   });
 }
@@ -1124,9 +1155,9 @@ function processImport() {
   if (!rows.length) { box.innerHTML = '<p style="color:var(--text-sec);font-size:13px">Nada para processar. Cole os dados ou selecione um arquivo.</p>'; return; }
   box.innerHTML =
     '<div style="font-size:13px;margin-bottom:8px"><strong style="color:var(--dourado)">'+validos.length+'</strong> pronto(s) para cadastrar'+(invalidos ? ' • <span style="color:var(--danger)">'+invalidos+' sem nome (ignorado)</span>' : '')+'</div>'+
-    '<div class="table-wrap" style="max-height:240px;overflow:auto"><table><thead><tr><th>Nome</th><th>Apelido</th><th>CPF</th><th>Fila</th><th>Pos.</th><th>Tipo</th><th>Bonif.</th><th>Nasc.</th><th>Anexos</th></tr></thead><tbody>'+
+    '<div class="table-wrap" style="max-height:240px;overflow:auto"><table><thead><tr><th>Nome</th><th>Apelido</th><th>CPF</th><th>Fila</th><th>Pos.</th><th>Tipo</th><th>Bonif.</th><th>Nasc.</th><th>Anexos</th><th>Assin.</th><th>Adesão</th></tr></thead><tbody>'+
     validos.map(r => { const idade = idadeDe(r.dataNascimento); const menor = idade!==null && idade<18;
-      return '<tr><td>'+r.nome+'</td><td>'+(r.apelido||'-')+'</td><td>'+(r.cpf||'-')+'</td><td>'+(r.fila||'-')+'</td><td>'+(r.posicao||'-')+'</td><td>'+(TIPO_BRINC_LABEL[r.tipo]||r.tipo)+'</td><td>'+(r.optBonificacao==='sim'?'sim':'não')+'</td><td>'+(r.dataNascimento?formatDate(r.dataNascimento)+(menor?' <span style="color:var(--warn)">('+idade+')</span>':''):'-')+'</td><td>'+(menor?((r.anexoI==='sim'?'I':'—')+' / '+(r.anexoII==='sim'?'II':'—')):'-')+'</td></tr>'; }).join('')+
+      return '<tr><td>'+r.nome+'</td><td>'+(r.apelido||'-')+'</td><td>'+(r.cpf||'-')+'</td><td>'+(r.fila||'-')+'</td><td>'+(r.posicao||'-')+'</td><td>'+(TIPO_BRINC_LABEL[r.tipo]||r.tipo)+'</td><td>'+(r.optBonificacao==='sim'?'sim':'não')+'</td><td>'+(r.dataNascimento?formatDate(r.dataNascimento)+(menor?' <span style="color:var(--warn)">('+idade+')</span>':''):'-')+'</td><td>'+(menor?((r.anexoI==='sim'?'I':'—')+' / '+(r.anexoII==='sim'?'II':'—')):'-')+'</td><td>'+(r.dataAssinatura?formatDate(r.dataAssinatura):'<span style="color:var(--text-sec)">hoje</span>')+'</td><td>'+(r.optBonificacao==='sim'?(r.dataAdesao?formatDate(r.dataAdesao):'<span style="color:var(--text-sec)">hoje</span>'):'-')+'</td></tr>'; }).join('')+
     '</tbody></table></div>'+
     (validos.length ? '<button class="btn btn-primary btn-block" style="margin-top:12px" onclick="confirmImport(this)"><i data-lucide="user-plus"></i> Cadastrar '+validos.length+' brincante'+(validos.length>1?'s':'')+'</button>' : '');
   icons();
@@ -1143,7 +1174,7 @@ async function confirmImport(btn) {
   } catch(e) { btnLoading(btn, false); toast('Erro ao cadastrar em lote', true); }
 }
 function baixarModeloCsv() {
-  const csv = 'Nome,Apelido,CPF,Fila,Posicao,Tipo,Bonificacao,Nascimento,AnexoI,AnexoII\nMaria Silva,Mari,12345678900,A,1,brincante,sim,2010-05-14,sim,sim\nJoao Souza,,98765432100,B,2,item,nao,1998-03-22,,\n';
+  const csv = 'Nome,Apelido,CPF,Fila,Posicao,Tipo,Bonificacao,Nascimento,AnexoI,AnexoII,Assinatura,Adesao\nMaria Silva,Mari,12345678900,A,1,brincante,sim,2010-05-14,sim,sim,2027-02-10,2027-02-10\nJoao Souza,,98765432100,B,2,item,nao,1998-03-22,,,2027-02-10,\n';
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
   a.download = 'modelo-brincantes.csv';
@@ -1470,28 +1501,63 @@ function formEvento(e) {
   e = e || {};
   return '<input type="hidden" id="fEvId" value="'+(e.ID||'')+'">'+
     '<div class="form-group"><label>Data</label><input type="date" class="form-input" id="fEvData" value="'+(e.Data||'')+'"></div>'+
-    '<div class="form-group"><label>Tipo</label><select class="form-select" id="fEvTipo">'+TIPO_OPTIONS+'</select></div>'+
+    '<div class="form-group"><label>Tipo</label><select class="form-select" id="fEvTipo" onchange="toggleEvPartBox()">'+TIPO_OPTIONS+'</select></div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
       '<div class="form-group"><label>Início</label><input type="time" class="form-input" id="fEvIni" value="'+(e.HoraInicio||'')+'"></div>'+
       '<div class="form-group"><label>Fim</label><input type="time" class="form-input" id="fEvFim" value="'+(e.HoraFim||'')+'"></div>'+
     '</div>'+
     '<div class="form-group"><label>Descrição (opcional)</label><input class="form-input" id="fEvDesc" value="'+(e.Descricao||'').replace(/"/g,'&quot;')+'"></div>'+
-    '<div class="form-group"><label>Valor da bonificação neste dia (opcional)</label><input type="number" step="0.01" min="0" class="form-input" id="fEvValor" value="'+(e.ValorBonificacao||'')+'"><div class="input-hint">Deixe vazio para usar o valor padrão do tipo.</div></div>';
+    '<div class="form-group"><label>Valor da bonificação neste dia (opcional)</label><input type="number" step="0.01" min="0" class="form-input" id="fEvValor" value="'+(e.ValorBonificacao||'')+'"><div class="input-hint">Deixe vazio para usar o valor padrão do tipo.</div></div>'+
+    evParticipantesHtml(e);
+}
+// Bloco de participantes designados — só aparece em atividades do compromisso.
+// Vazio = todos; marcado = só o grupo escolhido participa da chamada daquele evento.
+function evParticipantesHtml(e) {
+  const set = new Set(String((e && e.Participantes) || '').split(',').map(s=>s.trim()).filter(Boolean));
+  const dancarinos = (brincantesCache||[]).filter(b => ehDancarinoTipo(b.Tipo))
+    .sort((a,b)=>(a.Fila||'').localeCompare(b.Fila||'')||(a.Nome||'').localeCompare(b.Nome||''));
+  const linhas = dancarinos.map(b =>
+    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0;cursor:pointer">'+
+      '<input type="checkbox" class="fEvPart" value="'+b.ID+'"'+(set.has(b.ID)?' checked':'')+'> '+
+      (b.Apelido||b.Nome)+' <span style="color:var(--text-sec);font-size:11px">Fila '+(b.Fila||'?')+'</span>'+
+    '</label>').join('') || '<div style="color:var(--text-sec);font-size:12px">Nenhum brincante carregado.</div>';
+  return '<div class="form-group" id="fEvPartBox" style="display:none">'+
+    '<label>Participantes designados (só este grupo faz a chamada)</label>'+
+    '<div class="input-hint" style="margin-bottom:6px">Deixe tudo desmarcado para incluir <strong>todos</strong>. Marque só quem vai participar desta atividade (ex.: o grupo do mês).</div>'+
+    '<div style="display:flex;gap:8px;margin-bottom:6px"><button type="button" class="btn btn-outline btn-sm" onclick="fEvPartAll(true)">Todos</button><button type="button" class="btn btn-outline btn-sm" onclick="fEvPartAll(false)">Limpar</button></div>'+
+    '<div style="max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px">'+linhas+'</div>'+
+  '</div>';
+}
+function fEvPartAll(on) { document.querySelectorAll('.fEvPart').forEach(c => c.checked = on); }
+function toggleEvPartBox() {
+  const box = document.getElementById('fEvPartBox');
+  if (!box) return;
+  const tipo = document.getElementById('fEvTipo').value;
+  box.style.display = TIPOS_ATIVIDADE.indexOf(tipo) >= 0 ? 'block' : 'none';
 }
 
-function showAddEvento(dateIso) {
+async function ensureBrincantesCache() {
+  if (brincantesCache && brincantesCache.length) return;
+  try { const b = await srv('getBrincantes'); if (b) { brincantesCache = b; _cache.brincantes = b; } } catch(e) {}
+}
+
+async function showAddEvento(dateIso) {
   const data = dateIso || isoLocal(new Date());
+  await ensureBrincantesCache();
   showModal('Novo Evento', 'calendar-plus', formEvento({ Data:data }) +
     '<button class="btn btn-primary btn-block" onclick="saveEvento(this)">Registrar</button>');
   document.getElementById('fEvTipo').value = 'regular';
+  toggleEvPartBox();
 }
 
-function showEditEvento(id) {
+async function showEditEvento(id) {
   const e = (ensaiosCache||[]).find(x => x.ID===id);
   if (!e) return;
+  await ensureBrincantesCache();
   showModal('Editar Evento', 'pencil', formEvento(e) +
     '<button class="btn btn-primary btn-block" onclick="saveEvento(this)">Salvar</button>');
   document.getElementById('fEvTipo').value = e.Tipo || 'regular';
+  toggleEvPartBox();
 }
 
 async function saveEvento(btn) {
@@ -1504,6 +1570,13 @@ async function saveEvento(btn) {
     descricao: document.getElementById('fEvDesc').value,
     valorBonificacao: document.getElementById('fEvValor').value,
   };
+  // Participantes designados: só valem para atividades do compromisso; nos demais
+  // tipos gravamos vazio (= todos), limpando qualquer designação anterior.
+  if (TIPOS_ATIVIDADE.indexOf(dados.tipo) >= 0) {
+    dados.participantes = Array.from(document.querySelectorAll('.fEvPart:checked')).map(c => c.value).join(',');
+  } else {
+    dados.participantes = '';
+  }
   if (!dados.data) return toast('Selecione a data', true);
   btnLoading(btn, true);
   try {
@@ -1524,6 +1597,7 @@ function showEventDetail(id) {
       '<div><strong style="color:var(--text)">Horário:</strong> '+horario+'</div>'+
       '<div><strong style="color:var(--text)">Status:</strong> '+statusBadge(e.Status)+'</div>'+
       (e.ValorBonificacao?'<div><strong style="color:var(--text)">Bonificação neste dia:</strong> R$ '+e.ValorBonificacao+'</div>':'')+
+      (participantesDoEvento(e)?'<div><strong style="color:var(--text)">Atividade de grupo:</strong> '+participantesDoEvento(e).size+' participante(s) designado(s)</div>':'')+
       (e.Descricao?'<div><strong style="color:var(--text)">Descrição:</strong> '+e.Descricao+'</div>':'')+
       (e.ObsEvento?'<div><strong style="color:var(--text)">Observação:</strong> '+e.ObsEvento+'</div>':'')+
     '</div>'+
@@ -1548,7 +1622,23 @@ async function delEnsaio(id) {
 let _avEvento = null;      // evento (ensaio) atualmente aberto na chamada
 let _avBrincantes = [];    // lista de brincantes carregada
 let _avState = {};         // brincanteId -> { presente:'sim'|'nao'|null, nota, texto }
+// Set de IDs designados do evento, ou null quando o evento é aberto a todos.
+function participantesDoEvento(ev) {
+  const raw = String((ev && ev.Participantes) || '').trim();
+  if (!raw) return null;
+  const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
+  return ids.length ? new Set(ids) : null;
+}
 const NOTA_TIT = ['','Muito fraco','Abaixo','Regular','Bom','Destaque'];
+
+// Categorias e cores do seletor visual de eventos (chamada)
+const AV_CATS = [
+  { label:'Ensaios',                     icon:'dumbbell', tipos:['regular','ensaiao'] },
+  { label:'Apresentações',               icon:'music',    tipos:['apresentacao','festival','igreja'] },
+  { label:'Atividades do compromisso',   icon:'hammer',   tipos:['arrecadacao','bracal','comunitario','outra'] },
+];
+const TIPO_ACCENT = { regular:'#4a90e2', ensaiao:'#3f6fd1', apresentacao:'#2FB360', festival:'#F2B134', igreja:'#E8802B', arrecadacao:'#9278dc', bracal:'#9278dc', comunitario:'#9278dc', outra:'#9278dc' };
+const MESES_ABREV = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
 async function loadEnsaioSelect() {
   const sel = document.getElementById('selEnsaioAv');
@@ -1557,12 +1647,60 @@ async function loadEnsaioSelect() {
       list.slice().sort((a,b)=>new Date(b.Data)-new Date(a.Data))
         .map(e => '<option value="'+e.ID+'">'+formatDate(e.Data)+' · '+TIPO_LABEL[e.Tipo]+(e.Status==='cancelado'?' (cancelado)':'')+(e.Descricao?' · '+e.Descricao:'')+'</option>')
         .join('');
+    renderAvPicker(list);
   };
   document.getElementById('avGrid').innerHTML = '';
   document.getElementById('avHeader').style.display = 'none';
   document.getElementById('avLegenda').style.display = 'none';
+  document.getElementById('avBackBar').style.display = 'none';
+  document.getElementById('avPicker').style.display = 'block';
   if (_cache.ensaios) { ensaiosCache = _cache.ensaios; fill(ensaiosCache); }
   try { const ensaios = await srv('getEnsaios') || []; _cache.ensaios = ensaios; ensaiosCache = ensaios; fill(ensaios); } catch(e) {}
+}
+// Cards de evento agrupados por categoria, em ordem de data (mais recente primeiro), com cor por tipo.
+function renderAvPicker(list) {
+  const box = document.getElementById('avPicker');
+  if (!box) return;
+  const eventos = (list||[]).slice();
+  if (!eventos.length) { box.innerHTML = '<div class="av-pick-empty">Nenhum evento cadastrado ainda. Crie eventos na aba <strong>Agenda</strong>.</div>'; return; }
+  const html = AV_CATS.map(cat => {
+    const its = eventos.filter(e => cat.tipos.indexOf(e.Tipo) >= 0).sort((a,b) => new Date(b.Data) - new Date(a.Data));
+    if (!its.length) return '';
+    return '<div class="av-pick-cat">'+
+      '<div class="av-pick-cat-title"><i data-lucide="'+cat.icon+'"></i> '+cat.label+' <span class="n">'+its.length+'</span></div>'+
+      '<div class="av-pick-grid">'+ its.map(avPickCard).join('') +'</div>'+
+    '</div>';
+  }).join('');
+  box.innerHTML = html || '<div class="av-pick-empty">Nenhum evento para avaliar.</div>';
+  icons();
+}
+function avPickCard(e) {
+  const d = new Date((e.Data||'') + 'T00:00:00');
+  const dia = isNaN(d) ? '?' : d.getDate();
+  const mesAno = isNaN(d) ? (e.Data||'—') : (MESES_ABREV[d.getMonth()]+' '+d.getFullYear());
+  const cancel = e.Status === 'cancelado';
+  const stat = e.Status || 'planejado';
+  const hora = e.HoraInicio ? e.HoraInicio+(e.HoraFim?'–'+e.HoraFim:'') : 'sem horário';
+  return '<div class="av-pick-card'+(cancel?' cancelado':'')+'" style="--accent:'+(TIPO_ACCENT[e.Tipo]||'#F2B134')+'" onclick="pickAvEvento(\''+e.ID+'\')">'+
+    '<span class="av-pick-stat '+stat+'">'+stat+'</span>'+
+    '<div class="av-pick-day">'+dia+'<small>'+mesAno+'</small></div>'+
+    '<span class="av-pick-type '+tipoChip(e.Tipo)+'">'+TIPO_LABEL[e.Tipo]+'</span>'+
+    '<div class="av-pick-meta"><i data-lucide="clock"></i> '+hora+'</div>'+
+    (e.Descricao?'<div class="av-pick-desc" title="'+String(e.Descricao).replace(/"/g,'&quot;')+'">'+e.Descricao+'</div>':'')+
+  '</div>';
+}
+function pickAvEvento(id) {
+  document.getElementById('selEnsaioAv').value = id;
+  loadAvaliacao();
+}
+function avVoltar() {
+  document.getElementById('selEnsaioAv').value = '';
+  document.getElementById('avGrid').innerHTML = '';
+  document.getElementById('avHeader').style.display = 'none';
+  document.getElementById('avLegenda').style.display = 'none';
+  document.getElementById('avBackBar').style.display = 'none';
+  document.getElementById('avPicker').style.display = 'block';
+  _avEvento = null;
 }
 
 // ---- Renderização da grade (3 estados: não marcado / presente / falta) ----
@@ -1618,16 +1756,20 @@ function refreshRow(id) {
 async function loadAvaliacao() {
   const ensaioId = document.getElementById('selEnsaioAv').value;
   const grid = document.getElementById('avGrid');
-  if (!ensaioId) { grid.innerHTML = ''; document.getElementById('avHeader').style.display='none'; document.getElementById('avLegenda').style.display='none'; return; }
+  if (!ensaioId) { avVoltar(); return; }
+  document.getElementById('avPicker').style.display = 'none';
+  document.getElementById('avBackBar').style.display = 'flex';
   _avEvento = (ensaiosCache||[]).find(e => e.ID===ensaioId) || { ID:ensaioId, Tipo:'regular', Status:'planejado', Data:'' };
   document.getElementById('avLegenda').style.display = 'block';
   const ck = 'av_' + ensaioId;
   const build = (brincantes, avaliacoes) => {
-    _avBrincantes = brincantes;
+    // Atividade com participantes designados: a chamada mostra só o grupo escolhido.
+    const set = participantesDoEvento(_avEvento);
+    _avBrincantes = set ? brincantes.filter(b => set.has(b.ID)) : brincantes;
     _avState = {};
     avaliacoes.forEach(a => { _avState[a.BrincanteID] = { presente:a.Presente, nota:Number(a.Nota)||0, texto:a.Observacao||'', justificada:a.Justificada===true }; });
     renderAvHeader();
-    renderAvaliacao(brincantes);
+    renderAvaliacao(_avBrincantes);
   };
   if (_cache.brincantes && _cache[ck]) { brincantesCache = _cache.brincantes; build(_cache.brincantes, _cache[ck]); }
   else grid.innerHTML = skelList(6);
@@ -1800,19 +1942,33 @@ function ativBadge(status) {
   return '<span class="badge '+cls+'">'+(ATIV_LABEL[status]||status)+'</span>';
 }
 function renderBonificacao(sim) {
+  const destBadge = (d) => d==='doar'
+    ? '<span class="badge" style="background:var(--success);color:#fff">doa</span>'
+    : '<span class="badge badge-brincante">resgata</span>';
   document.getElementById('bonifContent').innerHTML =
     '<div class="stats">'+
-    statCard('R$ '+sim.totalGeral, 'Custo total estimado', 'wallet')+
-    statCard(sim.lista.length, 'Opt-in', 'users')+
-    statCard(sim.lista.filter(l=>l.elegivel).length, 'Ativados', 'badge-check')+
-    statCard('R$ '+sim.config.valorEnsaio, 'Por ensaio', 'coins')+'</div>'+
-    '<div class="table-wrap"><table><thead><tr><th>Nome</th><th>Fila</th><th>Status</th><th>Ensaios</th><th>Apres.</th><th>Sanção</th><th>Acumulado</th></tr></thead><tbody>'+
+    statCard('R$ '+sim.totalGeral, 'Total acumulado (elegíveis)', 'wallet')+
+    statCard('R$ '+(sim.totalResgate!=null?sim.totalResgate:sim.totalGeral), 'A pagar em resgates (sai do caixa)', 'hand-coins')+
+    statCard('R$ '+(sim.totalDoacao!=null?sim.totalDoacao:'0.00'), 'Doado à quadrilha (fica no caixa)', 'heart-handshake')+
+    statCard(sim.lista.filter(l=>l.elegivel).length+'/'+sim.lista.length, 'Ativados / opt-in', 'badge-check')+'</div>'+
+    (function(){
+      const pg = sim.pagamento || {};
+      const lib = !!sim.escolhaDestinoLiberada;
+      const partes = [];
+      if (pg.data1) partes.push('Pagamento previsto: <strong>'+formatDate(pg.data1)+'</strong>');
+      if (pg.data2) partes.push('2ª parcela: <strong>'+formatDate(pg.data2)+'</strong>');
+      if (pg.obs) partes.push(pg.obs);
+      partes.push('Escolha de destino: <strong style="color:'+(lib?'var(--success)':'var(--warn)')+'">'+(lib?'liberada':'bloqueada')+'</strong>'+(lib?'':' (brincantes ainda não escolhem)'));
+      return '<div class="alert alert-neutral" style="margin-bottom:14px"><i data-lucide="hand-coins"></i><div style="line-height:1.6">'+partes.join(' &nbsp;•&nbsp; ')+'</div></div>';
+    })()+
+    '<div class="table-wrap"><table><thead><tr><th>Nome</th><th>Fila</th><th>Status</th><th>Destino</th><th>Ensaios</th><th>Apres.</th><th>Sanção</th><th>Acumulado</th></tr></thead><tbody>'+
     sim.lista.map(l =>
       '<tr style="'+(l.elegivel?'':'opacity:.5')+'"><td>'+l.nome+'</td><td>'+(l.fila||'-')+'</td>'+
       '<td>'+ativBadge(l.statusAtivacao)+'</td>'+
+      '<td>'+destBadge(l.destino)+'</td>'+
       '<td>'+l.ensaiosPresente+'</td><td>'+l.apresentacoesPresente+(l.festivalPresente?' + Festival':'')+'</td>'+
       '<td>'+(l.sancaoPct>0?'<span class="badge" style="background:var(--danger);color:#fff">−'+l.sancaoPct+'%</span>':'-')+'</td>'+
-      '<td style="font-weight:700;color:var(--dourado)">R$ '+l.valorAcumulado+(l.sancaoPct>0?'<div style="font-size:10px;color:var(--text-sec);font-weight:400">bruto R$ '+l.valorBruto+'</div>':'')+'</td></tr>'
+      '<td style="font-weight:700;color:'+(l.destino==='doar'?'var(--success)':'var(--dourado)')+'">R$ '+l.valorAcumulado+(l.sancaoPct>0?'<div style="font-size:10px;color:var(--text-sec);font-weight:400">bruto R$ '+l.valorBruto+'</div>':'')+'</td></tr>'
     ).join('')+'</tbody></table></div>';
   icons();
 }
@@ -1829,6 +1985,7 @@ async function loadBonificacao() {
 function renderConfig(cfg) {
   const num = (id,label,val,step,hint) => '<div class="form-group"><label>'+label+'</label><input type="number" step="'+(step||'0.01')+'" min="0" class="form-input" id="'+id+'" value="'+(val!=null?val:'')+'">'+(hint?'<div class="input-hint">'+hint+'</div>':'')+'</div>';
   const date = (id,label,val,hint) => '<div class="form-group"><label>'+label+'</label><input type="date" class="form-input" id="'+id+'" value="'+(val||'')+'">'+(hint?'<div class="input-hint">'+hint+'</div>':'')+'</div>';
+  const txt = (id,label,val,ph,hint) => '<div class="form-group"><label>'+label+'</label><input type="text" class="form-input" id="'+id+'" value="'+(val?String(val).replace(/"/g,'&quot;'):'')+'" placeholder="'+(ph||'')+'">'+(hint?'<div class="input-hint">'+hint+'</div>':'')+'</div>';
   document.getElementById('configContent').innerHTML =
     '<div class="alert alert-warn" style="margin-bottom:16px"><i data-lucide="alert-triangle" style="color:var(--warn)"></i><div>Alterar estes valores <strong>recalcula a bonificação de todos</strong> retroativamente (ranking, perfis e simulação). Confira antes de salvar.</div></div>'+
     '<div class="card"><div class="card-title"><i data-lucide="coins"></i> Valores da bonificação</div>'+
@@ -1844,6 +2001,15 @@ function renderConfig(cfg) {
       '<div class="form-row">'+date('cfgIniTemp','Início da temporada',cfg.inicioTemporada,'Quando começam os ensaios.')+date('cfgIniCont','Início da contagem da bonificação',cfg.inicioContagem,'Antes disso conta só para ativação.')+'</div>'+
       '<div class="form-row">'+date('cfgFimCont','Fim da contagem (Festival)',cfg.fimContagem)+date('cfgFimAdesao','Fim da adesão ao programa',cfg.fimAdesao)+'</div>'+
       num('cfgTemporada','Ano da temporada',cfg.temporada,'1')+
+    '</div>'+
+    '<div class="card"><div class="card-title"><i data-lucide="hand-coins"></i> Pagamento da bonificação</div>'+
+      '<div class="input-hint" style="margin-bottom:10px">Pelo contrato, a bonificação só é repassada <strong>após o Festival</strong>. Estes campos são informativos — aparecem no perfil de cada brincante para ele saber quando e como vai receber.</div>'+
+      '<div class="form-row">'+date('cfgDataPag1','Pagamento previsto',cfg.dataPagamentoBonif,'1ª (ou única) entrega, após o Festival.')+date('cfgDataPag2','2ª parcela (opcional)',cfg.dataPagamentoBonif2,'Modelo 13º: metade numa data, metade em outra.')+'</div>'+
+      txt('cfgObsPag','Como será pago (observação)',cfg.obsPagamentoBonif,'Ex.: metade dos brincantes até 15/08, a outra metade até 15/09','Texto livre mostrado ao brincante.')+
+      '<div class="form-group"><label>Liberar escolha de destino (resgatar/doar)</label><select class="form-select" id="cfgEscolhaLib">'+
+        '<option value="nao" '+(cfg.escolhaDestinoLiberada!=='sim'?'selected':'')+'>Bloqueada (brincante ainda não escolhe)</option>'+
+        '<option value="sim" '+(cfg.escolhaDestinoLiberada==='sim'?'selected':'')+'>Liberada (brincante já pode escolher)</option>'+
+      '</select><div class="input-hint">Ative só quando a contagem estiver fechada (após o Festival) e cada um já souber quanto acumulou. Enquanto bloqueada, o brincante vê o valor mas não escolhe.</div></div>'+
     '</div>'+
     '<div style="text-align:right"><button class="btn btn-primary" onclick="saveConfig(this)"><i data-lucide="save"></i> Salvar configurações</button></div>';
   icons();
@@ -1870,6 +2036,10 @@ async function saveConfig(btn) {
     fimContagem: document.getElementById('cfgFimCont').value,
     fimAdesao: document.getElementById('cfgFimAdesao').value,
     temporada: document.getElementById('cfgTemporada').value,
+    dataPagamentoBonif: document.getElementById('cfgDataPag1').value,
+    dataPagamentoBonif2: document.getElementById('cfgDataPag2').value,
+    obsPagamentoBonif: document.getElementById('cfgObsPag').value,
+    escolhaDestinoLiberada: document.getElementById('cfgEscolhaLib').value,
   };
   if (!await confirmDialog({ title:'Salvar configurações', message:'Isso pode <strong>recalcular a bonificação de todos</strong> retroativamente. Deseja continuar?', okLabel:'Salvar' })) return;
   btnLoading(btn, true);
@@ -1924,6 +2094,7 @@ function renderPerfil(p) {
     '<div class="stat-card"><span class="stat-ic"><i data-lucide="hand-coins"></i></span><div class="stat-value" style="color:'+(p.OptBonificacao==='sim'?'var(--dourado)':'var(--text-sec)')+'">R$ '+p.bonificacao+'</div>'+
     '<div class="stat-label">Bonificação acumulada</div></div></div>'+
     (p.OptBonificacao==='sim'?buildAtivacaoCard(p.ativacao, p.DataAssinatura):'')+
+    buildDestinoCard(p)+
     buildDicasPerfil(p)+
     buildAlertasPerfil(p)+
     '<div class="card"><div class="card-title"><i data-lucide="history"></i> Histórico de avaliações</div>'+
@@ -1966,6 +2137,47 @@ function buildAtivacaoCard(a, assinatura) {
   }
   return '<div class="card"><div class="card-title" style="color:'+m[1]+'"><i data-lucide="'+m[0]+'"></i> Ativação: '+m[2]+'</div>'+
     '<div style="font-size:13px;color:var(--text-sec);line-height:1.5">'+m[3]+'</div>'+criterios+datas+'</div>';
+}
+// Card de auto-serviço: mostra quando/como o brincante recebe e, se a coordenação
+// já liberou, deixa ele escolher resgatar ou doar à quadrilha.
+function buildDestinoCard(p) {
+  if (p.OptBonificacao !== 'sim') return '';
+  const doar = p.DestinoBonificacao === 'doar';
+  const liberada = !!p.escolhaDestinoLiberada;
+  const pg = p.pagamento || {};
+  const lin = (lbl,val) => val ? '<div style="display:flex;justify-content:space-between;gap:12px"><span style="color:var(--text-sec)">'+lbl+'</span><strong>'+formatDate(val)+'</strong></div>' : '';
+  let pagInfo = '';
+  if (pg.data1 || pg.data2 || pg.obs) {
+    pagInfo = '<div style="font-size:12px;line-height:1.9;border-top:1px solid var(--border);padding-top:8px;margin-top:8px">'+
+      lin('Pagamento previsto', pg.data1)+
+      lin('2ª parcela', pg.data2)+
+      (pg.obs?'<div style="color:var(--text-sec);margin-top:4px">'+pg.obs+'</div>':'')+
+    '</div>';
+  }
+  let escolha;
+  if (liberada) {
+    escolha = '<div style="font-size:13px;color:var(--text-sec);line-height:1.5;margin:10px 0 8px">Escolha o que fazer com o valor acumulado:</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<button class="btn '+(!doar?'btn-gold':'btn-outline')+' btn-sm" onclick="escolherDestino(\'resgatar\')"><i data-lucide="hand-coins"></i> Resgatar'+(!doar?' ✓':'')+'</button>'+
+        '<button class="btn '+(doar?'btn-primary':'btn-outline')+' btn-sm" onclick="escolherDestino(\'doar\')"><i data-lucide="heart-handshake"></i> Doar à quadrilha'+(doar?' ✓':'')+'</button>'+
+      '</div>';
+  } else {
+    escolha = '<div class="alert alert-neutral" style="margin-top:10px"><i data-lucide="lock"></i><div>A escolha entre <strong>resgatar</strong> ou <strong>doar à quadrilha</strong> será liberada pela coordenação após o Festival, quando o valor final estiver fechado. Sua opção registrada hoje: <strong>'+(doar?'doar':'resgatar')+'</strong>.</div></div>';
+  }
+  return '<div class="card"><div class="card-title"><i data-lucide="heart-handshake"></i> Bonificação: pagamento e destino</div>'+
+    '<div style="font-size:13px;color:var(--text-sec);line-height:1.5">Pelo contrato, o valor é repassado <strong>após o Festival</strong>. No fim você pode <strong>resgatar</strong> o acumulado ou <strong>doar à quadrilha</strong> para ajudar ainda mais a Explosão.</div>'+
+    pagInfo + escolha + '</div>';
+}
+async function escolherDestino(destino) {
+  try {
+    const r = await srv('setDestinoBonificacao', currentUser.id, destino, currentUser);
+    if (r && r.success) {
+      if (_cache.perfil) _cache.perfil.DestinoBonificacao = r.destino;
+      _cache.bonificacao = null;
+      toast(destino==='doar'?'Você optou por doar à quadrilha. Obrigado! 💛':'Você optou por resgatar sua bonificação.');
+      if (_cache.perfil) renderPerfil(_cache.perfil);
+    } else { toast((r && r.message) || 'Não foi possível salvar sua escolha', true); }
+  } catch(e) { toast('Não foi possível salvar sua escolha', true); }
 }
 function buildDicasPerfil(p) {
   if (!p.dicas || !p.dicas.length) return '';

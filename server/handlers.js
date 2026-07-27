@@ -26,6 +26,14 @@ const DEFAULT_CONFIG = {
   inicioContagem: '2027-05-01', // piso da contagem (fev–abr = só ativação; começa de fato ao fim da ativação de cada um)
   fimContagem: '2027-07-31',
   fimAdesao: '2027-04-30',
+  // Pagamento da bonificação: pelo contrato só é repassada APÓS o Festival.
+  // Campos informativos para o brincante saber quando/como vai receber.
+  dataPagamentoBonif: '',   // data prevista da 1ª (ou única) entrega
+  dataPagamentoBonif2: '',  // 2ª metade/parcela (modelo 13º, opcional)
+  obsPagamentoBonif: '',    // texto livre: como será pago (ex.: metade até X, metade até Y)
+  // Toggle manual: a coordenação libera quando o valor já está fechado (fim da
+  // contagem), permitindo então que o brincante escolha resgatar ou doar.
+  escolhaDestinoLiberada: 'nao',
 };
 
 // ---------- helpers ----------
@@ -139,6 +147,10 @@ function normalizaBrincante_(b) {
     DataAdesao: b.DataAdesao || '',
     DataAssinatura: b.DataAssinatura || '',
     OptBonificacao: b.OptBonificacao || 'nao',
+    // Destino do valor acumulado no fim da temporada: 'resgatar' (o brincante
+    // recebe) ou 'doar' (deixa com a quadrilha). O próprio brincante pode
+    // escolher no seu perfil; a coordenação também edita no cadastro.
+    DestinoBonificacao: b.DestinoBonificacao || 'resgatar',
     StatusAtivacao: b.StatusAtivacao || 'auto',
     QualificacaoExtra: b.QualificacaoExtra || '',
     StatusMembro: b.StatusMembro || 'ativo',
@@ -177,6 +189,7 @@ async function addBrincante(dados, usuario) {
     DataAdesao: dados.dataAdesao || today(),
     DataAssinatura: dados.dataAssinatura || today(),
     OptBonificacao: dados.optBonificacao || 'nao',
+    DestinoBonificacao: dados.destinoBonificacao === 'doar' ? 'doar' : 'resgatar',
     StatusAtivacao: 'auto',
     QualificacaoExtra: '',
     StatusMembro: 'ativo',
@@ -219,7 +232,7 @@ async function updateBrincante(id, dados, usuario) {
 
   const campoMap = {
     nome: 'Nome', apelido: 'Apelido', cpf: 'CPF', fila: 'Fila', posicao: 'Posicao',
-    tipo: 'Tipo', optBonificacao: 'OptBonificacao', statusAtivacao: 'StatusAtivacao',
+    tipo: 'Tipo', optBonificacao: 'OptBonificacao', destinoBonificacao: 'DestinoBonificacao', statusAtivacao: 'StatusAtivacao',
     qualificacaoExtra: 'QualificacaoExtra',
     dataNascimento: 'DataNascimento', anexoI: 'AnexoI', anexoII: 'AnexoII',
     dataAdesao: 'DataAdesao', dataAssinatura: 'DataAssinatura',
@@ -239,6 +252,24 @@ async function updateBrincante(id, dados, usuario) {
     await registrarLog_(usuario.id, usuario.nome, 'EDIÇÃO', `Brincante ${id} editado. Campos: ${changes.join(', ')}`);
   }
   return { success: true };
+}
+
+// Auto-serviço: o próprio brincante define, no seu perfil, se ao fim da temporada
+// vai RESGATAR o valor acumulado ou DOAR à quadrilha. Só toca esse campo.
+async function setDestinoBonificacao(id, destino, usuario) {
+  const config = await getConfigMap_();
+  if (config.escolhaDestinoLiberada !== 'sim') {
+    return { success: false, message: 'A escolha ainda não foi liberada pela coordenação.' };
+  }
+  const dest = destino === 'doar' ? 'doar' : 'resgatar';
+  const ref = getDb().collection('brincantes').doc(String(id).trim());
+  const doc = await ref.get();
+  if (!doc.exists) return { success: false, message: 'Brincante não encontrado' };
+  await ref.update({ DestinoBonificacao: dest });
+  if (usuario) {
+    await registrarLog_(usuario.id, usuario.nome, 'DESTINO_BONIF', `Brincante ${id}: destino da bonificação = ${dest}`);
+  }
+  return { success: true, destino: dest };
 }
 
 async function removeBrincante(id, usuario) {
@@ -269,6 +300,9 @@ async function getEnsaios() {
       ObsEvento: r.ObsEvento || '',
       // Valor de bonificação específico deste evento (''=usa o padrão do tipo)
       ValorBonificacao: (r.ValorBonificacao === undefined || r.ValorBonificacao === null) ? '' : String(r.ValorBonificacao),
+      // Participantes designados (só atividades do compromisso). IDs separados por
+      // vírgula; vazio = todos os brincantes (comportamento padrão).
+      Participantes: r.Participantes || '',
     };
   });
 }
@@ -282,6 +316,7 @@ async function addEnsaio(dados, usuario) {
     HoraInicio: dados.horaInicio || '', HoraFim: dados.horaFim || '',
     Status: 'planejado', HoraInicioReal: '', HoraFimReal: '', ObsEvento: '',
     ValorBonificacao: (dados.valorBonificacao === undefined || dados.valorBonificacao === '') ? '' : String(dados.valorBonificacao),
+    Participantes: dados.participantes || '',
   });
   if (usuario) {
     await registrarLog_(usuario.id, usuario.nome, 'EVENTO_CRIADO', `Evento ${id}: ${dados.tipo} em ${dados.data}`);
@@ -300,7 +335,7 @@ async function updateEvento(id, dados, usuario) {
     data: 'Data', tipo: 'Tipo', descricao: 'Descricao',
     horaInicio: 'HoraInicio', horaFim: 'HoraFim', status: 'Status',
     horaInicioReal: 'HoraInicioReal', horaFimReal: 'HoraFimReal', obsEvento: 'ObsEvento',
-    valorBonificacao: 'ValorBonificacao',
+    valorBonificacao: 'ValorBonificacao', participantes: 'Participantes',
   };
   const update = {};
   const changes = [];
@@ -701,6 +736,12 @@ async function getPerfilBrincante(brincanteId) {
     idade: idadeAnos_(brincante.DataNascimento),
     papel: papelDanca_(brincante.Tipo),
     freqMinima,
+    escolhaDestinoLiberada: config.escolhaDestinoLiberada === 'sim',
+    pagamento: {
+      data1: config.dataPagamentoBonif || '',
+      data2: config.dataPagamentoBonif2 || '',
+      obs: config.obsPagamentoBonif || '',
+    },
     dicas,
     historico,
   };
@@ -786,7 +827,7 @@ async function getSimulacaoBonificacao() {
   const advsPor = {};
   advsAll.forEach((a) => { (advsPor[a.BrincanteID] = advsPor[a.BrincanteID] || []).push(a); });
 
-  let totalGeral = 0;
+  let totalGeral = 0, totalResgate = 0, totalDoacao = 0;
   const lista = brincantes.map((b) => {
     const avs = avaliacoes.filter((a) => a.BrincanteID === b.ID);
     const avsMetric = metric.avaliacoes.filter((a) => a.BrincanteID === b.ID);
@@ -808,12 +849,18 @@ async function getSimulacaoBonificacao() {
     const sancaoPct = penalidadeTotal_(b, advsPor[b.ID]);
     const valorComSancao = valor * (1 - sancaoPct / 100);
     const elegivel = ativacao.ativado;
-    if (elegivel) totalGeral += valorComSancao;
+    const destino = b.DestinoBonificacao === 'doar' ? 'doar' : 'resgatar';
+    if (elegivel) {
+      totalGeral += valorComSancao;
+      if (destino === 'doar') totalDoacao += valorComSancao;
+      else totalResgate += valorComSancao;
+    }
     return {
       nome: b.Apelido || b.Nome,
       fila: b.Fila,
       statusAtivacao: ativacao.status,
       elegivel,
+      destino,
       ensaiosPresente,
       apresentacoesPresente,
       festivalPresente,
@@ -823,7 +870,19 @@ async function getSimulacaoBonificacao() {
     };
   });
 
-  return { lista, totalGeral: totalGeral.toFixed(2), config: { valorEnsaio, valorApresentacao, valorFestival } };
+  return {
+    lista,
+    totalGeral: totalGeral.toFixed(2),
+    totalResgate: totalResgate.toFixed(2),
+    totalDoacao: totalDoacao.toFixed(2),
+    escolhaDestinoLiberada: config.escolhaDestinoLiberada === 'sim',
+    pagamento: {
+      data1: config.dataPagamentoBonif || '',
+      data2: config.dataPagamentoBonif2 || '',
+      obs: config.obsPagamentoBonif || '',
+    },
+    config: { valorEnsaio, valorApresentacao, valorFestival },
+  };
 }
 
 // ============================================================
@@ -863,7 +922,7 @@ async function updateConfigMap(mapa, usuario) {
 module.exports = {
   login,
   getLogs,
-  getBrincantes, addBrincante, addBrincantesLote, updateBrincante, removeBrincante,
+  getBrincantes, addBrincante, addBrincantesLote, updateBrincante, setDestinoBonificacao, removeBrincante,
   getEnsaios, addEnsaio, updateEvento, deleteEnsaio,
   getAvaliacoes, salvarAvaliacoes, upsertAvaliacao,
   getAdvertencias, addAdvertencia, removeAdvertencia,
