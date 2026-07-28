@@ -42,21 +42,25 @@ p(doc, "O desenho do programa está no material de divulgação. Resumo do que v
        "como base — valores e benefícios podem ser ajustados pela coordenação a cada "
        "temporada.")
 tabela(doc, ["Nível", "Por mês", "Por temporada", "Benefícios"], [
-    ["Fogueira", "R$ 5", "R$ 50",
+    ["Fogueira", "R$ 10", "R$ 100",
      "Carteirinha, Close Friends, sorteios, descontos e acesso à prestação de contas"],
-    ["Bandeirinha", "R$ 10", "R$ 100", "Tudo do Fogueira + brinde da temporada"],
-    ["Estrela do Arraial", "R$ 20", "R$ 200",
+    ["Bandeirinha", "R$ 20", "R$ 200", "Tudo do Fogueira + brinde da temporada"],
+    ["Estrela do Arraial", "R$ 30", "R$ 300",
      "Tudo do Bandeirinha + blusa “Sócio Torcedor” com o nome nas costas + bastidores e "
      "encontro com a quadrilha"],
 ], larguras=[3.5, 2.2, 2.8, 7.5])
 for rot, txt in [
+    ("Temporada: ", "dez meses de contribuição, de fevereiro a novembro. Dezembro e "
+     "janeiro são entressafra: não há cobrança e ninguém acumula atraso — janeiro é a "
+     "janela de captação e renovação, dezembro fica livre para as festas de fim de ano."),
     ("Contribuição: ", "mensal ou por temporada, à escolha do torcedor."),
     ("Adesão: ", "Pix + cadastro na lista oficial (e, quando o site estiver no ar, pela "
      "própria plataforma)."),
     ("Mudança de nível: ", "o sócio pode subir ou descer de nível quando quiser."),
-    ("Sorteios: ", "todos concorrem com a mesma chance, independentemente do nível."),
+    ("Sorteios: ", "abertos a quem está com a contribuição em dia. Entre os elegíveis, "
+     "todos concorrem com a mesma chance, independentemente do nível."),
     ("Sem juros e sem multa: ", "quem atrasa não paga nada a mais — apenas não bate a "
-     "meta do mês para efeito de troféu."),
+     "meta do mês para efeito de troféu e fica fora do sorteio até regularizar."),
 ]:
     bullet(doc, txt, rotulo=rot)
 
@@ -65,17 +69,19 @@ h1(doc, "METAS E CENÁRIOS", 3)
 p(doc, "Os números abaixo são cenários para dimensionar o programa, não promessas. "
        "A distribuição usada é a mesma proporção em todos os cenários (60% Fogueira, "
        "30% Bandeirinha, 10% Estrela).")
-tabela(doc, ["Cenário", "Sócios", "Receita mensal", "Receita anual aproximada"], [
-    ["Início", "50", "R$ 400", "R$ 4.800"],
-    ["Meta da temporada", "100", "R$ 800", "R$ 9.600"],
-    ["Consolidado", "200", "R$ 1.600", "R$ 19.200"],
-    ["Sonho grande", "400", "R$ 3.200", "R$ 38.400"],
+tabela(doc, ["Cenário", "Sócios", "Receita mensal", "Receita da temporada (10 meses)"], [
+    ["Início", "50", "R$ 750", "R$ 7.500"],
+    ["Meta da temporada", "100", "R$ 1.500", "R$ 15.000"],
+    ["Consolidado", "200", "R$ 3.000", "R$ 30.000"],
+    ["Sonho grande", "400", "R$ 6.000", "R$ 60.000"],
 ], larguras=[4.0, 3.0, 4.0, 5.0])
 caixa(doc, "Como ler esses números",
-      "Cem sócios em Beruri é uma meta realista: é menos gente do que a Explosão "
-      "costuma reunir num único ensaio aberto. O valor não vem do preço alto, vem da "
-      "recorrência — R$ 5 por mês, doze vezes, com cem pessoas, é mais do que a "
-      "maioria dos eventos de arrecadação já rendeu à quadrilha.", VERDE)
+      "A temporada tem dez meses de contribuição, de fevereiro a novembro — dezembro "
+      "e janeiro são entressafra, sem cobrança. Cem sócios em Beruri é uma meta "
+      "realista: é menos gente do que a Explosão costuma reunir num único ensaio "
+      "aberto. O valor não vem do preço alto, vem da recorrência — R$ 10 por mês, dez "
+      "vezes, com cem pessoas, é mais do que a maioria dos eventos de arrecadação já "
+      "rendeu à quadrilha.", VERDE)
 
 # ---------------------------------------------------------------- operação ---
 doc.add_page_break()
@@ -146,7 +152,12 @@ for rot, txt in [
     ("Campanha de lançamento: ", "o Arraial de Lançamento é o momento de maior captação "
      "do ano — posto de adesão no evento, com meta do dia e anúncio no palco."),
     ("Indicação: ", "quem indica um novo sócio entra em um sorteio extra ou ganha "
-     "reconhecimento público."),
+     "reconhecimento público. A indicação é registrada no sistema com o nome e o "
+     "telefone de quem foi trazido — nunca CPF ou data de nascimento, que juntos são "
+     "a senha de acesso do sócio ao painel."),
+    ("Captação pelo brincante: ", "para o brincante, trazer sócios é uma missão no "
+     "Sistema de Avaliação e conta como desempenho e troféu — reconhecimento, não "
+     "dinheiro. Ele declara quem trouxe e a coordenação confirma."),
     ("Presença nos eventos: ", "em todo evento da quadrilha há um ponto de adesão, com "
      "QR code e alguém explicando o programa."),
     ("Prova social: ", "publicar a lista de sócios e o que o dinheiro comprou é o melhor "
@@ -162,8 +173,9 @@ h1(doc, "BENEFÍCIOS: COMO ENTREGAR DE VERDADE", 7)
 p(doc, "O maior risco do programa é prometer e não entregar. Cada benefício abaixo "
        "tem responsável e momento de entrega definidos.")
 tabela(doc, ["Benefício", "Quem entrega", "Quando", "Custo"], [
-    ["Carteirinha digital", "Comunicação", "Na adesão", "Zero"],
-    ["Carteirinha física", "Comunicação", "Em reunião da torcida", "Baixo (impressão)"],
+    ["Carteirinha digital", "Comunicação", "Na adesão, no painel do sócio", "Zero"],
+    ["Carteirinha física exclusiva", "Comunicação",
+     "Reunião da torcida, fevereiro de 2027", "Baixo (impressão)"],
     ["Close Friends do Instagram", "Comunicação", "Na adesão", "Zero"],
     ["Destaque “Sócios Torcedores” no perfil", "Comunicação", "Permanente", "Zero"],
     ["Sorteios do ano", "Comunicação + Financeiro", "Calendário definido", "Baixo (prêmios de parceiros)"],
@@ -174,6 +186,14 @@ tabela(doc, ["Benefício", "Quem entrega", "Quando", "Custo"], [
     ["Encontro com a quadrilha (Estrela)", "Presidência", "Uma vez por temporada", "Zero"],
     ["Acesso à prestação de contas", "Financeiro", "Mensal", "Zero"],
 ], larguras=[5.5, 4.0, 3.5, 3.0], tam=9.5)
+caixa(doc, "A carteirinha da primeira torcida",
+      "Todo sócio tem a carteirinha digital no painel do site, e o sistema gera o modelo "
+      "genérico para impressão a qualquer momento. Além disso, quem aderir até fevereiro "
+      "de 2027 recebe uma carteirinha física exclusiva, de design próprio, entregue "
+      "pessoalmente na reunião da torcida — é a carteirinha da primeira temporada, item "
+      "de colecionador que só esse grupo terá. Quem entrar depois recebe a carteirinha "
+      "comum. É um motivo concreto para aderir cedo, e custa à quadrilha apenas a "
+      "impressão.", AMBAR)
 
 h1(doc, "PARCEIROS QUE SUSTENTAM O PROGRAMA", 8)
 p(doc, "As parcerias comerciais mudaram de função: em vez de serem apenas cotas de "
@@ -220,8 +240,12 @@ for rot, txt in [
 
 h1(doc, "SORTEIOS", 10)
 for rot, txt in [
-    ("Regra central: ", "todos os sócios concorrem com a mesma chance, independentemente "
-     "do nível. Todo apoio vale igual na hora do sorteio."),
+    ("Regra central: ", "o sorteio é aberto a quem está com a contribuição em dia. Entre "
+     "os elegíveis, todos concorrem com a mesma chance, independentemente do nível — todo "
+     "apoio vale igual na hora do sorteio."),
+    ("Quem pagou atrasado concorre: ", "a limitação é sobre estar devendo, não sobre ter "
+     "atrasado. Quem regulariza volta a concorrer no sorteio seguinte, porque a "
+     "elegibilidade é apurada na data do sorteio."),
     ("Frequência: ", "calendário definido no início da temporada, com pelo menos um "
      "sorteio por trimestre e sorteios extras nos eventos-âncora."),
     ("Prêmios: ", "dinheiro, kits de mercado, vales de parceiros, camisa da temporada e "
@@ -240,14 +264,20 @@ p(doc, "Transparência é o principal produto do programa. Quem contribui precis
 tabela(doc, ["Entrega", "Conteúdo", "Frequência"], [
     ["Relatório do mês", "Quantos sócios, quanto entrou, onde foi aplicado", "Mensal"],
     ["Painel de finanças", "Receitas e despesas da quadrilha, com destino de cada recurso",
-     "Sempre disponível no site"],
+     "Por temporada, liberada pela coordenação"],
     ["Balanço da temporada", "Consolidado do ano, apresentado no Arraial de Lançamento",
      "Anual"],
     ["Registro de sorteios", "Participantes, resultado e entrega dos prêmios", "A cada sorteio"],
 ], larguras=[4.0, 8.0, 4.0])
 p(doc, "O mesmo padrão de dois níveis vale aqui: recurso público tem detalhamento "
-       "completo e aberto; arrecadação própria tem total divulgado e detalhe interno. "
-       "O sócio tem acesso à planilha de gastos e investimentos do programa.")
+       "completo e aberto; arrecadação própria tem total divulgado e detalhe interno.")
+caixa(doc, "Como a liberação funciona",
+      "O painel de finanças é liberado por temporada, uma de cada vez, pela coordenação. "
+      "A temporada em andamento só é aberta ao sócio depois que a categorização de "
+      "gastos e investimentos estiver definida e o lançamento estiver em dia — abrir "
+      "antes disso significa mostrar número errado a quem confiou na quadrilha. As "
+      "temporadas passadas entram pela importação de uma planilha, e ficam disponíveis "
+      "assim que a coordenação marca a temporada como visível.", AZUL)
 
 # ---------------------------------------------------------------- o sistema --
 h1(doc, "O SITE DO SÓCIO TORCEDOR", 12)
@@ -281,17 +311,19 @@ p(doc, "Previsões, não datas fechadas.")
 tabela(doc, ["Período previsto", "O que acontece"], [
     ["Agosto de 2026", "Decisão da Diretoria sobre valores, benefícios e responsáveis; "
      "definição do Pix oficial do programa"],
-    ["Setembro de 2026", "Lançamento público do programa; primeira campanha de adesão; "
-     "brincantes começam a captar"],
-    ["Outubro a dezembro de 2026", "Operação mensal rodando; primeiros sorteios; primeiro "
-     "relatório mensal publicado; site avança para o painel do sócio"],
-    ["Janeiro e fevereiro de 2027", "Carteirinha e identidade do programa dentro da nova "
-     "identidade visual; renovação para a temporada"],
+    ["Setembro a dezembro de 2026", "Campanha de divulgação: apresentar o programa à "
+     "cidade e formar a lista de interessados. Ainda sem cobrança. O site avança para o "
+     "painel do sócio"],
+    ["Janeiro de 2027", "Captação: adesões efetivadas e cadastro no sistema. Carteirinha "
+     "e identidade do programa dentro da nova identidade visual"],
+    ["Fevereiro de 2027", "Início da temporada e da primeira cobrança. Reunião da torcida "
+     "com a entrega da carteirinha física exclusiva a quem aderiu até fevereiro"],
     ["Março de 2027 (previsão)", "Grande campanha de adesão no Arraial de Lançamento, com "
      "prestação de contas do ano anterior"],
-    ["Ao longo de 2027", "Sorteios, troféus, relatórios mensais e captação contínua"],
-    ["Agosto de 2027 em diante", "Renovação da torcida para a temporada seguinte e "
-     "presença no Arraial da Explosão"],
+    ["Fevereiro a novembro de 2027", "Temporada rodando: sorteios, troféus, relatórios "
+     "mensais e captação contínua"],
+    ["Dezembro de 2027 e janeiro de 2028", "Entressafra: sem cobrança. Balanço da "
+     "temporada e renovação da torcida para o ciclo seguinte"],
 ], larguras=[5.0, 11.0])
 
 # ------------------------------------------------------------------ riscos ---
@@ -314,11 +346,12 @@ tabela(doc, ["Risco", "Como reduzir"], [
 h1(doc, "INDICADORES", 15)
 tabela(doc, ["Indicador", "Meta de referência"], [
     ["Número de sócios ativos", "100 na temporada 2027"],
-    ["Receita recorrente mensal", "R$ 800 na meta da temporada"],
+    ["Receita recorrente mensal", "R$ 1.500 na meta da temporada"],
+    ["Receita da temporada", "R$ 15.000 (dez meses)"],
     ["Taxa de pagamento em dia (até o dia 5)", "Acima de 70% dos sócios"],
     ["Renovação de uma temporada para outra", "Acima de 60% dos sócios"],
     ["Sócios captados por brincante", "2 por brincante na temporada"],
-    ["Relatórios mensais publicados", "12 por ano, sem falha"],
+    ["Relatórios mensais publicados", "10 por temporada, sem falha"],
 ], larguras=[8.0, 8.0])
 
 citacao(doc, "A Explosão é de Beruri. E Beruri é de quem faz junto.")
