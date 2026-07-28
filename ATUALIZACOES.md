@@ -6,6 +6,116 @@
 
 ---
 
+## 2026-07-28 — Novos valores dos níveis do Sócio Torcedor (10 / 20 / 30)
+
+- **Decisão do dono:** Fogueira passa de R$ 5 para **R$ 10**, Bandeirinha de R$ 10
+  para **R$ 20** e Estrela do Arraial de R$ 20 para **R$ 30**. Na temporada de dez
+  meses, isso dá R$ 100 / R$ 200 / R$ 300 por sócio, e a meta de 100 sócios sai de
+  R$ 8.000 para **R$ 15.000**.
+- **`_geradores/gen_socio.py`:** tabela de níveis e cenários atualizados pelo dono;
+  os **indicadores do fim do documento** ainda diziam "R$ 800/mês" e "R$ 8.000 na
+  temporada" — corrigidos para R$ 1.500 e R$ 15.000, senão o documento fecharia
+  contradizendo a própria tabela de metas. Documento **regerado**.
+- O material de **divulgação** e o `server/niveis.js` do projeto irmão já haviam
+  sido atualizados para os mesmos valores — os três lados estão coerentes.
+- `PENDENCIAS.md`: correções dos dois documentos marcadas como concluídas; os novos
+  valores ficaram registrados como **proposta até a Diretoria decidir**. Anotado
+  também como rodar os geradores nesta máquina (o Python daqui é *embeddable*, sem
+  pip) e a extensão *Office Viewer* instalada no VS Code para ler os `.docx`.
+
+## 2026-07-27 — Alinhamento com o Site Sócio Torcedor (decisões e governança)
+
+Leitura cruzada dos dois projetos para alinhá-los, já que são da mesma quadrilha.
+As divergências encontradas foram levadas ao dono e decididas. **Fica valendo:
+tudo o que foi decidido em 27/07/2026 é a referência** — documento anterior que
+conflite é o que muda.
+
+- **Temporada do Sócio Torcedor: 10 meses** (fev–nov), como está no `ARQUITETURA-M2.md`.
+  Os documentos calculavam 12 meses (R$ 9.600 para 100 sócios) — passa a **R$ 8.000**.
+- **Primeira temporada: 2027**, alinhada ao resto da quadrilha. Campanha no fim de
+  2026, captação em **janeiro/2027**, programa começa em **fevereiro/2027**. Como a
+  captação toda cai em jan–fev, todo o primeiro grupo é "sócio desde fevereiro" e
+  fica elegível aos prêmios da temporada — sem precisar de exceção.
+- **Sorteio exige estar em dia** (regra do sistema). O material de divulgação, que
+  prometia "todos concorrem com a mesma chance" sem condição, é que será corrigido.
+- **Transparência:** por ora o sócio vê apenas a **temporada anterior**. A da
+  temporada vigente depende de a coordenação definir a categorização de gastos e
+  investimentos para lançamento em tempo real.
+- **Carteirinha:** digital no painel do sócio; genérica para impressão gerada pelo
+  site; e uma **física exclusiva**, de design próprio, entregue numa reunião só a
+  quem aderiu **até fevereiro/2027** — item de colecionador.
+- **Captação de sócios por brincante:** vira **módulo de missões neste sistema**,
+  valendo **desempenho e troféu, sem dinheiro** (não mexe no contrato nem na
+  frequência). A declaração coleta **nome e telefone apenas** — nunca CPF e data de
+  nascimento, que juntos são a credencial de login do sócio no outro sistema.
+  Confirmação manual do admin como base, com cruzamento automático por cima.
+- **`CLAUDE.md`:** passa a mandar ler o `PENDENCIAS.md` no início da sessão (o
+  projeto irmão já fazia isso), a riscar de lá o que for concluído, e registra o
+  projeto irmão + onde vivem os documentos dele. Novo aviso: handler novo precisa
+  entrar em `FUNCOES` com escopo e aridade.
+- **`PENDENCIAS.md`:** seção do Sócio Torcedor reescrita — estava desatualizada
+  (apontava pasta inexistente e dizia que o projeto não estava no Git). Entraram os
+  cruzamentos entre os dois sistemas e a lista de correções dos documentos.
+
+## 2026-07-27 — Sessão por token e escopos na API (falha de segurança corrigida)
+
+**A API estava completamente aberta, em produção.** `netlify/functions/api.js`
+validava apenas se o nome da função estava numa lista — nenhuma autenticação. As
+27 funções respondiam a qualquer requisição: `getBrincantes` devolvia o **CPF
+completo** de todos (e o CPF é a senha de login), e `addBrincante`,
+`removeBrincante`, `deleteEnsaio` e `updateConfigMap` podiam ser chamadas por
+qualquer um com a URL. O objeto `usuario` gravado nos logs vinha **como argumento
+do navegador** — bastava declarar-se "Coordenação".
+
+Portada a solução já em uso no projeto irmão (Site Sócio Torcedor), com as
+adaptações deste sistema:
+
+- **`server/sessoes.js` (novo):** coleção `sessoes/{token}` com token de 32 bytes
+  (`crypto.randomBytes`), `Tipo` (`admin`/`brincante`), `BrincanteID`, `Nome` e
+  `ExpiraEm`. Admin expira em 12 h, brincante em 30 dias. O formato do token é
+  validado por regex **antes** de virar caminho no banco — sem isso um token com
+  `/` alcançaria outro documento. Faxina de sessões vencidas de carona no login
+  (1 em 10), já que Netlify Functions não têm cron.
+- **`netlify/functions/api.js`:** a whitelist virou um mapa em que cada função
+  declara **escopo** (`publico`/`autenticado`/`brincante`/`admin`) e **aridade**.
+  O dispatcher valida o token, confere o escopo e injeta a sessão como último
+  argumento do handler.
+  - **Anti-forja:** a lista de argumentos é normalizada para exatamente a aridade
+    declarada antes de a sessão ser anexada — argumentos a mais são descartados
+    (senão o cliente empurraria um objeto para o lugar da sessão) e a menos viram
+    `undefined` (para a sessão não escorregar de posição).
+  - Respostas 401 carregam `__auth: true`, sinalizando ao front que descarte a sessão.
+- **`server/handlers.js`:** `login` cria a sessão e devolve o token; novos
+  handlers `logout` e `entrarComoBrincante`. Duas travas de escopo:
+  `getPerfilBrincante` e `setDestinoBonificacao` passaram a ler o ID **da
+  sessão** quando quem chama não é admin — antes, trocar um parâmetro dava acesso
+  ao desempenho, à bonificação e às advertências de outra pessoa. Trocar o **CPF**
+  de um brincante agora derruba as sessões dele (o CPF é a senha).
+- **Papel duplo virou real:** quem é coordenação **e** item/brincante escolhia no
+  login como entrar, mas era só visual — o acesso continuava total. Agora
+  escolher "item/brincante" chama `entrarComoBrincante`, que **rebaixa a sessão**
+  no servidor. Só rebaixa, nunca promove.
+- **`public/index.html`:** guarda o token e o envia em toda chamada; parou de
+  mandar `currentUser` como argumento (17 chamadas); `logout` encerra a sessão
+  também no servidor; sessão recusada cai para a tela de login com aviso, em vez
+  de deixar tela pela metade.
+- **`testes/api.test.js` (novo) + `npm test`:** o teste ficou **versionado no
+  projeto**, como no repositório irmão. Não precisa de Firebase nem de
+  `netlify dev` — injeta um Firestore em memória no lugar do `server/firebase.js`
+  e chama o handler da Netlify Function direto.
+- **Testes executados: 29, todos passaram** — chamada sem token → 401 (com
+  `__auth`); token forjado → 401; token com path
+  injection (`../brincantes/DEV`) → 401; token não-string → 401; senha errada não
+  devolve token; brincante em função de admin → 403 (e a config **não** foi
+  alterada); brincante tentando mudar o destino da bonificação de outro → alterou
+  o **próprio**, o do outro ficou intacto; tentativa de injetar
+  `{id:'HACKER'}` no lugar da sessão → o log gravou "Coordenação"; sessão
+  rebaixada perde acesso admin; troca de CPF invalida o token antigo; logout
+  invalida o token.
+- **Pendente para o deploy:** todo mundo vai precisar entrar de novo (as sessões
+  nascem agora). O usuário `DEV`/`123456` continua existindo — remover quando
+  houver um admin real (ver `PENDENCIAS.md`).
+
 ## 2026-07-27 — Pendências registradas e publicação de tudo no GitHub
 
 - **Novo `PENDENCIAS.md`** (raiz do repo): registro único de tudo que está em aberto —

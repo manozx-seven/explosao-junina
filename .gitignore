@@ -18,3 +18,6 @@ documentos explosão/_backup/
 # Cache do Python (geradores dos documentos)
 __pycache__/
 *.pyc
+
+# Configuracao local do Claude Code (permissoes da maquina)
+.claude/

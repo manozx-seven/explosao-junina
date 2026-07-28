@@ -589,14 +589,17 @@ function btnLoading(btn, loading) {
 // SERVER CALLS (with auto-loading)
 // Chama a Netlify Function que substitui o google.script.run.
 // ============================================================
+// O token da sessão vai em toda chamada. Quem o usuário é passa a ser
+// resolvido no servidor — o objeto `currentUser` não é mais enviado.
 const API_URL = '/.netlify/functions/api';
+let authToken = null;
 async function srv(fn, ...args) {
   let res;
   try {
     res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fn, args })
+      body: JSON.stringify({ fn, args, token: authToken })
     });
   } catch (e) {
     hideLoading();
@@ -607,9 +610,24 @@ async function srv(fn, ...args) {
   if (text) { try { data = JSON.parse(text); } catch (e) { data = null; } }
   if (!res.ok || (data && data.__error)) {
     hideLoading();
+    // Sessão morta no servidor: cai para o login em vez de deixar a tela pela metade.
+    if (data && data.__auth) { sessaoInvalida(); }
     throw new Error((data && data.__error) || ('Erro ' + res.status));
   }
   return data;
+}
+
+// Chamado quando o servidor recusa o token (expirado, revogado ou inválido).
+function sessaoInvalida() {
+  if (!currentUser && !authToken) return;
+  clearSession();
+  authToken = null;
+  currentUser = null;
+  const app = document.getElementById('app');
+  const login = document.getElementById('loginPage');
+  if (app) app.style.display = 'none';
+  if (login) login.style.display = 'flex';
+  toast('Sua sessão expirou. Entre novamente.', true);
 }
 
 // ============================================================
@@ -657,6 +675,7 @@ async function doLogin() {
   try {
     const res = await srv('login', id, cpf);
     if (res.success) {
+      authToken = res.token;                                     // sessão do servidor
       if (res.papel && res.podeCoord) escolherPapel(res);       // papel duplo → pergunta
       else entrarNoApp(res, res.podeCoord ? 'admin' : 'brincante');
     } else {
@@ -673,6 +692,7 @@ async function doLogin() {
 // Entra no app com um papel definido (admin = coordenação; brincante = só perfil)
 function entrarNoApp(res, role) {
   currentUser = Object.assign({}, res, { role });
+  delete currentUser.token;   // o token vive em authToken, não no objeto do usuário
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('userName').innerHTML = '<strong>' + res.nome + '</strong>';
@@ -692,17 +712,24 @@ function escolherPapel(res) {
       '<button class="btn btn-gold btn-block" onclick="escolherPapelRole(\'brincante\')"><i data-lucide="user-round"></i> '+danc+' (meu desempenho)</button>'+
     '</div>');
 }
-function escolherPapelRole(role) {
+async function escolherPapelRole(role) {
   const res = _loginPendente; _loginPendente = null;
   closeModal();
-  if (res) entrarNoApp(res, role);
+  if (!res) return;
+  // Entrar como item/brincante REBAIXA a sessão no servidor: a escolha deixa
+  // de ser só visual e o token perde o poder de administrar.
+  if (role !== 'admin') { try { await srv('entrarComoBrincante'); } catch(e) {} }
+  entrarNoApp(res, role);
 }
 
 document.getElementById('loginCpf').addEventListener('keypress', e => { if (e.key === 'Enter') doLogin(); });
 document.getElementById('loginId').addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('loginCpf').focus(); });
 
 function doLogout() {
+  // Encerra também no servidor — sem isso o token continuaria valendo.
+  if (authToken) { srv('logout').catch(()=>{}); }
   clearSession();
+  authToken = null;
   currentUser = null;
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
@@ -723,12 +750,12 @@ function throttle(fn, wait) {
 }
 function saveSession() {
   if (!currentUser) return;
-  try { localStorage.setItem(SESSION_KEY, JSON.stringify({ user: currentUser, last: Date.now() })); } catch(e) {}
+  try { localStorage.setItem(SESSION_KEY, JSON.stringify({ user: currentUser, token: authToken, last: Date.now() })); } catch(e) {}
 }
 function touchSession() {
   if (!currentUser) return;
   try {
-    const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null') || { user: currentUser };
+    const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null') || { user: currentUser, token: authToken };
     s.last = Date.now();
     localStorage.setItem(SESSION_KEY, JSON.stringify(s));
   } catch(e) {}
@@ -741,9 +768,10 @@ function expireSession() {
 function restoreSession() {
   let s;
   try { s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e) { s = null; }
-  if (!s || !s.user || !s.last) return false;
+  if (!s || !s.user || !s.last || !s.token) return false;
   if (Date.now() - s.last > SESSION_TIMEOUT) { clearSession(); return false; }
   currentUser = s.user;
+  authToken = s.token;
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('userName').innerHTML = '<strong>' + currentUser.nome + '</strong>';
@@ -1010,7 +1038,7 @@ async function saveNewBrincante(btn) {
   if (!dados.nome) return toast('Preencha o nome', true);
   if (opt === 'sim' && !validarAdesao()) return toast('Corrija a data de adesão à bonificação', true);
   btnLoading(btn, true);
-  const res = await srv('addBrincante', dados, currentUser);
+  const res = await srv('addBrincante', dados);
   if (res.success) { toast(res.message); closeModal(); loadBrincantes(); }
   btnLoading(btn, false);
 }
@@ -1080,7 +1108,7 @@ async function saveEditBrincante(id, btn) {
     dataDesligamento: membro==='desligado' ? document.getElementById('eDataDeslig').value : ''
   };
   btnLoading(btn, true);
-  await srv('updateBrincante', id, dados, currentUser);
+  await srv('updateBrincante', id, dados);
   _cache.bonificacao=null; _cache.ranking=null; _cache.perfil=null; _cache.dashboard=null;
   toast('Brincante atualizado!'); closeModal(); loadBrincantes();
 }
@@ -1167,7 +1195,7 @@ async function confirmImport(btn) {
   if (!await confirmDialog({ title:'Cadastrar em lote', message:'Cadastrar <strong>'+_importRows.length+'</strong> brincante(s) de uma vez?', okLabel:'Cadastrar' })) return;
   btnLoading(btn, true);
   try {
-    const r = await srv('addBrincantesLote', _importRows, currentUser);
+    const r = await srv('addBrincantesLote', _importRows);
     const nErr = (r.erros || []).length;
     toast((r.total || 0)+' cadastrado(s)'+(nErr ? ' • '+nErr+' com erro' : '')+'!', nErr > 0 && !r.total);
     closeModal(); loadBrincantes();
@@ -1184,7 +1212,7 @@ function baixarModeloCsv() {
 async function deleteBrincante(id, nome) {
   if (!await confirmDialog({ title:'Remover brincante', message:'Remover <strong>'+nome+'</strong>? As avaliações dele também serão apagadas.', okLabel:'Remover', danger:true })) return;
   if (_cache.brincantes) { _cache.brincantes = _cache.brincantes.filter(b => b.ID !== id); brincantesCache = _cache.brincantes; renderBrincantes(brincantesCache); }
-  try { await srv('removeBrincante', id, currentUser); toast('Brincante removido'); } catch(e) { toast('Erro ao remover', true); }
+  try { await srv('removeBrincante', id); toast('Brincante removido'); } catch(e) { toast('Erro ao remover', true); }
   loadBrincantes();
 }
 
@@ -1238,7 +1266,7 @@ async function saveAdvertencia(btn, id) {
   if (!dados.motivo.trim()) return toast('Descreva o motivo', true);
   btnLoading(btn, true);
   try {
-    await srv('addAdvertencia', dados, currentUser);
+    await srv('addAdvertencia', dados);
     document.getElementById('fAdvMotivo').value = '';
     _cache.bonificacao=null; _cache.perfil=null; _cache.dashboard=null;
     toast('Advertência registrada');
@@ -1249,7 +1277,7 @@ async function saveAdvertencia(btn, id) {
 async function delAdvertencia(advId, brincId) {
   if (!await confirmDialog({ title:'Remover advertência', message:'Remover esta advertência? A sanção correspondente deixa de valer.', okLabel:'Remover', danger:true })) return;
   try {
-    await srv('removeAdvertencia', advId, currentUser);
+    await srv('removeAdvertencia', advId);
     _cache.bonificacao=null; _cache.perfil=null; _cache.dashboard=null;
     toast('Advertência removida');
     showAdvertencias(brincId);
@@ -1468,7 +1496,7 @@ async function saveBatch(btn) {
   }
   btnLoading(btn, true);
   try {
-    await Promise.all(eventos.map(ev => srv('addEnsaio', ev, currentUser)));
+    await Promise.all(eventos.map(ev => srv('addEnsaio', ev)));
     toast(eventos.length+' evento'+(eventos.length>1?'s':'')+' criado'+(eventos.length>1?'s':'')+'!');
     closeModal(); exitSelMode(); _cache.ensaios = null; loadAgenda();
   } catch(e) { btnLoading(btn, false); toast('Erro ao criar eventos', true); }
@@ -1580,8 +1608,8 @@ async function saveEvento(btn) {
   if (!dados.data) return toast('Selecione a data', true);
   btnLoading(btn, true);
   try {
-    if (id) await srv('updateEvento', id, dados, currentUser);
-    else await srv('addEnsaio', dados, currentUser);
+    if (id) await srv('updateEvento', id, dados);
+    else await srv('addEnsaio', dados);
     toast(id ? 'Evento atualizado!' : 'Evento criado!');
     closeModal(); _cache.ensaios = null; loadAgenda();
   } catch(e) { btnLoading(btn, false); toast('Erro ao salvar', true); }
@@ -1612,7 +1640,7 @@ async function delEnsaio(id) {
   if (!await confirmDialog({ title:'Excluir evento', message:'Excluir este evento e todas as avaliações dele?', okLabel:'Excluir', danger:true })) return;
   closeModal();
   if (_cache.ensaios) { _cache.ensaios = _cache.ensaios.filter(e => e.ID !== id); ensaiosCache = _cache.ensaios; renderAgenda(); }
-  try { await srv('deleteEnsaio', id, currentUser); toast('Evento excluído'); } catch(e) { toast('Erro ao excluir', true); }
+  try { await srv('deleteEnsaio', id); toast('Evento excluído'); } catch(e) { toast('Erro ao excluir', true); }
   loadAgenda();
 }
 
@@ -1826,13 +1854,13 @@ async function autosaveAv(id) {
   else if (s.presente === 'nao') patch = { presente:'nao', justificativa:s.texto||'', justificada: !!s.justificada };
   else patch = { presente:null };
   try {
-    await srv('upsertAvaliacao', ensaioId, id, patch, currentUser);
+    await srv('upsertAvaliacao', ensaioId, id, patch);
     flashSaved(id);
     // Fazer a chamada confirma que o evento aconteceu: planejado -> realizado.
     if (s.presente && _avEvento && _avEvento.Status === 'planejado') {
       _avEvento.Status = 'realizado';
       syncEventoCache(); renderAvHeader();
-      srv('updateEvento', ensaioId, { status:'realizado' }, currentUser).catch(()=>{});
+      srv('updateEvento', ensaioId, { status:'realizado' }).catch(()=>{});
     }
     _cache.dashboard=null; _cache.ranking=null; _cache.bonificacao=null; _cache.perfil=null;
     delete _cache['av_'+ensaioId];
@@ -1891,7 +1919,7 @@ async function saveAjuste(btn) {
   const dados = { horaInicioReal:document.getElementById('fAjIni').value, horaFimReal:document.getElementById('fAjFim').value, obsEvento:document.getElementById('fAjObs').value };
   btnLoading(btn, true);
   try {
-    await srv('updateEvento', _avEvento.ID, dados, currentUser);
+    await srv('updateEvento', _avEvento.ID, dados);
     Object.assign(_avEvento, { HoraInicioReal:dados.horaInicioReal, HoraFimReal:dados.horaFimReal, ObsEvento:dados.obsEvento });
     syncEventoCache(); closeModal(); renderAvHeader(); toast('Ajuste salvo');
   } catch(e) { btnLoading(btn, false); toast('Erro ao salvar', true); }
@@ -1899,7 +1927,7 @@ async function saveAjuste(btn) {
 async function marcarNaoAconteceu() {
   if (!await confirmDialog({ title:'Evento não realizado', message:'Marcar este evento como <strong>não realizado</strong>? Ele deixa de contar para frequência e bonificação.', okLabel:'Não aconteceu', danger:true })) return;
   try {
-    await srv('updateEvento', _avEvento.ID, { status:'cancelado' }, currentUser);
+    await srv('updateEvento', _avEvento.ID, { status:'cancelado' });
     _avEvento.Status = 'cancelado'; syncEventoCache(); renderAvHeader();
     _cache.dashboard=null; _cache.ranking=null; _cache.bonificacao=null;
     toast('Evento marcado como não realizado');
@@ -1907,7 +1935,7 @@ async function marcarNaoAconteceu() {
 }
 async function reativarEvento() {
   try {
-    await srv('updateEvento', _avEvento.ID, { status:'realizado' }, currentUser);
+    await srv('updateEvento', _avEvento.ID, { status:'realizado' });
     _avEvento.Status = 'realizado'; syncEventoCache(); renderAvHeader();
     _cache.dashboard=null; _cache.ranking=null; _cache.bonificacao=null;
     toast('Evento reativado');
@@ -2044,7 +2072,7 @@ async function saveConfig(btn) {
   if (!await confirmDialog({ title:'Salvar configurações', message:'Isso pode <strong>recalcular a bonificação de todos</strong> retroativamente. Deseja continuar?', okLabel:'Salvar' })) return;
   btnLoading(btn, true);
   try {
-    await srv('updateConfigMap', mapa, currentUser);
+    await srv('updateConfigMap', mapa);
     _cache.config = mapa;
     _cache.dashboard=null; _cache.ranking=null; _cache.bonificacao=null; _cache.perfil=null;
     toast('Configurações salvas!');
@@ -2170,7 +2198,7 @@ function buildDestinoCard(p) {
 }
 async function escolherDestino(destino) {
   try {
-    const r = await srv('setDestinoBonificacao', currentUser.id, destino, currentUser);
+    const r = await srv('setDestinoBonificacao', currentUser.id, destino);
     if (r && r.success) {
       if (_cache.perfil) _cache.perfil.DestinoBonificacao = r.destino;
       _cache.bonificacao = null;

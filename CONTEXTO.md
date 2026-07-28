@@ -76,6 +76,7 @@ Firebase Firestore  ← banco de dados
 | `ensaios`    | ex. `ENS20260210_1234` | ID, Data, Tipo, Descricao, CriadoPor, HoraInicio, HoraFim, Status (`planejado`/`realizado`/`cancelado`), HoraInicioReal, HoraFimReal, ObsEvento |
 | `avaliacoes` | auto                | EnsaioID, BrincanteID, Presente, Nota, Observacao, AvaliadoPor, DataRegistro |
 | `logs`       | auto                | DataHora, UsuarioID, UsuarioNome, Acao, Detalhes |
+| `sessoes`    | o próprio token     | Token, Tipo (`admin`/`brincante`), BrincanteID, Nome, CriadoEm, ExpiraEm |
 | `advertencias` | auto              | BrincanteID, Nivel (`verbal`/`formal`/`desligamento`/`extrema`), Motivo, Data, RegistradoPor, DataRegistro |
 
 Config padrão (chaves em `config/app`): `valorEnsaio=0.50`, `valorApresentacao=1.00`,
@@ -154,15 +155,26 @@ tiver 2026, ajustar pela aba Configurações.)
 - **Usuário DEV** (acesso admin sem dados pessoais reais): `ID = DEV`,
   senha = `123456`. Criado por `scripts/seed-dev.js`. Serve para administrar e
   cadastrar as pessoas reais; pode ser removido quando houver um admin real.
-- **Sessão:** após o login, a sessão é guardada no `localStorage` do navegador e
-  restaurada ao recarregar a página. **Expira após 1 hora sem atividade**
-  (mouse/teclado/toque/scroll); um vigia no cliente faz logout automático quando
-  o tempo estoura. (Ainda é sessão só do lado do cliente — a evolução para token
-  assinado no servidor continua valendo.)
-- Observação de segurança: as funções de escrita ainda recebem o objeto `usuario`
-  vindo do cliente (herdado do Apps Script). A verificação de login é no servidor,
-  então CPFs não vazam ao navegador. Evolução futura: emitir token de sessão
-  assinado no login.
+- **Sessão por token (servidor).** O login cria um documento em
+  `sessoes/{token}` (token de 32 bytes) com `Tipo` (`admin`/`brincante`),
+  `BrincanteID` e `Nome`. Admin expira em **12 h**, brincante em **30 dias**.
+  Toda chamada da API envia o token; **quem o usuário é vem sempre da sessão**,
+  nunca de argumento do cliente.
+- **Escopos.** Cada função declara em `netlify/functions/api.js` o escopo
+  (`publico`/`autenticado`/`brincante`/`admin`) e a **aridade**. O dispatcher
+  normaliza os argumentos para exatamente essa aridade antes de anexar a sessão
+  como último argumento — argumento a mais não vira sessão forjada. Função nova
+  que não entre nesse mapa simplesmente não responde (falha fechada).
+- **Brincante só acessa o próprio dado.** `getPerfilBrincante` e
+  `setDestinoBonificacao` leem o ID **da sessão** quando quem chama não é admin.
+- **Papel duplo.** Quem é coordenação e também item/brincante entra como admin e,
+  ao escolher "item/brincante" no login, chama `entrarComoBrincante`, que
+  **rebaixa a sessão** no servidor. Só rebaixa, nunca promove.
+- **Troca de CPF derruba as sessões** daquele brincante — o CPF é a senha.
+- **No cliente:** o token fica no `localStorage` junto com a sessão, que é
+  restaurada ao recarregar a página e **expira após 1 hora sem atividade**
+  (mouse/teclado/toque/scroll). São duas camadas independentes: o vigia de
+  inatividade no navegador e a validade do token no servidor.
 
 ## 8. Estrutura de pastas
 
@@ -170,6 +182,8 @@ tiver 2026, ajustar pela aba Configurações.)
 public/index.html          Frontend completo (UI + lógica de tela)
 netlify/functions/api.js   Dispatcher da API (Netlify Function)
 server/firebase.js         Init do firebase-admin (REST) via variáveis de ambiente
+server/sessoes.js          Sessões por token (criar/validar/rebaixar/encerrar)
+testes/api.test.js         Escopos, anti-forja de sessão e travas (npm test)
 server/handlers.js         Lógica de negócio (Firestore) — ~18 funções
 scripts/seed.js            Cria config inicial + coordenação real (por CPF)
 scripts/seed-dev.js        Cria/atualiza o usuário DEV (admin)

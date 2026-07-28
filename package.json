@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "seed": "node scripts/seed.js",
-    "dev": "netlify dev"
+    "dev": "netlify dev",
+    "test": "node testes/api.test.js"
   },
   "dependencies": {
     "firebase-admin": "^12.7.0"

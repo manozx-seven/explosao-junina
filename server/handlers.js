@@ -11,6 +11,9 @@
 //   logs/{autoId}           -> { DataHora, UsuarioID, ... }
 // ============================================================
 const { getDb } = require('./firebase');
+const {
+  criarSessao, encerrarSessao, rebaixarParaBrincante, encerrarSessoesDoBrincante,
+} = require('./sessoes');
 
 const DEFAULT_CONFIG = {
   valorEnsaio: '0.50',
@@ -85,6 +88,10 @@ async function proximoId_() {
 
 // ============================================================
 // AUTENTICAÇÃO - Login por ID + CPF
+//
+// O login devolve um TOKEN de sessão. A partir daqui, toda chamada da API
+// precisa apresentá-lo, e quem o usuário é passa a vir do servidor — o
+// objeto `usuario` não é mais aceito como argumento do navegador.
 // ============================================================
 async function login(id, cpf) {
   const cpfLimpo = normalizaCpf(cpf);
@@ -94,9 +101,14 @@ async function login(id, cpf) {
   if (doc.exists) {
     const b = doc.data();
     if (normalizaCpf(b.CPF) === cpfLimpo) {
+      // Coordenação entra como admin; quem só dança entra como brincante.
+      // Papel duplo nasce admin e pode rebaixar em `entrarComoBrincante`.
+      const tipoSessao = ehCoordenacao_(b.Tipo) ? 'admin' : 'brincante';
+      const sessao = await criarSessao(tipoSessao, { id: b.ID || idLimpo, nome: b.Nome });
       await registrarLog_(idLimpo, b.Nome, 'LOGIN', 'Acesso ao sistema');
       return {
         success: true,
+        token: sessao.token,
         nome: b.Nome,
         id: b.ID,
         apelido: b.Apelido,
@@ -108,6 +120,22 @@ async function login(id, cpf) {
     }
   }
   return { success: false, message: 'ID ou CPF inválido' };
+}
+
+async function logout(sessao) {
+  if (sessao && sessao.token) await encerrarSessao(sessao.token);
+  return { success: true };
+}
+
+/**
+ * Quem tem papel duplo escolhe, no login, entrar como coordenação ou como
+ * item/brincante. Escolhendo o papel de dança, a sessão é REBAIXADA de fato:
+ * o token perde o poder de administrar enquanto durar. Só rebaixa.
+ */
+async function entrarComoBrincante(sessao) {
+  if (!sessao || !sessao.token) return { success: false };
+  await rebaixarParaBrincante(sessao.token);
+  return { success: true };
 }
 
 // ============================================================
@@ -248,6 +276,9 @@ async function updateBrincante(id, dados, usuario) {
   }
   if (changes.length) await ref.update(update);
 
+  // O CPF é a senha: trocá-lo precisa derrubar quem já estava logado com a antiga.
+  if (changes.includes('cpf')) await encerrarSessoesDoBrincante(String(id).trim());
+
   if (usuario) {
     await registrarLog_(usuario.id, usuario.nome, 'EDIÇÃO', `Brincante ${id} editado. Campos: ${changes.join(', ')}`);
   }
@@ -256,18 +287,23 @@ async function updateBrincante(id, dados, usuario) {
 
 // Auto-serviço: o próprio brincante define, no seu perfil, se ao fim da temporada
 // vai RESGATAR o valor acumulado ou DOAR à quadrilha. Só toca esse campo.
+//
+// Escopo `autenticado`: quem NÃO é admin só altera o próprio destino — o ID vem
+// da sessão, não do argumento. Sem isso, o brincante A trocaria a escolha do B
+// mudando um parâmetro na requisição.
 async function setDestinoBonificacao(id, destino, usuario) {
   const config = await getConfigMap_();
   if (config.escolhaDestinoLiberada !== 'sim') {
     return { success: false, message: 'A escolha ainda não foi liberada pela coordenação.' };
   }
   const dest = destino === 'doar' ? 'doar' : 'resgatar';
-  const ref = getDb().collection('brincantes').doc(String(id).trim());
+  const alvo = (usuario && usuario.tipo !== 'admin') ? usuario.id : id;
+  const ref = getDb().collection('brincantes').doc(String(alvo).trim());
   const doc = await ref.get();
   if (!doc.exists) return { success: false, message: 'Brincante não encontrado' };
   await ref.update({ DestinoBonificacao: dest });
   if (usuario) {
-    await registrarLog_(usuario.id, usuario.nome, 'DESTINO_BONIF', `Brincante ${id}: destino da bonificação = ${dest}`);
+    await registrarLog_(usuario.id, usuario.nome, 'DESTINO_BONIF', `Brincante ${alvo}: destino da bonificação = ${dest}`);
   }
   return { success: true, destino: dest };
 }
@@ -659,11 +695,18 @@ async function getDashboard() {
 
 // ============================================================
 // PERFIL DO BRINCANTE
+//
+// Escopo `autenticado`: a coordenação vê o perfil de qualquer um; quem NÃO é
+// admin vê apenas o próprio, e o ID vem DA SESSÃO. Sem essa trava, bastaria
+// trocar o parâmetro para ler o desempenho, a bonificação e as advertências
+// de outra pessoa.
 // ============================================================
-async function getPerfilBrincante(brincanteId) {
+async function getPerfilBrincante(brincanteId, usuario) {
+  const alvo = (usuario && usuario.tipo !== 'admin') ? usuario.id : brincanteId;
   const [brincantes, ensaiosRaw, config] = await Promise.all([getBrincantes(), getEnsaios(), getConfigMap_()]);
-  const brincante = brincantes.find((b) => b.ID === brincanteId);
+  const brincante = brincantes.find((b) => b.ID === alvo);
   if (!brincante) return null;
+  brincanteId = alvo;
 
   const avaliacoesRaw = await getAvaliacoes({ brincanteId });
   const advs = await getAdvertencias(brincanteId);
@@ -917,10 +960,12 @@ async function updateConfigMap(mapa, usuario) {
 }
 
 // ============================================================
-// EXPORT - mapa de funções expostas à API (whitelist)
+// EXPORT - funções disponíveis para a API.
+// Quem pode chamar cada uma é declarado em netlify/functions/api.js
+// (escopo + aridade). Estar aqui não basta para ser chamável.
 // ============================================================
 module.exports = {
-  login,
+  login, logout, entrarComoBrincante,
   getLogs,
   getBrincantes, addBrincante, addBrincantesLote, updateBrincante, setDestinoBonificacao, removeBrincante,
   getEnsaios, addEnsaio, updateEvento, deleteEnsaio,
