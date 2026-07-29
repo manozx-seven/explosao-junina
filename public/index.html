@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Explosão Junina - Sistema de Avaliação</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%23F2B134'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M8.5%2014.5A2.5%202.5%200%200%200%2011%2012c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054%202-6%20.5%202.5%202%204.9%204%206.5%202%201.6%203%203.5%203%205.5a7%207%200%201%201-14%200c0-1.153.433-2.294%201-3a2.5%202.5%200%200%200%202.5%202.5z'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="64x64" href="img/favicon-64.png">
+<link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+<link rel="apple-touch-icon" href="img/apple-touch.png">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -71,8 +73,12 @@ svg.lucide { width:18px; height:18px; stroke-width:2; vertical-align:middle; fle
 .login-page { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px; animation:fadeIn .6s ease; }
 .login-box { background:linear-gradient(180deg,var(--card),#191b3d); border:1px solid var(--border); border-radius:var(--radius); width:100%; max-width:392px; text-align:center; overflow:hidden; box-shadow:0 24px 60px rgba(0,0,0,.45); animation:slideUp .5s ease; }
 .login-inner { padding:36px 32px 34px; }
-.brand-mark { width:60px; height:60px; margin:0 auto 14px; border-radius:16px; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 30%, rgba(242,177,52,.28), transparent 70%), var(--vermelho-bg); border:1px solid rgba(242,177,52,.35); box-shadow:0 0 24px rgba(242,177,52,.25); }
-.brand-mark svg.lucide { width:30px; height:30px; color:var(--dourado); stroke-width:2; }
+/* O logo entrou no lugar do ícone de fogo. O quadrado vermelho com brilho saiu
+   junto: a arte já tem fogo, contorno e brilho próprios, e empilhar os dois vira
+   ruído. Precisa ser grande o bastante para o nome dentro do logo ser legível —
+   a 60px, que era o tamanho da marca antiga, viraria um borrão. */
+.brand-mark { display:block; width:150px; height:auto; margin:0 auto 12px; filter:drop-shadow(0 8px 16px rgba(0,0,0,.45)); }
+@media (max-width:400px) { .brand-mark { width:126px; } }
 .login-box h1 { font-size:12px; font-weight:600; color:var(--dourado); letter-spacing:2.5px; text-transform:uppercase; margin-bottom:6px; }
 .login-box h2 { font-family:'Barlow Condensed',sans-serif; font-size:34px; font-weight:800; letter-spacing:1px; color:var(--text); line-height:1; margin-bottom:8px; text-transform:uppercase; }
 .login-box h3 { font-size:12.5px; color:var(--text-sec); margin-bottom:28px; font-weight:400; }
@@ -109,8 +115,10 @@ svg.lucide { width:18px; height:18px; stroke-width:2; vertical-align:middle; fle
 .app { display:none; animation:fadeIn .4s ease; }
 .topbar { background:rgba(29,31,66,.85); border-bottom:1px solid var(--border); padding:12px 20px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; backdrop-filter:blur(10px); }
 .topbar-left { display:flex; align-items:center; gap:12px; }
-.topbar-logo { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 30%, rgba(242,177,52,.25), transparent 70%), var(--vermelho-bg); border:1px solid rgba(242,177,52,.3); flex-shrink:0; }
-.topbar-logo svg.lucide { width:20px; height:20px; color:var(--dourado); }
+/* Mesma ideia da tela de login: o logo dispensa a caixa. O -4px de margem
+   vertical deixa ele maior que os 38px do ícone antigo sem engordar a barra. */
+.topbar-logo { width:48px; height:48px; margin:-4px 0; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.topbar-logo img { width:100%; height:100%; object-fit:contain; display:block; filter:drop-shadow(0 2px 5px rgba(0,0,0,.5)); }
 .topbar-brand { font-family:'Barlow Condensed',sans-serif; font-size:19px; font-weight:800; letter-spacing:.5px; color:var(--dourado); line-height:1; text-transform:uppercase; }
 .topbar-sub { font-size:11px; color:var(--text-sec); }
 .topbar-user { font-size:13px; color:var(--text-sec); display:flex; align-items:center; gap:8px; }
@@ -339,7 +347,7 @@ tr:hover td { background:rgba(255,255,255,.03); }
   /* Topbar compacta (permanece em linha) */
   .topbar { padding:10px 14px; }
   .topbar-left { gap:9px; }
-  .topbar-logo { width:34px; height:34px; }
+  .topbar-logo { width:40px; height:40px; }
   .topbar-sub { display:none; }
   .topbar-brand { font-size:16px; }
   .topbar-user { font-size:12px; gap:6px; }
@@ -409,7 +417,7 @@ tr:hover td { background:rgba(255,255,255,.03); }
   <div class="login-box">
     <div class="bunting"></div>
     <div class="login-inner">
-      <div class="brand-mark"><i data-lucide="flame"></i></div>
+      <img class="brand-mark" src="img/logo-256.png" width="256" height="256" alt="Explosão Junina de Beruri">
       <h1>Grupo Recreativo e Folclórico</h1>
       <h2>Explosão Junina</h2>
       <h3>Sistema de Avaliação • Temporada 2027</h3>
@@ -429,7 +437,7 @@ tr:hover td { background:rgba(255,255,255,.03); }
 <div id="app" class="app">
   <div class="topbar">
     <div class="topbar-left">
-      <div class="topbar-logo"><i data-lucide="flame"></i></div>
+      <div class="topbar-logo"><img src="img/apple-touch.png" alt="Explosão Junina de Beruri"></div>
       <div>
         <div class="topbar-brand">Explosão Junina</div>
         <div class="topbar-sub">Sistema de Avaliação</div>

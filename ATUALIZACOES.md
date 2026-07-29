@@ -6,6 +6,29 @@
 
 ---
 
+## 2026-07-29 — Logo da quadrilha no lugar do ícone de fogo
+
+O sistema usava um ícone genérico de chama (Lucide) na aba do navegador, na tela
+de login e no topo do app. Entrou a **arte oficial da Explosão** nos três
+lugares.
+
+- **Imagens:** `public/img/` com `favicon-32.png`, `favicon-64.png`,
+  `apple-touch.png` (180px) e `logo-256.png`; o original em
+  `arte/logo-explosao-original.png`. São **os mesmos arquivos já usados no Site
+  Sócio Torcedor** (conferido por hash: o PNG entregue é idêntico ao `arte/` de
+  lá), então os dois sistemas ficam com a mesma identidade sem gerar nada de
+  novo.
+- **Favicon:** o `data:` URI com o SVG da chama saiu; entraram os dois PNGs e o
+  `apple-touch-icon`.
+- **Login e topo do app:** a caixa vermelha com brilho dourado que envolvia o
+  ícone **saiu junto** — a arte já tem fogo, contorno e brilho próprios, e
+  empilhar os dois vira ruído (mesma decisão tomada no projeto irmão). No login o
+  logo tem 150px (126px em tela estreita): a 60px, tamanho da marca antiga, o
+  nome dentro da arte viraria borrão. No topo tem 48px com margem negativa, para
+  ficar maior que o ícone antigo sem engordar a barra.
+- **Conferido no navegador**, servindo o `public/` local: login e topbar
+  renderizando, e os três caminhos de imagem respondendo 200.
+
 ## 2026-07-29 — Bloco "Onde parei" no PENDENCIAS.md
 
 O trabalho passou a ser retomado em máquinas diferentes, e a lista de pendências
