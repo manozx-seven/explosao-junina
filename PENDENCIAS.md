@@ -15,10 +15,14 @@
 
 ## ▶ Onde parei em 29/07/2026 (fim do dia)
 
-Tudo commitado e no ar (`dcf37c0` na `main`; o push redeploya o Netlify). Nada
+Tudo commitado e no ar (`d2ee6e1` na `main`; o push redeploya o Netlify). Nada
 ficou pela metade. **Máquina nova:** `git pull` → `npm install` → `npm test`
 (63 asserções). Para mexer nos documentos, `pip install python-docx` e rodar o
 gerador dentro de `documentos explosão/_geradores/`.
+
+A última coisa feita no dia foi visual: o **logo oficial da quadrilha** entrou no
+favicon, na tela de login e no topo do app, no lugar do ícone de chama. As
+imagens estão em `public/img/` e o original em `arte/`.
 
 **O que fazer primeiro, na ordem:**
 
@@ -89,6 +93,9 @@ No repositório do **Sócio Torcedor** ficou um arquivo não versionado
       brincante. Pedido e adiado.
 - [ ] **Valores diferenciados para itens** (marcador, casal de noivos, casal real). Hoje
       só a frequência é diferente (85%).
+- [ ] **Repetição na tela de login** (cosmético, 29/07/2026): o logo já traz o nome da
+      quadrilha escrito e, logo abaixo, o `<h2>` repete "EXPLOSÃO JUNINA". Dá para
+      enxugar o bloco de títulos — não foi feito porque o pedido era só trocar a imagem.
 
 ---
 
