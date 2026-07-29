@@ -6,6 +6,182 @@
 
 ---
 
+## 2026-07-29 — Teto de R$ 80 na bonificação (contrato e sistema)
+
+Decisão do dono: o Programa de Bonificação passa a ter **teto de R$ 80,00 por
+brincante na temporada**. Ele existe para o programa dar retorno simbólico sem
+estourar o orçamento — sem teto, o custo depende de quantos convites de
+apresentação aparecerem, e isso ninguém controla.
+
+- **Contrato** (`documentos explosão/Contratos Explosao Junina Final.docx`):
+  novo script `_geradores/patch_contrato_teto.py`, idempotente, alterando os
+  **dois termos** (Brincante e Item Destaque): alíneas "e" e "f" na Cláusula
+  Sexta, III; alínea nova na seção X amarrando o Programa de Fidelidade ao mesmo
+  teto (o Nível 3 dobra o valor por ensaio — sem essa linha, os dois pontos do
+  documento se contradiriam); linha do teto na tabela de projeção; observação
+  explicando que o máximo atual (R$ 44,00) ainda fica abaixo dele; e o teto no
+  quadro de adesão da primeira página, onde o brincante assina.
+  O contrato segue sem gerador completo: reescrevê-lo do zero arriscaria perder
+  formatação jurídica (campos de assinatura, caixas de opção, anexos). O patch é
+  script versionado — continua valendo que nenhum `.docx` é editado à mão.
+- **Sistema:** config nova `tetoBonificacao` (padrão `80.00`), `tetoConfig_()` e
+  `aplicarTeto_()` em `server/handlers.js`. **O teto entra antes da sanção**: ele
+  limita o que se acumula, e a sanção desconta sobre o acumulado. Invertido, a
+  advertência formal (−50%) renderia mais a quem passou do teto do que a quem
+  ficou nele. `0`, vazio ou lixo = sem teto — erro de digitação na tela de
+  configurações não pode zerar a bonificação de todo mundo em silêncio.
+- **`getPerfilBrincante`** devolve `bonificacaoSemTeto`, `teto` e `tetoAtingido`;
+  **`getSimulacaoBonificacao`** devolve `valorSemTeto`/`atingiuTeto` por
+  brincante, mais `teto`, `noTeto` e `tetoTotal` — o compromisso máximo com os
+  elegíveis de hoje, que é o número de que o Financeiro precisa para reservar
+  orçamento.
+- **Frontend:** campo do teto na aba Configurações; faixa na aba Bonificação com
+  teto, compromisso máximo e quantos já chegaram nele; marca "no teto" na linha
+  de quem atingiu; e, no perfil do brincante, aviso com quanto falta para
+  alcançá-lo (ou de que chegou, deixando claro que presença e nota continuam
+  sendo requisitos para receber).
+- **Testes: 63 asserções, todas passando** (eram 55). Oito novas cobrem o teto no
+  perfil e na simulação, a **ordem teto → sanção** (R$ 120 com −50% vira R$ 40, e
+  não R$ 60) e o desligamento do teto com `0`.
+- `CONTEXTO.md` §5 e §6 atualizados.
+
+## 2026-07-29 — Documentos: Arraial, Organograma, contrato explicado e Sócio Torcedor
+
+Rodada de documentos pedida pelo dono. Três geradores novos, dois reescritos e
+um `.docx` corrigido por script.
+
+- **Arraial da Explosão** (`gen_arraial_explosao.py`): reenquadrado como
+  **projeto**, não como plano de um evento que já existe — capítulo 1 novo ("Por
+  que vamos fazer"), com o problema (a temporada junina morre cedo em Beruri), a
+  ideia que costura a reestruturação (**estar sempre ativo, sempre inovando,
+  sempre movimentando o cenário da quadrilha na cidade**), o que cada frente da
+  quadrilha ganha com o evento e o que precisa ser decidido para ele sair do
+  papel. A **§4 Feira e Comércio Local** foi refeita: parceria com a Prefeitura
+  (limpeza, segurança, espaço, estrutura, transporte e hospedagem das danças
+  convidadas), **taxa de 5% a 10% sobre a venda ou valor fixo pelo espaço**,
+  edital com formulário de cadastro das bancas, seleção, mapa e demarcação dos
+  espaços, e **banner de divulgação com o nome de cada banca** — que é o que
+  transforma a taxa em investimento para o comerciante. Cronograma, checklist,
+  riscos, equipes e a lista do que o sistema vai fazer acompanharam a mudança.
+- **Guia do contrato** (`gen_contrato_guia.py`, documento **novo**): "Contrato e
+  Bonificacao - Guia Explicativo.docx". Explica por que existe contrato numa
+  quadrilha, o que ele protege dos dois lados, a importância jurídica (afastar
+  vínculo empregatício, cessão de imagem, anexos de menor de idade, direito de
+  defesa, formalidades), o Programa de Bonificação inteiro **com o teto** e um
+  capítulo mapeando **cláusula por cláusula onde ela vive dentro do Sistema de
+  Avaliação**. Fecha com FAQ do brincante e checklist da reunião de assinatura.
+- **Organograma** (`gen_organograma.py`, gerador **novo**): o arquivo era o único
+  editado direto no Word e abria com um parágrafo solto de conversa colado de
+  chat. Agora tem gerador no padrão do kit, com a **imagem do organograma
+  preservada** (`_geradores/_ativos/organograma.png`, embutida pelo novo helper
+  `imagem()` do `kit.py`). Conteúdo dos cargos mantido, mais: capítulo de
+  **objetivo** (organizar a Explosão, direcionar a Diretoria, distribuir papéis,
+  mapear as divisões do ano e da arena, evitar acúmulo de função e definir de
+  quem cobrar), quadro de alçadas, regras de funcionamento, aviso sobre as
+  frentes ainda sem dono (Sócio Torcedor, arrecadação, arraiais, parcerias) e
+  **quadro de nomeação** para a reunião da Diretoria.
+- **Sócio Torcedor — Plano de Implementação** (`gen_socio.py`): atualizado contra
+  o repositório do site. Entraram a régua do atraso (em dia / pago com atraso /
+  atrasado / suspenso / inativo), entressafra e volta do inativo, corte do dia
+  20, valor derivado do nível, login por CPF e nascimento, capítulo novo de
+  **missões** (os quatro tipos, custo de validação de cada um, prova por link ou
+  texto, pontos retidos), as três travas do sorteio, o que o sócio e a
+  coordenação fazem em cada painel, um bloco de segurança e o status real dos
+  marcos. As três conquistas que estavam "em breve" passaram a **"no ar"** — o
+  módulo de missões ficou pronto.
+- **Sócio Torcedor — divulgação** (`gen_socio_divulgacao.py`, gerador **novo**):
+  era editado avulso. Ganhou gerador e seções novas — painel do sócio, troféus,
+  missões, "e se eu atrasar?" e um FAQ.
+- **Projeto Explosão Junina** (`gen_projeto.py`): passou a abrir com **"As
+  novidades da temporada 2027"** e o **mapa dos documentos**, como o dono pediu.
+  Atualizados: o teto no §10.2, a missão de captação e o aviso de registro no
+  §10.1, o status real do site do sócio no §10.3, o cadastro de bancas no §10.4,
+  o organograma como coração da reestruturação no §4, o guia e o valor jurídico
+  do contrato no §8.4, e o Arraial como projeto (com parceria e taxa das bancas)
+  no §11.3.
+- **`kit.py`:** helpers `imagem()` e a pasta `_ativos/`.
+- **Backups** dos três `.docx` que existiam antes do gerador ficaram em
+  `documentos explosão/_backup/`.
+
+> **Sobre rodar os geradores:** nesta máquina o `python-docx` está disponível no
+> Python do Laragon (`C:\laragon\bin\python\python-3.13`). A observação antiga do
+> `PENDENCIAS.md` sobre o Python *embeddable* sem pip não vale mais.
+
+## 2026-07-28 — Missão de captação de sócios torcedores (módulo novo)
+
+Aplicada no sistema a decisão que estava só no papel — "Programa Socio Torcedor -
+Plano de Implementacao.docx" §6: **trazer sócios é uma missão do brincante e vale
+desempenho e troféu, não dinheiro**. Era o último item do documento que ainda não
+existia em código (o resto já estava no projeto irmão e nos dois `.docx`).
+
+- **Coleção nova `indicacoes/{autoId}`**: `BrincanteID`, `Nome`, `Telefone`,
+  `Status` (`pendente`/`confirmada`/`recusada`), `DataDeclaracao`, `DeclaradaPor`,
+  `DecididaPor`, `DataDecisao`, `MotivoRecusa`.
+- **Privacidade como regra de código, não como recomendação:** guarda-se apenas
+  **nome e telefone**. CPF e data de nascimento juntos são a credencial de login
+  do sócio no Site Sócio Torcedor — o documento gravado é montado campo a campo,
+  então o que o cliente mandar além disso não entra. Há teste provando.
+- **Handlers** (`server/handlers.js`): `getIndicacoes`, `addIndicacao`,
+  `decidirIndicacao`, `removeIndicacao`, `getCaptacao`. Todos declarados em
+  `FUNCOES` com escopo e aridade.
+  - `addIndicacao` e `removeIndicacao` são **`autenticado`**: o brincante declara
+    por si e o **ID vem da sessão** (mesma trava de `getPerfilBrincante`); apaga
+    só a própria indicação e só enquanto pendente. Admin declara em nome de
+    alguém e apaga qualquer uma.
+  - `getIndicacoes`, `decidirIndicacao` e `getCaptacao` são **`admin`**.
+  - Telefone já declarado (e não recusado) é **recusado como duplicata** — dois
+    brincantes reivindicando o mesmo contato vira briga na hora do troféu.
+- **Nada de dinheiro e nada de frequência:** a missão não entra em `getRanking`,
+  `getSimulacaoBonificacao` nem nas contas de presença/nota. Quatro testes
+  cobrem exatamente isso, porque é a promessa do contrato que não pode escorregar.
+- **Troféu "Chamador de Gente"** ao bater a meta da temporada. Config nova
+  `metaSociosPorBrincante` (padrão **2**, o indicador do Plano §15), editável na
+  aba **Configurações**. O nome vive numa constante no servidor
+  (`TROFEU_CAPTACAO`) e a tela lê dela — já mudou uma vez (era "Padrinho", nome
+  aposentado do documento no mesmo dia) e não pode haver duas verdades.
+- **Frontend** (`public/index.html`): aba **Sócios** para a coordenação (stats,
+  fila de confirmação, ranking de captação, histórico com desfazer/apagar) e card
+  **"Missão: traga a torcida"** no perfil do brincante (progresso, troféu, lista
+  das próprias indicações e o formulário de declaração). O formulário avisa, na
+  tela, para nunca pedir CPF ou data de nascimento.
+- **Helper `esc()`** novo no front: o nome do sócio é digitado por brincante, a
+  entrada mais aberta do sistema. O nome **não viaja dentro do `onclick`** — o
+  navegador decodifica entidades HTML antes do JS, então um nome com apóstrofo
+  quebraria o handler mesmo escapado; passa-se o id e busca-se o nome.
+- **Testes: 55 asserções, todas passando** (eram 29). O Firestore falso ganhou
+  `where`, que faltava — sem ele o teste não alcançava `getPerfilBrincante`.
+- **Verificado também contra o Firestore real** (`netlify dev --offline`): as duas
+  funções novas devolvem 401 sem token, `getCaptacao` responde com o ranking
+  montado, `metaSociosPorBrincante` chega ao `getConfig` e o token morre no logout.
+- **Pendente do desenho** (segue no `PENDENCIAS.md`): o cruzamento automático com
+  o cadastro do outro sistema. A confirmação manual do admin é a base — o
+  automático entra por cima dela, nunca no lugar.
+
+## 2026-07-28 — Plano do Sócio Torcedor: troféus renomeados, M2 pronto e M3 em andamento
+
+Edição do dono no `_geradores/gen_socio.py`, com o `.docx` regerado. **Só
+documento** — mas mexe no vocabulário e no status que o resto do projeto usa.
+
+- **Catálogo de troféus refeito** (§9), agora com coluna de situação: Primeira
+  Fagulha, Pontual, Trio de Fogo, Temporada Completa, **Chamador de Gente**,
+  Veterano e **Sócio Fiel** (físico, entregue a cada dois ou três meses) estão
+  "no ar"; Torcedor de Arquibancada, Missão Cumprida e Puxador de Fila ficam
+  marcados como **"em breve"** até o módulo de missões do site entrar.
+  **"Padrinho" saiu** — "Chamador de Gente" é o troféu de indicar alguém que
+  virou sócio de verdade. Foi por isso que o troféu da missão neste sistema
+  mudou de nome na entrada acima.
+- **Indicação não gera sorteio extra** (§6): quem indica ganha reconhecimento e
+  o troféu, e não uma segunda urna — "criar uma segunda urna contradiria a
+  promessa feita ao sócio" (todos concorrem com a mesma chance). Este sistema
+  não tem sorteio, então nada a mudar aqui; vale para o projeto irmão.
+- **Status do site do sócio atualizado** (§12): **M2 Pronto** (painel do sócio,
+  carteirinha digital, troca de nível, mural, importação por planilha) e **M3 em
+  andamento** (troféus e vitrine prontos; faltam missões com validação em lote,
+  ranking, sorteios e notificações). Do M2 falta só o comprovante por imagem,
+  preso a credenciais externas. Para o site subir de verdade, faltam **banco e
+  hospedagem** — dependem da criação das contas.
+- `PENDENCIAS.md` §2 realinhado a esse status.
+
 ## 2026-07-28 — Novos valores dos níveis do Sócio Torcedor (10 / 20 / 30)
 
 - **Decisão do dono:** Fogueira passa de R$ 5 para **R$ 10**, Bandeirinha de R$ 10

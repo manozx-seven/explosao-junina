@@ -4,7 +4,7 @@
 > nas decisões da coordenação. O que já foi feito está no `ATUALIZACOES.md`;
 > o que o sistema é está no `CONTEXTO.md`.
 >
-> **Última revisão:** 2026-07-27.
+> **Última revisão:** 2026-07-29.
 >
 > **Decisões de 27/07/2026 são a referência.** Onde um documento anterior conflitar
 > com elas, o documento é que muda. Nos dois pontos em que o próprio 27/07 se
@@ -16,10 +16,12 @@
 ## 1. Sistema de Avaliação (este repositório)
 
 ### Configuração da temporada (fazer antes de fevereiro/2027)
-- [ ] Conferir a **config viva no Firestore** (`config/app`): se ainda estiver em 2026,
-      ajustar pela aba **Configurações** — `temporada`, `inicioTemporada`,
+- [ ] **Confirmado em 28/07/2026: a config viva ainda está em `temporada=2026`.**
+      Ajustar pela aba **Configurações** — `temporada`, `inicioTemporada`,
       `inicioContagem`, `fimContagem`, `fimAdesao`. Os padrões do código já estão em 2027,
       mas o banco manda.
+- [ ] Definir a **meta de sócios por brincante** (`metaSociosPorBrincante`, hoje no
+      padrão 2) junto com a decisão da coordenação sobre a captação da temporada.
 - [ ] Definir e preencher os campos de pagamento da bonificação: `dataPagamentoBonif`
       (após o Festival), `dataPagamentoBonif2` (2ª parcela, opcional) e
       `obsPagamentoBonif`.
@@ -27,6 +29,13 @@
       só então o brincante escolhe resgatar ou doar.
 - [ ] Revisar os valores por tipo de evento (`valorEnsaio`, `valorApresentacao`,
       `valorFestival`) — com o novo modelo de custeio, a bonificação pode subir.
+      **Agora há teto:** `tetoBonificacao` (padrão R$ 80,00, feito em 29/07/2026)
+      limita o acumulado por brincante, então mexer nos valores não estoura mais o
+      orçamento. Confirmar o teto na reunião da Diretoria junto com os valores.
+- [ ] **Conferir se a config viva tem `tetoBonificacao`.** O padrão do código é
+      `80.00`, mas o banco manda: se `config/app` já existir sem a chave, o valor
+      padrão vale; se alguém salvar a tela de Configurações com o campo vazio, o
+      teto é desligado. Checar pela aba Configurações antes da temporada.
 
 ### Segurança e acesso
 - [x] **Token de sessão no servidor** — feito em 27/07/2026. Coleção `sessoes`,
@@ -72,18 +81,27 @@ refletir no outro.
       no repositório do Sócio Torcedor.
 - [x] **M2 etapa 1** — sessão por token e escopos na API (27/07/2026). Foi de lá que
       veio a correção aplicada neste sistema.
-- [ ] **Projeto Firebase próprio** (separado de `explosao-junina`) e site próprio no
-      Netlify — pendências do dono, listadas no `PROXIMOS-PASSOS.md` de lá.
-- [ ] **Resto do M2** (config/geral, campos novos, cálculo de situação, painel do
-      sócio, importação CSV, finanças, comprovante no Drive), **M3** (troféus,
-      missões, ranking, sorteios) e **M4** (página pública e adesão online).
+- [x] **M2 — painel do sócio** (28/07/2026): login do sócio, carteirinha digital,
+      situação do mês, progresso, histórico, troca de nível, mural, finanças e, do
+      lado da coordenação, regras, fila de confirmação, lembretes e importação por
+      planilha.
+- [x] **Site no ar com o banco de verdade** (29/07/2026) — projeto Firebase próprio e
+      site no Netlify: <https://explosao-socio-torcedor.netlify.app>.
+- [ ] **Comprovante de pagamento por imagem** (resto do M2) — depende de conta e
+      credenciais externas ainda não provisionadas. Hoje o sócio descreve o
+      pagamento por texto e a coordenação confirma.
+- [ ] **M3 em andamento**: troféus (todas as dez conquistas), **sorteios** e o
+      **módulo de missões** (pontos retidos, validação em lote, prova por link ou
+      texto) já estão prontos. Faltam **ranking da temporada no mural** e as
+      **notificações** (a mensagem pronta para WhatsApp é a de melhor retorno).
+- [ ] **M4** — página pública e adesão online.
 
 ### Cruzamentos com este sistema (decididos em 27/07/2026)
-- [ ] **Módulo de missões neste sistema** para a captação de sócios: o brincante
-      declara quem trouxe (**nome e telefone apenas** — nunca CPF ou data de
-      nascimento, que são a credencial de login do sócio), fica pendente e o admin
-      confirma. Vale **desempenho e troféu, sem bonificação em dinheiro** — não mexe
-      no contrato nem na frequência.
+- [x] **Módulo de missões neste sistema** para a captação de sócios — feito em
+      28/07/2026. Coleção `indicacoes`, aba **Sócios** para a coordenação, card
+      "Missão: traga a torcida" no perfil do brincante, troféu Padrinho e a config
+      `metaSociosPorBrincante`. Guarda **nome e telefone apenas**; vale desempenho
+      e troféu, sem dinheiro. Detalhes em `ATUALIZACOES.md`.
 - [ ] **Confirmação automática da indicação**: a base é a confirmação manual do admin;
       por cima dela, o cruzamento automático quando o cadastro do sócio aparecer com
       nome e telefone batendo. Exige integração entre dois projetos hoje independentes
@@ -108,6 +126,10 @@ Foram descritas nos planos de evento e ainda **não existem**:
       arrecadação própria só o total).
 - [ ] **Sorteio digital** — entre o público presente e entre os sócios em dia, com
       registro do resultado.
+- [ ] **Cadastro das bancas do Arraial** — formulário de inscrição do edital da feira
+      (o que vende, tamanho da banca, se traz estrutura, se precisa de energia),
+      seleção pela coordenação, confirmação da vaga, mapa dos espaços demarcados e
+      registro do acerto (taxa de 5% a 10% ou valor fixo) para o balanço do evento.
 
 ---
 
@@ -117,13 +139,10 @@ Os `.docx` são **gerados por script** em `documentos explosão/_geradores/`
 (`kit.py` + um `gen_*.py` por documento). Editar o gerador e rodar de novo —
 nunca editar o `.docx` na mão.
 
-> **Para rodar os geradores nesta máquina:** o Python instalado
-> (`C:\Users\EJUD\python313`) é a distribuição *embeddable*, **sem pip e sem
-> site-packages**, então `pip install python-docx` não funciona. As dependências
-> (`python-docx`, `lxml`, `typing_extensions`) foram baixadas do PyPI para uma
-> pasta à parte e usadas via `sys.path.insert` — sem alterar a instalação do
-> Python. Numa máquina com pip normal, basta `pip install python-docx` e rodar
-> `python gen_socio.py`.
+> **Para rodar os geradores nesta máquina:** o `python-docx` está disponível no
+> Python do Laragon (`C:\laragon\bin\python\python-3.13`), então basta
+> `python gen_socio.py` dentro de `_geradores/`. (A observação anterior, sobre um
+> Python *embeddable* sem pip, não vale mais.)
 >
 > Para **ler** os `.docx` dentro do VS Code, está instalada a extensão
 > *Office Viewer* (`cweijan.vscode-office`) — visualiza `.docx`, `.xlsx`, `.pdf`
@@ -132,9 +151,10 @@ nunca editar o `.docx` na mão.
 - [ ] **Confirmar o tema anterior.** O plano de reestruturação trata
       *"A Bolha do Amor"* como **tema anterior** (usa a expressão "tema anterior", sem
       citar ano). Se for o tema de 2027, o capítulo de diagnóstico precisa ser reescrito.
-- [ ] **Limpar o `Organograma - Explosão Junina.docx`.** O arquivo começa com um
-      parágrafo solto de conversa (sobra de copiar/colar de chat) e não segue o padrão
-      visual dos outros documentos.
+- [x] **Organograma limpo e com gerador** (29/07/2026). Saiu o parágrafo solto de
+      chat, entrou o padrão visual do kit, o capítulo de objetivo, o quadro de
+      alçadas e o quadro de nomeação. A imagem do organograma vive agora em
+      `_geradores/_ativos/organograma.png`.
 - [ ] **Kit Parceiro** — atualizar para o novo papel das parcerias: sustentar o Programa
       Sócio Torcedor (descontos, prêmios de sorteio, brindes) e gerar ações para o
       público geral.
@@ -154,11 +174,25 @@ nunca editar o `.docx` na mão.
 > R$ 200 / R$ 300 por sócio, e a meta de 100 sócios passa de R$ 8.000 para
 > **R$ 15.000**. Já refletido nos dois `.docx` e no `server/niveis.js` do projeto
 > irmão. Segue como **proposta até a Diretoria bater o martelo**.
+- [x] **Sócio Torcedor: os dois documentos detalhados contra o site** (29/07/2026) —
+      régua do atraso, entressafra, corte do dia 20, valor derivado do nível, login
+      do sócio, missões, travas do sorteio, painéis e status real dos marcos. O
+      material de divulgação ganhou gerador (`gen_socio_divulgacao.py`) e seções
+      novas (painel, troféus, missões, atraso e FAQ).
+- [x] **Guia do contrato e da bonificação** (29/07/2026) — documento novo
+      (`gen_contrato_guia.py`) explicando por que o contrato existe, o valor
+      jurídico dele, o programa com o teto e a interação com o sistema.
+- [x] **Arraial da Explosão reenquadrado como projeto** (29/07/2026) — o "por que
+      fazer", a parceria com a Prefeitura e a feira com edital, taxa e banner.
 - [ ] **Contrato do brincante** — revisar antes da assinatura prevista para fevereiro de
-      2027 (datas da temporada, prazos de adesão e ativação).
-- [ ] Documentos sem gerador (editados à mão, via `python-docx` avulso): Contratos,
-      Kit Parceiro, Programa Sócio Torcedor (divulgação) e Organograma. Migrar para o
-      kit quando forem revisados.
+      2027 (datas da temporada, prazos de adesão e ativação). O teto de R$ 80 já entrou
+      (29/07/2026, via `patch_contrato_teto.py`).
+- [ ] **Leitura jurídica do contrato** antes da assinatura de fevereiro/2027 —
+      sobretudo imagem, anexos de menor de idade e a natureza não empregatícia da
+      bonificação. O guia registra que o texto foi escrito pela própria coordenação.
+- [ ] Documentos sem gerador (editados à mão ou por script pontual): **Contratos**
+      (alterado por `patch_contrato_teto.py`) e **Kit Parceiro**. Migrar para o kit
+      quando forem revisados — o resto da pasta já é gerado.
 
 ---
 
@@ -174,6 +208,14 @@ nunca editar o `.docx` na mão.
       programa.
 - [ ] **Definir no Arraial da Explosão** se as danças de fora competem, competem em
       categoria própria ou participam fora de competição.
-- [ ] **Definir a condição das bancas** do Arraial (gratuito, taxa simbólica ou
-      contrapartida).
+- [ ] **Fechar a condição das bancas** do Arraial. A proposta do dono (29/07/2026) é
+      **taxa de 5% a 10% sobre a venda ou valor fixo pelo espaço**, valendo também
+      para quem ocupa lugar na tenda; falta a Diretoria escolher o modelo e o número.
+      Danças convidadas seguem sem pagar.
+- [ ] **Protocolar o ofício de parceria com a Prefeitura** para o Arraial da Explosão,
+      pedindo recursos, limpeza, segurança, organização do espaço, estrutura e
+      transporte/hospedagem das danças convidadas. O cronograma do evento coloca isso
+      em D-90 — é o item que decide o tamanho do evento.
+- [ ] **Publicar o edital da feira** com o formulário de cadastro das bancas, para
+      montar o mapa dos espaços e o banner de divulgação com o nome de cada uma.
 - [ ] **Meta de sócios por brincante** para a captação da temporada.

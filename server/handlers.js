@@ -19,6 +19,10 @@ const DEFAULT_CONFIG = {
   valorEnsaio: '0.50',
   valorApresentacao: '1.00',
   valorFestival: '5.00',
+  // Teto da bonificação por brincante na temporada (Cláusula Sexta, III, "e").
+  // O programa é retorno simbólico: o teto garante que ele nunca estoure o
+  // orçamento, por maior que a temporada seja. 0 (ou vazio) = sem teto.
+  tetoBonificacao: '80.00',
   mesesAtivacao: '3',
   frequenciaMinima: '75',
   frequenciaItem: '85',
@@ -37,6 +41,9 @@ const DEFAULT_CONFIG = {
   // Toggle manual: a coordenação libera quando o valor já está fechado (fim da
   // contagem), permitindo então que o brincante escolha resgatar ou doar.
   escolhaDestinoLiberada: 'nao',
+  // Missão de captação: quantos sócios torcedores cada brincante se compromete
+  // a trazer na temporada (Plano de Implementação §6 e §15: "2 por brincante").
+  metaSociosPorBrincante: '2',
 };
 
 // ---------- helpers ----------
@@ -541,6 +548,22 @@ function noPeriodoBonif_(ensaio, inicioContagem, fimContagem) {
   return ensaio.Data >= inicioContagem && ensaio.Data <= fimContagem;
 }
 
+// Teto por brincante na temporada (Cláusula Sexta, III, "e"): ao chegar nele, o
+// brincante para de acumular e mantém o que já tem. Config `tetoBonificacao`;
+// 0, vazio ou lixo = sem teto, porque um erro de digitação na tela de
+// configurações não pode zerar a bonificação de todo mundo em silêncio.
+function tetoConfig_(config) {
+  const n = parseFloat(config && config.tetoBonificacao);
+  return (!isNaN(n) && n > 0) ? n : 0;
+}
+// Aplicado ANTES da sanção: o teto limita o que se acumula; a sanção desconta
+// sobre o acumulado (Cláusulas Sétima e Oitava). Inverter a ordem faria a
+// advertência formal (−50%) render mais a quem passou do teto do que a quem
+// ficou nele.
+function aplicarTeto_(valor, teto) {
+  return (teto > 0 && valor > teto) ? teto : valor;
+}
+
 // ============================================================
 // ADVERTÊNCIAS / SANÇÕES (Cláusula Sétima)
 // ============================================================
@@ -710,6 +733,9 @@ async function getPerfilBrincante(brincanteId, usuario) {
 
   const avaliacoesRaw = await getAvaliacoes({ brincanteId });
   const advs = await getAdvertencias(brincanteId);
+  // Missão de captação: fica no perfil junto do resto, mas NÃO entra em
+  // nenhuma conta de frequência, nota ou bonificação daqui para baixo.
+  const minhasIndicacoes = await getIndicacoes({ brincanteId });
   // Não cancelados (inclui atividades) -> histórico e bonificação.
   const { ensaios: ensaiosNC, avaliacoes: avaliacoesNC } = filtrarCancelados_(ensaiosRaw, avaliacoesRaw);
   // Só ensaios/apresentações -> frequência e nota.
@@ -746,6 +772,11 @@ async function getPerfilBrincante(brincanteId, usuario) {
       }
     });
   }
+  // Teto da temporada (Cláusula Sexta, III, "e") antes da sanção.
+  const teto = tetoConfig_(config);
+  const bonificacaoSemTeto = bonificacao;
+  bonificacao = aplicarTeto_(bonificacao, teto);
+  const tetoAtingido = teto > 0 && bonificacaoSemTeto >= teto;
   // Sanção (Cláusulas Sétima e Oitava): desconto sobre o total acumulado.
   const sancaoPct = penalidadeTotal_(brincante, advs);
   const bonificacaoBruta = bonificacao;
@@ -772,6 +803,9 @@ async function getPerfilBrincante(brincanteId, usuario) {
     mediaNotas, percNotasBoas, notas,
     bonificacao: bonificacao.toFixed(2),
     bonificacaoBruta: bonificacaoBruta.toFixed(2),
+    bonificacaoSemTeto: bonificacaoSemTeto.toFixed(2),
+    teto: teto ? teto.toFixed(2) : '',
+    tetoAtingido,
     sancaoPct,
     advertencias: advs,
     ativacao,
@@ -780,6 +814,10 @@ async function getPerfilBrincante(brincanteId, usuario) {
     papel: papelDanca_(brincante.Tipo),
     freqMinima,
     escolhaDestinoLiberada: config.escolhaDestinoLiberada === 'sim',
+    captacao: {
+      ...resumoCaptacao_(minhasIndicacoes, parseInt(config.metaSociosPorBrincante || 2, 10) || 0),
+      indicacoes: minhasIndicacoes,
+    },
     pagamento: {
       data1: config.dataPagamentoBonif || '',
       data2: config.dataPagamentoBonif2 || '',
@@ -863,6 +901,7 @@ async function getSimulacaoBonificacao() {
   const valorEnsaio = parseFloat(config.valorEnsaio || 0.5);
   const valorApresentacao = parseFloat(config.valorApresentacao || 1.0);
   const valorFestival = parseFloat(config.valorFestival || 5.0);
+  const teto = tetoConfig_(config);
   const inicioContagem = config.inicioContagem || '2026-05-01';
   const fimContagem = config.fimContagem || '2026-07-31';
 
@@ -870,7 +909,7 @@ async function getSimulacaoBonificacao() {
   const advsPor = {};
   advsAll.forEach((a) => { (advsPor[a.BrincanteID] = advsPor[a.BrincanteID] || []).push(a); });
 
-  let totalGeral = 0, totalResgate = 0, totalDoacao = 0;
+  let totalGeral = 0, totalResgate = 0, totalDoacao = 0, noTeto = 0;
   const lista = brincantes.map((b) => {
     const avs = avaliacoes.filter((a) => a.BrincanteID === b.ID);
     const avsMetric = metric.avaliacoes.filter((a) => a.BrincanteID === b.ID);
@@ -889,12 +928,17 @@ async function getSimulacaoBonificacao() {
         }
       }
     });
+    // Teto da temporada antes da sanção (mesma ordem do perfil).
+    const valorSemTeto = valor;
+    valor = aplicarTeto_(valor, teto);
+    const atingiuTeto = teto > 0 && valorSemTeto >= teto;
     const sancaoPct = penalidadeTotal_(b, advsPor[b.ID]);
     const valorComSancao = valor * (1 - sancaoPct / 100);
     const elegivel = ativacao.ativado;
     const destino = b.DestinoBonificacao === 'doar' ? 'doar' : 'resgatar';
     if (elegivel) {
       totalGeral += valorComSancao;
+      if (atingiuTeto) noTeto++;
       if (destino === 'doar') totalDoacao += valorComSancao;
       else totalResgate += valorComSancao;
     }
@@ -908,6 +952,8 @@ async function getSimulacaoBonificacao() {
       apresentacoesPresente,
       festivalPresente,
       valorBruto: valor.toFixed(2),
+      valorSemTeto: valorSemTeto.toFixed(2),
+      atingiuTeto,
       sancaoPct,
       valorAcumulado: valorComSancao.toFixed(2),
     };
@@ -918,13 +964,228 @@ async function getSimulacaoBonificacao() {
     totalGeral: totalGeral.toFixed(2),
     totalResgate: totalResgate.toFixed(2),
     totalDoacao: totalDoacao.toFixed(2),
+    teto: teto ? teto.toFixed(2) : '',
+    noTeto,
+    // Quanto a quadrilha pagaria, no pior caso, se todos os elegíveis chegassem
+    // ao teto — o número que o Financeiro precisa para reservar o orçamento.
+    tetoTotal: teto ? (teto * lista.filter((l) => l.elegivel).length).toFixed(2) : '',
     escolhaDestinoLiberada: config.escolhaDestinoLiberada === 'sim',
     pagamento: {
       data1: config.dataPagamentoBonif || '',
       data2: config.dataPagamentoBonif2 || '',
       obs: config.obsPagamentoBonif || '',
     },
-    config: { valorEnsaio, valorApresentacao, valorFestival },
+    config: { valorEnsaio, valorApresentacao, valorFestival, teto },
+  };
+}
+
+// ============================================================
+// MISSÕES — CAPTAÇÃO DE SÓCIOS TORCEDORES
+//
+// Decisão de 27/07/2026, escrita no "Programa Socio Torcedor - Plano de
+// Implementacao.docx" §6: trazer sócios é uma MISSÃO do brincante e vale
+// **desempenho e troféu — reconhecimento, não dinheiro**. Por isso nada aqui
+// entra na frequência, no ranking de desempenho nem na bonificação: a missão
+// não toca o contrato. O brincante declara quem trouxe; a coordenação confirma.
+//
+// ⚠️ PRIVACIDADE — regra do documento, não preferência de implementação:
+// a indicação guarda APENAS **nome e telefone**. CPF e data de nascimento
+// juntos são a credencial de login do sócio no outro sistema (Site Sócio
+// Torcedor); guardá-los aqui espalharia a senha de terceiros por um sistema
+// que não precisa dela. O documento gravado é montado campo a campo — o que o
+// cliente mandar além disso não entra, nem por engano nem de propósito.
+//
+// Coleção `indicacoes/{autoId}`:
+//   BrincanteID, Nome, Telefone, Status (pendente|confirmada|recusada),
+//   DataDeclaracao, DeclaradaPor, DecididaPor, DataDecisao, MotivoRecusa
+// ============================================================
+const STATUS_INDICACAO = ['pendente', 'confirmada', 'recusada'];
+
+// Nome do troféu conforme o Plano §9 ("Chamador de Gente — indicar alguém que
+// virou sócio de verdade"). Fica em constante de propósito: o nome já mudou uma
+// vez (era "Padrinho") e a tela lê daqui, para não haver duas verdades.
+const TROFEU_CAPTACAO = 'Chamador de Gente';
+
+function normalizaTelefone_(t) { return String(t || '').replace(/\D/g, '').slice(0, 11); }
+
+function normalizaIndicacao_(id, r) {
+  return {
+    id,
+    BrincanteID: r.BrincanteID || '',
+    Nome: r.Nome || '',
+    Telefone: r.Telefone || '',
+    Status: STATUS_INDICACAO.indexOf(r.Status) >= 0 ? r.Status : 'pendente',
+    DataDeclaracao: r.DataDeclaracao || '',
+    DeclaradaPor: r.DeclaradaPor || '',
+    DecididaPor: r.DecididaPor || '',
+    DataDecisao: r.DataDecisao || '',
+    MotivoRecusa: r.MotivoRecusa || '',
+  };
+}
+
+async function getIndicacoes(filtro) {
+  filtro = filtro || {};
+  const snap = await getDb().collection('indicacoes').get();
+  let lista = snap.docs.map((d) => normalizaIndicacao_(d.id, d.data()));
+  if (filtro.brincanteId) lista = lista.filter((i) => i.BrincanteID === filtro.brincanteId);
+  if (filtro.status) lista = lista.filter((i) => i.Status === filtro.status);
+  return lista.sort((a, b) => (b.DataDeclaracao || '').localeCompare(a.DataDeclaracao || ''));
+}
+
+/**
+ * Declara um sócio trazido. Escopo `autenticado`: o brincante declara por si e
+ * o ID vem DA SESSÃO — mesma trava de getPerfilBrincante, senão bastaria
+ * trocar o parâmetro para creditar a missão de outra pessoa. Admin pode
+ * declarar em nome de alguém (quem chegou pela coordenação, no papel).
+ */
+async function addIndicacao(dados, usuario) {
+  dados = dados || {};
+  const ehAdmin = !!usuario && usuario.tipo === 'admin';
+  const brincanteId = ehAdmin
+    ? String(dados.brincanteId || '').trim().toUpperCase()
+    : (usuario ? usuario.id : '');
+  if (!brincanteId) return { success: false, message: 'Escolha qual brincante trouxe o sócio.' };
+
+  const nome = String(dados.nome || '').trim().replace(/\s+/g, ' ');
+  const telefone = normalizaTelefone_(dados.telefone);
+  if (nome.length < 3) return { success: false, message: 'Informe o nome de quem você trouxe.' };
+  if (telefone.length < 10) return { success: false, message: 'Informe o telefone com DDD (10 ou 11 dígitos).' };
+
+  const brincante = (await getBrincantes()).find((b) => b.ID === brincanteId);
+  if (!brincante) return { success: false, message: 'Brincante não encontrado.' };
+
+  // O mesmo contato declarado por dois brincantes vira briga na hora do troféu.
+  // Recusada não bloqueia: se a coordenação recusou, o contato volta a valer.
+  const jaTem = (await getIndicacoes({})).find((i) => i.Telefone === telefone && i.Status !== 'recusada');
+  if (jaTem) {
+    return {
+      success: false,
+      message: jaTem.BrincanteID === brincanteId
+        ? 'Você já declarou esse contato.'
+        : 'Esse contato já foi declarado por outro brincante.',
+    };
+  }
+
+  // Montado campo a campo de propósito — ver o aviso de privacidade acima.
+  const doc = {
+    BrincanteID: brincanteId,
+    Nome: nome,
+    Telefone: telefone,
+    Status: 'pendente',
+    DataDeclaracao: nowIso(),
+    DeclaradaPor: usuario ? `${usuario.nome} (${usuario.id})` : 'sistema',
+    DecididaPor: '',
+    DataDecisao: '',
+    MotivoRecusa: '',
+  };
+  const ref = await getDb().collection('indicacoes').add(doc);
+  if (usuario) {
+    await registrarLog_(usuario.id, usuario.nome, 'INDICACAO_SOCIO', `Indicação de "${nome}" creditada a ${brincanteId}`);
+  }
+  return { success: true, id: ref.id, indicacao: normalizaIndicacao_(ref.id, doc) };
+}
+
+/**
+ * Confirmação manual da coordenação — a base do desenho. O cruzamento
+ * automático com o cadastro do outro sistema entra por cima disto depois
+ * (PENDENCIAS.md §2), nunca no lugar.
+ */
+async function decidirIndicacao(id, decisao, motivo, usuario) {
+  if (STATUS_INDICACAO.indexOf(decisao) < 0) return { success: false, message: 'Decisão inválida.' };
+  const ref = getDb().collection('indicacoes').doc(String(id));
+  const doc = await ref.get();
+  if (!doc.exists) return { success: false, message: 'Indicação não encontrada.' };
+
+  const pendente = decisao === 'pendente';
+  await ref.update({
+    Status: decisao,
+    DecididaPor: pendente ? '' : (usuario ? `${usuario.nome} (${usuario.id})` : 'sistema'),
+    DataDecisao: pendente ? '' : nowIso(),
+    MotivoRecusa: decisao === 'recusada' ? String(motivo || '').trim().slice(0, 200) : '',
+  });
+  if (usuario) {
+    await registrarLog_(usuario.id, usuario.nome, 'INDICACAO_DECIDIDA', `Indicação ${id} (${doc.data().Nome || ''}) marcada como ${decisao}`);
+  }
+  return { success: true };
+}
+
+/**
+ * Escopo `autenticado`: a coordenação apaga qualquer uma; o brincante só apaga
+ * a PRÓPRIA e só enquanto pendente — depois de decidida, quem desfaz é a
+ * coordenação. O dono é lido do documento, nunca do cliente.
+ */
+async function removeIndicacao(id, usuario) {
+  const ref = getDb().collection('indicacoes').doc(String(id));
+  const doc = await ref.get();
+  if (!doc.exists) return { success: false, message: 'Indicação não encontrada.' };
+  const r = normalizaIndicacao_(doc.id, doc.data());
+
+  if (!usuario || usuario.tipo !== 'admin') {
+    if (!usuario || r.BrincanteID !== usuario.id) return { success: false, message: 'Esta indicação não é sua.' };
+    if (r.Status !== 'pendente') return { success: false, message: 'Já foi avaliada pela coordenação — fale com ela para desfazer.' };
+  }
+  await ref.delete();
+  if (usuario) {
+    await registrarLog_(usuario.id, usuario.nome, 'INDICACAO_REMOVIDA', `Indicação ${id} (${r.Nome}) removida`);
+  }
+  return { success: true };
+}
+
+// Resumo da missão de um brincante. Usado no perfil dele e no painel da
+// coordenação — um cálculo só, para os dois lados nunca divergirem.
+function resumoCaptacao_(indicacoes, meta) {
+  const confirmadas = indicacoes.filter((i) => i.Status === 'confirmada').length;
+  const pendentes = indicacoes.filter((i) => i.Status === 'pendente').length;
+  const recusadas = indicacoes.filter((i) => i.Status === 'recusada').length;
+  return {
+    meta,
+    confirmadas,
+    pendentes,
+    recusadas,
+    // Troféu de captação (Plano §9): reconhecimento, sem valor em dinheiro.
+    trofeu: meta > 0 && confirmadas >= meta,
+    trofeuNome: TROFEU_CAPTACAO,
+    progresso: meta > 0 ? Math.min(100, Math.round((confirmadas / meta) * 100)) : 0,
+  };
+}
+
+/**
+ * Painel da coordenação: quem trouxe quanto. É um ranking de RECONHECIMENTO —
+ * não se mistura com o ranking de desempenho (getRanking), que continua sendo
+ * só presença e nota.
+ */
+async function getCaptacao() {
+  const [brincantes, indicacoes, config] = await Promise.all([getBrincantes(), getIndicacoes({}), getConfigMap_()]);
+  const meta = parseInt(config.metaSociosPorBrincante || 2, 10) || 0;
+
+  const porBrincante = {};
+  indicacoes.forEach((i) => {
+    (porBrincante[i.BrincanteID] = porBrincante[i.BrincanteID] || []).push(i);
+  });
+
+  // A missão é dos brincantes (Plano §6, "Brincantes (embaixadores)"), mas quem
+  // já tem indicação entra de qualquer jeito — mudar o tipo de alguém não pode
+  // sumir com o que a pessoa já trouxe.
+  const ranking = brincantes
+    .filter((b) => ehDancarino_(b.Tipo) || porBrincante[b.ID])
+    .map((b) => ({
+      id: b.ID,
+      nome: b.Nome,
+      apelido: b.Apelido || '',
+      tipo: b.Tipo,
+      ...resumoCaptacao_(porBrincante[b.ID] || [], meta),
+    }))
+    .sort((a, b) => (b.confirmadas - a.confirmadas) || (b.pendentes - a.pendentes) || a.nome.localeCompare(b.nome));
+
+  return {
+    meta,
+    metaTotal: meta * ranking.length,
+    trofeuNome: TROFEU_CAPTACAO,
+    confirmadas: indicacoes.filter((i) => i.Status === 'confirmada').length,
+    pendentes: indicacoes.filter((i) => i.Status === 'pendente').length,
+    trofeus: ranking.filter((r) => r.trofeu).length,
+    ranking,
+    indicacoes,
   };
 }
 
@@ -971,6 +1232,7 @@ module.exports = {
   getEnsaios, addEnsaio, updateEvento, deleteEnsaio,
   getAvaliacoes, salvarAvaliacoes, upsertAvaliacao,
   getAdvertencias, addAdvertencia, removeAdvertencia,
+  getIndicacoes, addIndicacao, decidirIndicacao, removeIndicacao, getCaptacao,
   getDashboard, getPerfilBrincante, getRanking, getSimulacaoBonificacao,
   getConfig, getStatusAdesao, updateConfig, updateConfigMap,
   // helpers exportados para o seed

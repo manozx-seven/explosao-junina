@@ -78,10 +78,13 @@ Firebase Firestore  ← banco de dados
 | `logs`       | auto                | DataHora, UsuarioID, UsuarioNome, Acao, Detalhes |
 | `sessoes`    | o próprio token     | Token, Tipo (`admin`/`brincante`), BrincanteID, Nome, CriadoEm, ExpiraEm |
 | `advertencias` | auto              | BrincanteID, Nivel (`verbal`/`formal`/`desligamento`/`extrema`), Motivo, Data, RegistradoPor, DataRegistro |
+| `indicacoes` | auto                | BrincanteID (quem trouxe), Nome, Telefone, Status (`pendente`/`confirmada`/`recusada`), DataDeclaracao, DeclaradaPor, DecididaPor, DataDecisao, MotivoRecusa |
+| `sessoes`    | o próprio token     | Token, Tipo (`admin`/`brincante`), BrincanteID, Nome, CriadoEm, ExpiraEm |
 
 Config padrão (chaves em `config/app`): `valorEnsaio=0.50`, `valorApresentacao=1.00`,
-`valorFestival=5.00`, `mesesAtivacao=3`, `frequenciaMinima=75`, `notaMinima=4`,
-`percentualNotaMinima=75`, `temporada=2027`, `inicioTemporada=2027-02-01`,
+`valorFestival=5.00`, `tetoBonificacao=80.00`,
+`mesesAtivacao=3`, `frequenciaMinima=75`, `notaMinima=4`,
+`percentualNotaMinima=75`, `metaSociosPorBrincante=2`, `temporada=2027`, `inicioTemporada=2027-02-01`,
 `inicioContagem=2027-05-01`, `fimContagem=2027-07-31`, `fimAdesao=2027-04-30`.
 Editável pela aba **Configurações** (admin). O evento pode ter `ValorBonificacao`
 (override opcional do valor daquele dia). Também há `frequenciaItem=85`.
@@ -126,6 +129,13 @@ tiver 2026, ajustar pela aba Configurações.)
     `avaliarAtivacao`) = o maior entre `inicioContagem` (piso) e o dia seguinte ao
     fim da ativação. Assim, quem adere em fevereiro acumula a partir de maio; em
     março, de junho; em abril, só o Festival (Cláusula Sexta, VI do contrato).
+  - **Teto de `tetoBonificacao` (padrão R$ 80,00) por brincante na temporada**
+    (Cláusula Sexta, III, "e"): ao alcançá-lo, o brincante mantém o acumulado e
+    para de somar. **O teto é aplicado ANTES da sanção** — ele limita o que se
+    acumula, e a sanção desconta sobre o acumulado. Invertida a ordem, a
+    advertência formal (−50%) renderia mais a quem passou do teto do que a quem
+    ficou nele. `0`, vazio ou valor inválido = **sem teto** (um erro de digitação
+    na tela de Configurações não pode zerar a bonificação de todos em silêncio).
 - **Ativação** (metas para o brincante ativar a bonificação): presença ≥ 75% e
   nota ≥ 4 em pelo menos 75% dos ensaios, dentro do período de ativação
   (`mesesAtivacao` = 3, **proporcional à data de adesão**: janela = adesão +
@@ -139,6 +149,21 @@ tiver 2026, ajustar pela aba Configurações.)
   pior entre advertências e desligamento.
 - **Falta justificada:** ao registrar falta, marca-se se foi justificada (avisada
   com 24h de antecedência) — campo `Justificada` na avaliação.
+- **Missão de captação de sócios torcedores** (Plano de Implementação do Sócio
+  Torcedor, §6): o brincante declara quem trouxe para o Programa Sócio Torcedor e
+  a coordenação **confirma manualmente**. Vale **desempenho e troféu — nunca
+  dinheiro**: não entra na frequência, no ranking de desempenho nem na
+  bonificação, e portanto não toca o contrato. Troféu **Chamador de Gente**
+  (constante `TROFEU_CAPTACAO`, nome vindo do Plano §9) ao atingir
+  `metaSociosPorBrincante` (padrão 2) indicações confirmadas.
+  - **A indicação guarda apenas nome e telefone.** CPF e data de nascimento
+    juntos são a credencial de login do sócio no **Site Sócio Torcedor** — o
+    documento em `indicacoes` é montado campo a campo justamente para que nada
+    além disso entre, venha de onde vier.
+  - Telefone já declarado e não recusado é rejeitado como duplicata.
+  - O brincante declara por si (ID lido da sessão) e só apaga a própria
+    indicação enquanto pendente; a coordenação confirma, recusa (com motivo),
+    volta para pendente ou apaga qualquer uma.
 - **Adesão à bonificação:** só permitida até `fimAdesao`.
 - **Chamada e avaliação:** a presença de cada brincante tem 3 estados — *não
   marcado* (sem registro em `avaliacoes`), *presente* (`Presente=sim`) ou *falta*
@@ -189,10 +214,13 @@ scripts/seed.js            Cria config inicial + coordenação real (por CPF)
 scripts/seed-dev.js        Cria/atualiza o usuário DEV (admin)
 scripts/gen-env.js         Gera .env a partir do serviceAccountKey.json
 legacy/                    Código.js e Index.html originais (Apps Script)
-documentos explosão/       Documentos da quadrilha (.docx): contrato, projeto,
-                           arrecadação, sócio torcedor, arraiais, kit parceiro
+documentos explosão/       Documentos da quadrilha (.docx): contrato + guia do
+                           contrato, projeto, organograma, arrecadação, sócio
+                           torcedor (plano e divulgação), arraiais, kit parceiro
 documentos explosão/_geradores/  Scripts python-docx que GERAM os .docx (kit.py +
-                           gen_*.py). Editar o gerador e rodar — nunca o .docx na mão
+                           gen_*.py). Editar o gerador e rodar — nunca o .docx na mão.
+                           `patch_contrato_teto.py` altera o contrato, que não tem
+                           gerador. `_ativos/` guarda as imagens usadas nos documentos
 CONTEXTO.md                Este arquivo
 ATUALIZACOES.md            Histórico de mudanças
 PENDENCIAS.md              Tudo que está em aberto (sistema, site do sócio, documentos)

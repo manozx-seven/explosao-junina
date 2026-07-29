@@ -34,8 +34,14 @@ function docRef(name, id) {
   };
 }
 function query(name, ids) {
-  const list = () => (ids || Object.keys(col(name))).map((i) => snapDoc(name, i));
+  const base = () => ids || Object.keys(col(name));
+  const list = () => base().map((i) => snapDoc(name, i));
   return {
+    // Só '==' — é o único operador que os handlers usam.
+    where: (campo, op, valor) => query(name, base().filter((i) => {
+      const d = col(name)[i];
+      return d !== undefined && (op === '==' ? d[campo] === valor : true);
+    })),
     orderBy: () => query(name, ids),
     limit: (n) => query(name, (ids || Object.keys(col(name))).slice(0, n)),
     get: async () => { const docs = list(); return { docs, forEach: (f) => docs.forEach(f), size: docs.length }; },
@@ -146,6 +152,122 @@ function ok(cond, msg, extra) {
   ok((await call('getBrincantes', [], tokenAna)).status === 200, 'coordenação dupla nasce admin');
   await call('entrarComoBrincante', [], tokenAna);
   ok((await call('getBrincantes', [], tokenAna)).status === 403, 'depois de rebaixar, perde o acesso admin');
+
+  console.log('\n== missão de captação: escopos e trava de dono ==');
+  ok((await call('getCaptacao', [], tokenMaria)).status === 403, 'brincante no painel de captação -> 403');
+  ok((await call('getIndicacoes', [{}], tokenMaria)).status === 403, 'brincante lendo todas as indicações -> 403');
+  ok((await call('decidirIndicacao', ['x', 'confirmada', ''], tokenMaria)).status === 403, 'brincante confirmando indicação -> 403');
+
+  // O ID do argumento é ignorado: a missão é creditada a quem está na sessão.
+  r = await call('addIndicacao', [{ brincanteId: 'EXP202702', nome: 'Tia Zuleide', telefone: '(92) 99888-7766' }], tokenMaria);
+  ok(r.body.success === true, 'brincante declara indicação', r.body);
+  const idIndMaria = r.body.id;
+  let ind = col('indicacoes')[idIndMaria];
+  ok(ind.BrincanteID === 'EXP202701', 'creditada à Maria (ID veio da sessão, não do argumento)', ind.BrincanteID);
+  ok(ind.Status === 'pendente', 'nasce pendente — quem confirma é a coordenação', ind.Status);
+  ok(ind.Telefone === '92998887766', 'telefone normalizado para dígitos', ind.Telefone);
+
+  console.log('\n== privacidade: CPF e nascimento nunca são gravados ==');
+  r = await call('addIndicacao', [{
+    nome: 'Seu Raimundo', telefone: '92991112233',
+    cpf: '12345678901', CPF: '12345678901', dataNascimento: '1970-05-02', DataNascimento: '1970-05-02',
+    observacao: 'CPF 123.456.789-01',
+  }], tokenMaria);
+  ok(r.body.success === true, 'declaração aceita', r.body);
+  const gravado = col('indicacoes')[r.body.id];
+  const campos = Object.keys(gravado).sort().join(',');
+  ok(campos === 'BrincanteID,DataDecisao,DataDeclaracao,DecididaPor,DeclaradaPor,MotivoRecusa,Nome,Status,Telefone',
+     'documento tem só os campos previstos', campos);
+  ok(!/12345678901|1970-05-02/.test(JSON.stringify(gravado)),
+     'CPF e data de nascimento NÃO entraram no banco', gravado);
+
+  console.log('\n== indicação duplicada ==');
+  r = await call('addIndicacao', [{ nome: 'Zuleide de novo', telefone: '92 99888 7766' }], tokenMaria);
+  ok(r.body.success === false, 'mesmo telefone é recusado', r.body);
+  r = await call('addIndicacao', [{ brincanteId: 'EXP202702', nome: 'Zuleide', telefone: '92998887766' }], tokenAdmin);
+  ok(r.body.success === false && /outro brincante/.test(r.body.message || ''),
+     'outro brincante não rouba o contato já declarado', r.body);
+
+  console.log('\n== o brincante só apaga a própria indicação ==');
+  r = await call('addIndicacao', [{ brincanteId: 'EXP202702', nome: 'Compadre do João', telefone: '92993334455' }], tokenAdmin);
+  const idIndJoao = r.body.id;
+  ok(col('indicacoes')[idIndJoao].BrincanteID === 'EXP202702', 'admin declara em nome de outro');
+  r = await call('removeIndicacao', [idIndJoao], tokenMaria);
+  ok(r.body.success === false && col('indicacoes')[idIndJoao] !== undefined,
+     'Maria não apaga a indicação do João', r.body);
+
+  console.log('\n== decisão da coordenação ==');
+  r = await call('decidirIndicacao', [idIndMaria, 'confirmada', ''], tokenAdmin);
+  ok(r.body.success === true && col('indicacoes')[idIndMaria].Status === 'confirmada', 'admin confirma', r.body);
+  ok(/Coordenação/.test(col('indicacoes')[idIndMaria].DecididaPor), 'registra quem confirmou', col('indicacoes')[idIndMaria].DecididaPor);
+  r = await call('removeIndicacao', [idIndMaria], tokenMaria);
+  ok(r.body.success === false && col('indicacoes')[idIndMaria] !== undefined,
+     'brincante não apaga o que já foi decidido', r.body);
+  ok((await call('decidirIndicacao', [idIndMaria, 'invalido', ''], tokenAdmin)).body.success === false,
+     'decisão fora da lista é recusada');
+
+  console.log('\n== troféu e painel de captação ==');
+  col('config').app.metaSociosPorBrincante = '2';
+  await call('addIndicacao', [{ nome: 'Vizinha Rosa', telefone: '92994445566' }], tokenMaria);
+  const idRosa = Object.keys(col('indicacoes')).find((k) => col('indicacoes')[k].Nome === 'Vizinha Rosa');
+  await call('decidirIndicacao', [idRosa, 'confirmada', ''], tokenAdmin);
+  r = await call('getCaptacao', [], tokenAdmin);
+  const maria = r.body.ranking.find((x) => x.id === 'EXP202701');
+  ok(maria.confirmadas === 2 && maria.trofeu === true, 'Maria bateu a meta e ganhou o troféu', maria);
+  ok(r.body.trofeuNome === 'Chamador de Gente', 'nome do troféu vem do servidor (Plano §9)', r.body.trofeuNome);
+  const joao = r.body.ranking.find((x) => x.id === 'EXP202702');
+  ok(joao.confirmadas === 0 && joao.pendentes === 1 && joao.trofeu === false, 'João segue sem troféu', joao);
+  ok(r.body.ranking[0].id === 'EXP202701', 'ranking ordenado por confirmadas');
+
+  console.log('\n== a missão não contamina desempenho nem bonificação ==');
+  r = await call('getPerfilBrincante', ['EXP202701'], tokenMaria);
+  ok(r.status === 200 && r.body.captacao.confirmadas === 2, 'perfil traz a captação da própria pessoa', r.body.captacao);
+  ok(r.body.totalEnsaios === 0 && r.body.presencas === 0 && r.body.percPresenca === 0,
+     'frequência intacta (indicação não é presença)', { t: r.body.totalEnsaios, p: r.body.percPresenca });
+  ok(r.body.bonificacao === '0.00', 'bonificação intacta (missão não vira dinheiro)', r.body.bonificacao);
+  const rank = (await call('getRanking', [], tokenAdmin)).body;
+  ok(rank.every((x) => x.presencas === 0 && x.percPresenca === 0 && x.totalAvaliacoes === 0),
+     'ranking de desempenho segue zerado — indicação não é presença nem nota', rank);
+  const sim = (await call('getSimulacaoBonificacao', [], tokenAdmin)).body;
+  ok(sim.totalGeral === '0.00', 'simulação de bonificação não virou dinheiro', sim.totalGeral);
+
+  console.log('\n== teto da bonificação (Cláusula Sexta, III, "e") ==');
+  // 12 ensaios a R$ 10 = R$ 120 acumulados, contra um teto de R$ 80.
+  Object.assign(col('config').app, {
+    valorEnsaio: '10.00', tetoBonificacao: '80.00',
+    inicioContagem: '2027-05-01', fimContagem: '2027-07-31',
+  });
+  Object.assign(col('brincantes').EXP202702, { OptBonificacao: 'sim', StatusAtivacao: 'ativado' });
+  for (let i = 1; i <= 12; i++) {
+    const id = 'ENS2027050' + i;
+    col('ensaios')[id] = { ID: id, Data: '2027-05-' + String(i).padStart(2, '0'), Tipo: 'regular', Status: 'realizado' };
+    col('avaliacoes')['AV' + id] = { EnsaioID: id, BrincanteID: 'EXP202702', Presente: 'sim', Nota: 5 };
+  }
+  r = await call('getPerfilBrincante', ['EXP202702'], tokenAdmin);
+  ok(r.body.bonificacaoSemTeto === '120.00', 'acumulou R$ 120 antes do teto', r.body.bonificacaoSemTeto);
+  ok(r.body.bonificacao === '80.00', 'perfil trava a bonificação no teto', r.body.bonificacao);
+  ok(r.body.teto === '80.00' && r.body.tetoAtingido === true, 'perfil avisa que o teto foi atingido', { t: r.body.teto, a: r.body.tetoAtingido });
+
+  let simT = (await call('getSimulacaoBonificacao', [], tokenAdmin)).body;
+  let joaoT = simT.lista.find((x) => x.nome === 'João');
+  ok(joaoT.valorAcumulado === '80.00' && joaoT.valorSemTeto === '120.00' && joaoT.atingiuTeto === true,
+     'simulação aplica o mesmo teto do perfil', joaoT);
+  ok(simT.totalGeral === '80.00' && simT.noTeto === 1, 'total da coordenação respeita o teto', { t: simT.totalGeral, n: simT.noTeto });
+  ok(simT.teto === '80.00' && simT.tetoTotal === '80.00', 'compromisso máximo = teto × elegíveis', { t: simT.teto, tt: simT.tetoTotal });
+
+  // A ordem importa: teto primeiro, sanção depois. Se fosse ao contrário,
+  // 120 × 50% = 60 daria MAIS a quem passou do teto do que os 40 corretos.
+  await call('addAdvertencia', [{ brincanteId: 'EXP202702', nivel: 'formal', motivo: 'teste' }], tokenAdmin);
+  r = await call('getPerfilBrincante', ['EXP202702'], tokenAdmin);
+  ok(r.body.bonificacao === '40.00', 'sanção de −50% incide sobre o teto, não sobre o acumulado', r.body.bonificacao);
+
+  // Teto zerado = sem teto (proteção contra apagar o campo na tela de config).
+  col('config').app.tetoBonificacao = '0';
+  simT = (await call('getSimulacaoBonificacao', [], tokenAdmin)).body;
+  joaoT = simT.lista.find((x) => x.nome === 'João');
+  ok(joaoT.valorSemTeto === '120.00' && joaoT.atingiuTeto === false && joaoT.valorAcumulado === '60.00',
+     'teto 0 desliga o limite (e a sanção volta a valer sobre os R$ 120)', joaoT);
+  col('config').app.tetoBonificacao = '80.00';
 
   console.log('\n== troca de CPF derruba a sessão ==');
   await call('updateBrincante', ['EXP202701', { cpf: '00011122233' }], tokenAdmin);

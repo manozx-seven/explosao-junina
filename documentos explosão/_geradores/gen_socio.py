@@ -61,6 +61,21 @@ for rot, txt in [
      "todos concorrem com a mesma chance, independentemente do nível."),
     ("Sem juros e sem multa: ", "quem atrasa não paga nada a mais — apenas não bate a "
      "meta do mês para efeito de troféu e fica fora do sorteio até regularizar."),
+    ("O valor é o do nível, e não se digita: ", "quem quer contribuir mais sobe de "
+     "nível. Deixar alguém no Fogueira pagando valor de Bandeirinha faria o sistema "
+     "cobrar um preço e entregar outro benefício — um número só decide as duas coisas."),
+    ("Quem cadastra é a coordenação: ", "o sócio preenche o formulário (WhatsApp ou "
+     "presencial) e a coordenação lança no sistema. O site do sócio serve para "
+     "entrar e acompanhar. A adesão online entra com a página pública (M4)."),
+    ("Como o sócio entra no painel: ", "CPF e data de nascimento. São os dois campos "
+     "que a coordenação não pode errar no cadastro, e os dois que o sistema nunca "
+     "devolve para tela nenhuma — juntos, são a senha dele."),
+    ("Corte do dia 20: ", "quem adere do dia 1 ao 20 contribui já pelo mês corrente; "
+     "do dia 21 em diante, a primeira contribuição é do mês seguinte. Evita cobrar "
+     "duas vezes em poucos dias."),
+    ("Vencimento: ", "dia 5 de cada mês. A chave Pix oficial fica no painel do sócio, "
+     "com o nome do titular ao lado — é a única conferência que ele consegue fazer "
+     "sozinho no aplicativo do banco antes de mandar o dinheiro."),
 ]:
     bullet(doc, txt, rotulo=rot)
 
@@ -123,6 +138,40 @@ caixa(doc, "A regra da data real",
       "penalizado por atraso da coordenação — e é essa data que vale para os troféus.",
       AMBAR)
 
+h2(doc, "4.1 A régua do atraso")
+p(doc, "Nunca há multa, juros ou cobrança retroativa. O que muda é o que o sócio "
+       "deixa de acessar enquanto estiver devendo — e é sempre reversível.")
+tabela(doc, ["Situação", "Quando acontece", "O que muda para o sócio"], [
+    ["Em dia", "Pagou até o dia 5", "Ganha o troféu do mês e concorre aos sorteios"],
+    ["Pago com atraso", "Pagou depois do dia 5",
+     "Vale como pago. Perde o troféu daquele mês e a sequência recomeça"],
+    ["Atrasado", "Passou do dia 5 com o mês em aberto",
+     "Fica fora dos sorteios e recebe um lembrete amigável. Painel, mural, missões e "
+     "finanças continuam. Pontos de missão ficam retidos até pagar"],
+    ["Suspenso", "Um mês fechado sem pagar", "Sai dos sorteios e do mural; o painel "
+     "segue acessível"],
+    ["Inativo", "Dois meses seguidos sem pagar",
+     "Sai do quadro ativo e o progresso da temporada zera"],
+], larguras=[3.0, 5.0, 8.0])
+p(doc, "A situação é calculada a partir dos pagamentos confirmados — nunca digitada "
+       "por alguém. Isso evita o caso clássico do sócio que pagou e continua marcado "
+       "como devedor porque ninguém lembrou de mudar o status.")
+
+h2(doc, "4.2 Entressafra e volta do inativo")
+for rot, txt in [
+    ("Na entressafra o relógio congela: ", "dezembro e janeiro não acumulam mês novo "
+     "em aberto. Mas não perdoa: quem já estava suspenso ou inativo continua assim "
+     "até regularizar."),
+    ("Quem volta não recomeça do zero: ", "o sócio inativo que retorna mantém para "
+     "sempre o número da carteirinha, a antiguidade e todo o histórico de "
+     "pagamentos. O que zera é o progresso e os troféus da temporada."),
+    ("Volta pagando só o mês corrente: ", "sem cobrança retroativa dos meses em que "
+     "esteve fora, e podendo trocar de nível na volta."),
+    ("Ele continua entrando no painel: ", "em versão reduzida. É a tela de quem a "
+     "quadrilha mais quer de volta — fechá-la seria fechar a porta."),
+]:
+    bullet(doc, txt, rotulo=rot)
+
 h1(doc, "QUEM CUIDA DE QUÊ", 5)
 tabela(doc, ["Papel", "Responsabilidade"], [
     ["Diretor Financeiro",
@@ -151,8 +200,10 @@ for rot, txt in [
      "sem depender de campanha externa."),
     ("Campanha de lançamento: ", "o Arraial de Lançamento é o momento de maior captação "
      "do ano — posto de adesão no evento, com meta do dia e anúncio no palco."),
-    ("Indicação: ", "quem indica um novo sócio entra em um sorteio extra ou ganha "
-     "reconhecimento público. A indicação é registrada no sistema com o nome e o "
+    ("Indicação: ", "quem indica um novo sócio ganha reconhecimento público e o troféu "
+     "“Chamador de Gente” no painel — não um sorteio à parte. A urna é única: todo apoio "
+     "vale igual na hora do sorteio, e criar uma segunda urna contradiria a promessa "
+     "feita ao sócio. A indicação é registrada no sistema com o nome e o "
      "telefone de quem foi trazido — nunca CPF ou data de nascimento, que juntos são "
      "a senha de acesso do sócio ao painel."),
     ("Captação pelo brincante: ", "para o brincante, trazer sócios é uma missão no "
@@ -220,25 +271,71 @@ p(doc, "Além disso, ficam mantidas as ações para o público geral — promoç
 h1(doc, "TROFÉUS E CONQUISTAS", 9)
 p(doc, "Os troféus são o mecanismo que mantém o sócio engajado ao longo do ano. São "
        "gratuitos para a quadrilha e transformam o pagamento em jogo, não em cobrança.")
-tabela(doc, ["Conquista", "Como se desbloqueia"], [
-    ["Em dia", "Pagar até o dia 5 do mês (usa a data real do pagamento)"],
-    ["Sequência", "Meses seguidos pagando em dia — a sequência aparece no painel"],
-    ["Temporada completa", "Contribuir em todos os meses da temporada"],
-    ["Torcedor de arquibancada", "Presença registrada nos eventos da quadrilha"],
-    ["Padrinho", "Indicar novos sócios que efetivamente aderirem"],
-    ["Veterano", "Renovar o apoio de uma temporada para outra"],
-], larguras=[4.5, 11.5])
+tabela(doc, ["Conquista", "Como se desbloqueia", "Situação"], [
+    ["Primeira Fagulha", "A primeira contribuição confirmada. Começou", "No ar"],
+    ["Pontual", "Pagar dentro do prazo — até o dia 5, pela data real do pagamento", "No ar"],
+    ["Trio de Fogo", "Três meses seguidos pagando dentro do prazo", "No ar"],
+    ["Temporada Completa", "Contribuir em todos os meses da própria temporada", "No ar"],
+    ["Chamador de Gente", "Indicar alguém que virou sócio de verdade", "No ar"],
+    ["Veterano", "Apoiar a quadrilha em mais de uma temporada", "No ar"],
+    ["Sócio Fiel (físico)", "Três meses seguidos no prazo — troféu entregue na mão pela "
+     "coordenação", "No ar"],
+    ["Torcedor de Arquibancada", "Presença registrada nos eventos da quadrilha", "No ar"],
+    ["Missão Cumprida", "A primeira missão aprovada pela coordenação", "No ar"],
+    ["Puxador de Fila", "Cinco missões aprovadas na temporada", "No ar"],
+], larguras=[4.5, 8.5, 3.0], tam=9.5)
 for rot, txt in [
     ("Sem punição: ", "quem paga depois do dia 5 não tem juros nem multa. Apenas não "
-     "conquista o troféu daquele mês."),
-    ("Visível: ", "os troféus aparecem no painel do sócio no site e podem ser destacados "
-     "nas redes."),
-    ("Reconhecimento físico: ", "a quadrilha pode entregar lembranças a quem acumula "
-     "conquistas — decisão interna, sem promessa no material de divulgação."),
+     "conquista o troféu daquele mês — e a sequência recomeça."),
+    ("Visível: ", "os troféus aparecem no painel do sócio no site, com barra de progresso "
+     "para os que ainda faltam, e podem ser destacados nas redes."),
+    ("Reconhecimento físico: ", "o Sócio Fiel é entregue pessoalmente, a cada dois ou três "
+     "meses — nunca todo mês. A quadrilha pode criar outras lembranças para quem acumula "
+     "conquistas: decisão interna, sem promessa no material de divulgação."),
+    ("Todas no ar: ", "as dez conquistas já são calculadas pelo site, inclusive as "
+     "três que dependiam do módulo de missões (Torcedor de Arquibancada, Missão "
+     "Cumprida e Puxador de Fila), concluído em julho de 2026."),
 ]:
     bullet(doc, txt, rotulo=rot)
 
-h1(doc, "SORTEIOS", 10)
+# ------------------------------------------------------------------ missões --
+h1(doc, "MISSÕES: O QUE FAZER ENTRE UM DIA 5 E O OUTRO", 10)
+p(doc, "O troféu premia quem paga. A missão dá o que fazer no resto do mês. Sem "
+       "isso, o programa só dá sinal de vida no vencimento — e apoio que só aparece "
+       "na hora de cobrar não cria torcida.")
+p(doc, "A coordenação publica cerca de uma missão por semana, mais relâmpagos "
+       "ocasionais. Cada missão vale pontos, e os pontos alimentam o ranking da "
+       "temporada e as conquistas.")
+tabela(doc, ["Tipo", "O que é", "Como valida", "Custo para a coordenação"], [
+    ["Missão rápida", "Enquete, quiz sobre a quadrilha, pergunta do dia — respondida "
+     "no próprio site", "Sozinha", "Zero — é o que permite cadência sem gerar fila"],
+    ["Rede social", "Curtir, comentar, compartilhar ou postar story marcando a "
+     "Explosão", "Link da publicação, conferido por uma pessoa",
+     "Alto — use cadência semanal; diária, com cem sócios, dá cem validações por dia"],
+    ["Presença", "Ensaio, apresentação ou reunião", "A coordenação marca quem veio, "
+     "de uma vez", "Baixo — não gera fila"],
+    ["Indicação", "Trazer um sócio novo", "Sozinha, conferindo o cadastro de quem foi "
+     "indicado", "Zero — só conta quando o indicado tem contribuição confirmada"],
+], larguras=[2.8, 5.2, 4.0, 4.0], tam=9.5)
+for rot, txt in [
+    ("Prova por link ou por escrito, não por print: ", "a coordenação abre a "
+     "publicação e vê o estado real dela, e link não se edita no editor de fotos. "
+     "Para o que some em 24 horas, como story, vale a descrição por escrito com "
+     "conferência por amostragem."),
+    ("Missão nasce como rascunho: ", "publicar é um segundo clique. E não se encerra "
+     "missão com entrega pendente na fila — o sócio enviou, alguém precisa "
+     "responder."),
+    ("Pontos congelam na aprovação: ", "mudar depois o valor de uma missão já "
+     "aprovada é recusado pelo sistema. O que foi ganho, foi ganho."),
+    ("Quem está devendo joga, mas os pontos ficam retidos: ", "libera quando o mês "
+     "for pago. É o desenho que dá algo concreto a perder sem expulsar ninguém da "
+     "brincadeira. Quem deixa o mês fechar (suspenso) sai das missões."),
+    ("Validação em lote: ", "a coordenação valida agrupando por missão, não uma a "
+     "uma. É o que torna o módulo sustentável numa base de cem sócios."),
+]:
+    bullet(doc, txt, rotulo=rot)
+
+h1(doc, "SORTEIOS", 11)
 for rot, txt in [
     ("Regra central: ", "o sorteio é aberto a quem está com a contribuição em dia. Entre "
      "os elegíveis, todos concorrem com a mesma chance, independentemente do nível — todo "
@@ -246,19 +343,27 @@ for rot, txt in [
     ("Quem pagou atrasado concorre: ", "a limitação é sobre estar devendo, não sobre ter "
      "atrasado. Quem regulariza volta a concorrer no sorteio seguinte, porque a "
      "elegibilidade é apurada na data do sorteio."),
+    ("É a única perda de quem está atrasado: ", "mural, missões, troféus, painel e "
+     "finanças continuam abertos. O sorteio é o que fica de fora."),
     ("Frequência: ", "calendário definido no início da temporada, com pelo menos um "
      "sorteio por trimestre e sorteios extras nos eventos-âncora."),
     ("Prêmios: ", "dinheiro, kits de mercado, vales de parceiros, camisa da temporada e "
      "brindes."),
-    ("Quem participa: ", "sócios com a contribuição em dia no período do sorteio."),
     ("Transparência do sorteio: ", "lista de participantes publicada antes, sorteio "
      "transmitido ou gravado, resultado divulgado na hora e prêmio entregue com registro."),
 ]:
     bullet(doc, txt, rotulo=rot)
+caixa(doc, "O sorteio precisa se defender sozinho",
+      "Sorteio de dinheiro entre vizinhos gera desconfiança mais cedo ou mais tarde. "
+      "Por isso o sistema congela a lista de participantes no momento do sorteio "
+      "(com os nomes, para a prova não depender do cadastro de depois), recusa "
+      "sortear duas vezes o mesmo sorteio, recusa sortear antes da data anunciada e "
+      "escolhe o vencedor por sorteio criptográfico, sem viés. A entrega do prêmio "
+      "fica registrada com data e com quem entregou.", AZUL)
 
 # ------------------------------------------------------------ transparência --
 doc.add_page_break()
-h1(doc, "TRANSPARÊNCIA PARA O SÓCIO", 11)
+h1(doc, "TRANSPARÊNCIA PARA O SÓCIO", 12)
 p(doc, "Transparência é o principal produto do programa. Quem contribui precisa ver "
        "para onde foi o dinheiro — e ver isso sem precisar pedir.")
 tabela(doc, ["Entrega", "Conteúdo", "Frequência"], [
@@ -280,23 +385,73 @@ caixa(doc, "Como a liberação funciona",
       "assim que a coordenação marca a temporada como visível.", AZUL)
 
 # ---------------------------------------------------------------- o sistema --
-h1(doc, "O SITE DO SÓCIO TORCEDOR", 12)
+h1(doc, "O SITE DO SÓCIO TORCEDOR", 13)
 p(doc, "O programa tem sistema próprio, separado do Sistema de Avaliação dos "
-       "brincantes. Enquanto o site não está completo, a operação roda com Pix, "
-       "WhatsApp e o painel da coordenação — que já existe.")
+       "brincantes. Desde julho de 2026 ele está no ar, ligado ao banco de dados de "
+       "verdade: o painel da coordenação e o painel do sócio funcionam, e a operação "
+       "roda com Pix e WhatsApp ao lado deles.")
+
+h2(doc, "13.1 O que o sócio faz no painel dele")
+tabela(doc, ["Recurso", "O que ele consegue"], [
+    ["Entrar", "Com CPF e data de nascimento, na página inicial do site"],
+    ["Carteirinha digital", "Sempre à mão, com o número e o nível; há também um "
+     "modelo genérico para imprimir"],
+    ["Situação do mês", "Se está em dia, o que falta pagar e até quando"],
+    ["Avisar o pagamento", "Informa que pagou, com data e hora reais; a coordenação "
+     "confirma depois. Enquanto não confirma, não entra no caixa"],
+    ["Chave Pix", "Com o nome do titular e botão de copiar, no topo do aviso de "
+     "pagamento"],
+    ["Progresso da temporada", "Quanto já contribuiu no ano e quanto falta"],
+    ["Histórico", "Todas as contribuições, com data real e forma de pagamento"],
+    ["Troféus", "Vitrine das conquistas, com barra de progresso das que faltam"],
+    ["Missões", "Missões abertas, envio da prova e os pontos — inclusive os retidos"],
+    ["Trocar de nível", "Sobe ou desce na hora, valendo do primeiro mês ainda não "
+     "pago; mês já pago não muda de valor"],
+    ["Mural", "Recados e novidades da quadrilha para a torcida"],
+    ["Finanças", "Prestação de contas das temporadas liberadas pela coordenação"],
+    ["Meus dados", "Corrige nome, apelido, contato e e-mail. CPF e nascimento ficam "
+     "travados — são a senha dele; para mudar, fala com a coordenação"],
+], larguras=[4.0, 12.0], tam=9.5)
+
+h2(doc, "13.2 O que a coordenação faz no painel dela")
+tabela(doc, ["Recurso", "Para que serve"], [
+    ["Cadastro de sócios", "Nome completo, CPF, nascimento, contato e nível. O valor "
+     "vem do nível, não se digita"],
+    ["Registro de pagamento", "Pix ou dinheiro, com data e hora reais e quem recebeu"],
+    ["Fila de confirmação", "Avisos de pagamento dos sócios esperando conferência"],
+    ["Lista de lembretes", "Quem está para vencer e quem está devendo, com o contato "
+     "à mão"],
+    ["Configuração das regras", "Temporada, vencimento, corte de adesão, régua de "
+     "suspensão, chave Pix e o que fica visível ao sócio"],
+    ["Missões", "Criação, publicação e validação em lote das entregas"],
+    ["Sorteios", "Abertura, sorteio e registro da entrega do prêmio"],
+    ["Troféus", "Acompanhamento de quem conquistou o quê, para a entrega dos físicos"],
+    ["Finanças", "Lançamentos da quadrilha e importação das temporadas passadas por "
+     "planilha, com prévia e detecção de linha repetida"],
+    ["Importação de sócios", "Entrada em lote por planilha, para a virada da "
+     "temporada"],
+    ["Administradores", "Quem da coordenação tem acesso, com troca de senha "
+     "obrigatória no primeiro login"],
+], larguras=[4.0, 12.0], tam=9.5)
+
+h2(doc, "13.3 Marcos")
 tabela(doc, ["Marco", "O que entrega", "Situação"], [
     ["M1 — Painel da coordenação",
      "Login da coordenação, cadastro de sócios por nível, registro e confirmação de "
      "pagamentos (Pix ou dinheiro) com data e hora reais, cards de arrecadação",
      "Pronto"],
     ["M2 — Painel do sócio",
-     "Login do próprio sócio: histórico de contribuições, situação do mês e acesso às "
-     "finanças da quadrilha",
-     "A fazer"],
-    ["M3 — Troféus e conquistas",
-     "Regras de conquista, sequência de meses em dia, total contribuído e exibição no "
-     "painel",
-     "A fazer"],
+     "Login do próprio sócio com CPF e data de nascimento: carteirinha digital, situação "
+     "do mês, progresso da temporada, histórico de contribuições, troca de nível, aviso "
+     "de pagamento, mural e acesso às finanças da quadrilha. Do lado da coordenação: "
+     "configuração das regras, fila de confirmação, lista de lembretes e importação de "
+     "sócios e de finanças por planilha",
+     "Pronto"],
+    ["M3 — Troféus, sorteios e missões",
+     "Troféus calculados com vitrine e progresso, sorteios com lista congelada e "
+     "registro de entrega, e o módulo de missões com pontos retidos e validação em "
+     "lote. Falta o ranking da temporada no mural e as notificações",
+     "Em andamento"],
     ["M4 — Página pública e adesão",
      "Página aberta explicando o programa, adesão online, geração da carteirinha digital "
      "e acabamento visual",
@@ -305,15 +460,38 @@ tabela(doc, ["Marco", "O que entrega", "Situação"], [
      "Cobrança recorrente e confirmação automática do Pix",
      "Ideia"],
 ], larguras=[4.5, 8.5, 3.0])
+p(doc, "Do M2 falta apenas o envio do comprovante por imagem, que depende de conta e "
+       "credenciais externas ainda não provisionadas — hoje o sócio descreve o pagamento "
+       "por texto e a coordenação confirma. Do M3 faltam o ranking da temporada e as "
+       "notificações; a mensagem pronta para WhatsApp é a de melhor retorno e custo zero.")
 
-h1(doc, "CALENDÁRIO DE IMPLANTAÇÃO", 13)
+h2(doc, "13.4 Segurança: o que o site protege")
+for rot, txt in [
+    ("CPF e nascimento nunca saem: ", "juntos, são a senha do sócio. O painel mostra "
+     "o CPF mascarado, e nenhuma tela devolve os dois."),
+    ("Quem o usuário é vem do servidor: ", "não do navegador. Não há como pedir os "
+     "dados de outro sócio trocando um parâmetro na tela."),
+    ("Trava de força bruta nos dois logins: ", "cinco erros em quinze minutos "
+     "bloqueiam por meia hora. Numa cidade pequena, o CPF de alguém não é segredo."),
+    ("O caixa só soma o que foi confirmado: ", "aviso de pagamento do sócio não entra "
+     "na arrecadação nem quita mês nenhum até a coordenação conferir."),
+    ("A chave Pix é validada por tipo: ", "é o único campo do sistema em que um erro "
+     "de digitação manda dinheiro para um desconhecido."),
+    ("A coordenação entra por e-mail e senha: ", "com troca obrigatória no primeiro "
+     "acesso e recuperação por e-mail. Cada administrador tem o próprio acesso."),
+]:
+    bullet(doc, txt, rotulo=rot)
+
+h1(doc, "CALENDÁRIO DE IMPLANTAÇÃO", 14)
 p(doc, "Previsões, não datas fechadas.")
 tabela(doc, ["Período previsto", "O que acontece"], [
-    ["Agosto de 2026", "Decisão da Diretoria sobre valores, benefícios e responsáveis; "
-     "definição do Pix oficial do programa"],
+    ["Agosto de 2026", "Reunião da Diretoria — o próximo passo do programa não é "
+     "código, é decisão: valores e benefícios dos níveis, chave Pix oficial, "
+     "categorização de gastos para liberar as finanças da temporada vigente, e a "
+     "data da reunião de entrega da carteirinha física"],
     ["Setembro a dezembro de 2026", "Campanha de divulgação: apresentar o programa à "
-     "cidade e formar a lista de interessados. Ainda sem cobrança. O site avança para o "
-     "painel do sócio"],
+     "cidade e formar a lista de interessados. Ainda sem cobrança. O site fecha o M3 "
+     "(ranking e notificações) e avança para a página pública"],
     ["Janeiro de 2027", "Captação: adesões efetivadas e cadastro no sistema. Carteirinha "
      "e identidade do programa dentro da nova identidade visual"],
     ["Fevereiro de 2027", "Início da temporada e da primeira cobrança. Reunião da torcida "
@@ -327,7 +505,7 @@ tabela(doc, ["Período previsto", "O que acontece"], [
 ], larguras=[5.0, 11.0])
 
 # ------------------------------------------------------------------ riscos ---
-h1(doc, "RISCOS E COMO REDUZIR", 14)
+h1(doc, "RISCOS E COMO REDUZIR", 15)
 tabela(doc, ["Risco", "Como reduzir"], [
     ["Promessa não cumprida", "Lista de benefícios com responsável e prazo, conferida "
      "mensalmente pela Diretoria"],
@@ -341,9 +519,16 @@ tabela(doc, ["Risco", "Como reduzir"], [
      "prestação de contas específica"],
     ["Sócio sem sentir diferença", "Conteúdo exclusivo de verdade no Close Friends e "
      "reconhecimento público nominal"],
+    ["Fila de validação de missões estourar", "Missão de rede social só em cadência "
+     "semanal, validação em lote e preferência pelos tipos que se aprovam sozinhos"],
+    ["Chave Pix errada no painel", "Validada por tipo na gravação e conferida com o "
+     "nome do titular ao lado; alteração só pela coordenação"],
+    ["O programa começar sem benefício pronto", "A primeira cobrança é fevereiro de "
+     "2027: até lá, carteirinha, Close Friends e calendário de sorteios precisam "
+     "existir de fato"],
 ], larguras=[6.0, 10.0])
 
-h1(doc, "INDICADORES", 15)
+h1(doc, "INDICADORES", 16)
 tabela(doc, ["Indicador", "Meta de referência"], [
     ["Número de sócios ativos", "100 na temporada 2027"],
     ["Receita recorrente mensal", "R$ 1.500 na meta da temporada"],

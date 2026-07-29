@@ -36,6 +36,9 @@ CABECALHO = [
 ]
 
 PASTA_DOCS = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+# Imagens usadas pelos geradores (organograma etc.). Ficam versionadas aqui
+# porque um .docx regerado perde tudo o que nao estiver no script.
+PASTA_ATIVOS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_ativos")
 
 
 def rgb(hexcor):
@@ -279,6 +282,17 @@ def checklist(doc, itens, titulo="Checklist de execução"):
     tabela(doc, ["O que fazer", "Responsável", "Status"],
            [[i, "", "[    ]"] for i in itens],
            larguras=[10.5, 3.5, 2.0])
+
+
+def imagem(doc, nome_arquivo, largura_cm=16.0, legenda=None):
+    """Insere uma imagem de `_geradores/_ativos`, centralizada, com legenda."""
+    doc.add_picture(os.path.join(PASTA_ATIVOS, nome_arquivo), width=Cm(largura_cm))
+    doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    if legenda:
+        par = doc.add_paragraph()
+        par.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        par.paragraph_format.space_after = Pt(10)
+        _run(par, legenda, 9.5, False, CINZA_TEXTO, italico=True)
 
 
 def salvar(doc, nome_arquivo):

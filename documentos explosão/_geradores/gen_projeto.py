@@ -38,6 +38,101 @@ for item in [
     ("15. Visão de futuro", "onde a Explosão quer chegar"),
 ]:
     bullet(doc, f" — {item[1]}", rotulo=item[0])
+p(doc, "Antes dos capítulos, duas páginas de panorama: as novidades da temporada e "
+       "o mapa de todos os documentos do projeto.")
+
+doc.add_page_break()
+
+# ------------------------------------------------------------- novidades ----
+h1(doc, "AS NOVIDADES DA TEMPORADA 2027")
+p(doc, "A reestruturação não é um ajuste — é uma mudança de patamar. Esta página "
+       "reúne tudo o que passa a existir e que não existia antes. Cada item tem "
+       "capítulo próprio neste documento ou documento inteiro dedicado a ele.")
+
+banner(doc, "A IDEIA QUE COSTURA TUDO",
+       "A Explosão deixa de ser uma quadrilha que aparece em julho e passa a ser um "
+       "grupo ativo o ano inteiro — sempre em movimento, sempre inovando, sempre "
+       "puxando o cenário junino de Beruri.",
+       VERMELHO)
+
+tabela(doc, ["Novidade", "O que é", "Onde está detalhado"], [
+    ["Novo modelo de custeio",
+     "Repasses públicos cobrem a montagem do espetáculo. O brincante não paga blusa "
+     "nem produção; a arrecadação deixa de ser sobrevivência e vira estratégia",
+     "Capítulo 11"],
+    ["Programa Sócio Torcedor",
+     "A torcida oficial: contribuição mensal simbólica, com carteirinha, sorteios, "
+     "troféus, missões e transparência. É o carro-chefe da arrecadação — e o site "
+     "dele já está no ar",
+     "Capítulo 11.2 e os dois documentos do programa"],
+    ["Arraial de Lançamento",
+     "Evento de abertura da temporada: revela tema, itens e camisa, presta contas do "
+     "ano anterior e capta sócios",
+     "Documento próprio"],
+    ["Arraial da Explosão",
+     "Projeto de festa própria depois do Festival, com danças convidadas, votação "
+     "popular pelo celular e feira do comércio local em parceria com a Prefeitura. "
+     "Ainda não aconteceu: é o que se pretende criar",
+     "Documento próprio"],
+    ["Organograma com nome e responsabilidade",
+     "Cargos, grupos de produção e equipes de arena definidos, cada um com o que "
+     "entrega e a quem responde. É o que acaba com o acúmulo de função",
+     "Capítulo 4 e documento próprio"],
+    ["Termo de Compromisso do Brincante",
+     "Contrato assinado por todos, com direitos e deveres dos dois lados, anexos "
+     "para menores de idade e cessão de imagem",
+     "Capítulo 8.4 e o guia do contrato"],
+    ["Teto de R$ 80 na bonificação",
+     "O Programa de Bonificação passa a ter limite por brincante na temporada: "
+     "retorno simbólico garantido, orçamento sob controle",
+     "Capítulo 10.2 e o guia do contrato"],
+    ["Sistema de Avaliação",
+     "Chamada, nota, ranking, ativação automática, advertências e bonificação — no "
+     "celular, com o brincante acompanhando o próprio desempenho",
+     "Capítulo 10.1"],
+    ["Missão de captação de sócios",
+     "Trazer sócio torcedor vira missão do brincante, valendo troféu e "
+     "reconhecimento — nunca dinheiro, para não tocar o contrato",
+     "Capítulo 10.1"],
+    ["Ensaio com método",
+     "Liderança por filas, estrutura fixa de ensaio, disputa mensal e treinamento "
+     "cruzado",
+     "Capítulo 9"],
+    ["Prestação de contas em dois níveis",
+     "Recurso público detalhado e aberto; arrecadação própria com o total divulgado",
+     "Capítulo 8.3"],
+    ["Identidade visual e comunicação",
+     "Marca institucional separada da marca do tema, calendário editorial e rotina "
+     "mínima de publicação",
+     "Capítulos 6 e 7"],
+], larguras=[4.0, 8.0, 4.0], tam=9.5)
+
+h1(doc, "O MAPA DOS DOCUMENTOS")
+p(doc, "Este plano é o documento guarda-chuva: ele conta a história inteira e "
+       "aponta para os demais. Nenhum outro documento contradiz este — quando "
+       "houver divergência, o mais recente vale e os dois são corrigidos.")
+tabela(doc, ["Documento", "Para que serve", "Público"], [
+    ["Plano de Reestruturação (este)", "A visão completa da temporada 2027",
+     "Coordenação"],
+    ["Organograma", "Quem faz o quê, o ano todo e no dia do espetáculo",
+     "Coordenação e responsáveis"],
+    ["Contratos (Termo do Brincante e do Item)", "O instrumento que se assina",
+     "Brincantes e responsáveis"],
+    ["Guia do Contrato e da Bonificação", "Por que o contrato existe, o que protege "
+     "e como a bonificação funciona no sistema", "Coordenação e brincantes"],
+    ["Programa Sócio Torcedor — Plano de Implementação", "Como o programa opera por "
+     "dentro: papéis, metas, regras e sistema", "Coordenação"],
+    ["Programa Sócio Torcedor (divulgação)", "A peça de convite à torcida",
+     "Público"],
+    ["Arraial de Lançamento — Plano do Evento", "Produção do evento de abertura",
+     "Coordenação"],
+    ["Arraial da Explosão — Plano do Evento", "Projeto da festa própria da quadrilha",
+     "Coordenação e Prefeitura"],
+    ["Projetos de Arrecadação", "O portfólio de projetos de reserva",
+     "Coordenação"],
+    ["Kit Parceiro", "Cotas, contrapartidas e ações com o comércio",
+     "Empresas e parceiros"],
+], larguras=[5.0, 8.0, 3.0], tam=9.5)
 
 doc.add_page_break()
 
@@ -197,6 +292,14 @@ p(doc, "A estrutura abaixo é o organograma oficial da Explosão Junina. Ela sep
 banner(doc, "COMO A ESTRUTURA SE ORGANIZA",
        "Diretoria → Comissão de Artes → Grupos de Produção (ano todo) → Equipes de Arena (dia do espetáculo)",
        GRAFITE)
+caixa(doc, "O organograma é o coração desta reestruturação",
+      "É a partir dele que a Diretoria se organiza, que os papéis são distribuídos e "
+      "que cada pessoa passa a saber o que se espera dela. Ele existe para acabar "
+      "com o acúmulo de função — quando alguém concentra três frentes, o grupo trava "
+      "quando essa pessoa falta — e para responder à pergunta mais prática de todas: "
+      "de quem se cobra cada coisa. O documento “Organograma – Explosão Junina” traz "
+      "a estrutura completa, com o quadro de nomeação a ser preenchido na reunião da "
+      "Diretoria.", VERMELHO)
 
 h2(doc, "4.1 Diretoria")
 p(doc, "A Diretoria responde pela quadrilha: institucionalmente, financeiramente e "
@@ -583,6 +686,14 @@ for rot, txt in [
      "de frequência maior."),
     ("Fornecedores e parceiros: ", "acordo simples por escrito, com contrapartidas e "
      "prazos registrados pelo Secretário."),
+    ("Guia de leitura: ", "o documento “Contrato e Bonificação — Guia Explicativo” "
+     "explica, em linguagem simples, por que o contrato existe, o que ele protege, "
+     "qual é o valor jurídico de cada cláusula e como o Programa de Bonificação "
+     "funciona dentro do sistema. É o material da reunião de assinatura."),
+    ("Por que isso importa juridicamente: ", "o Termo afasta expressamente o vínculo "
+     "empregatício, autoriza o uso de imagem, cobre a participação de menores de "
+     "idade com os anexos do responsável e garante direito de defesa antes de "
+     "qualquer sanção."),
 ]:
     bullet(doc, txt, rotulo=rot)
 
@@ -690,10 +801,19 @@ tabela(doc, ["Recurso", "O que faz"], [
     ["Advertências",
      "Registro de advertência verbal, formal, desligamento e falta grave, com efeito "
      "sobre a bonificação"],
+    ["Missão de captação de sócios",
+     "O brincante declara quem trouxe para o Programa Sócio Torcedor e a coordenação "
+     "confirma. Vale desempenho e troféu — nunca dinheiro: não entra na frequência, "
+     "no ranking nem na bonificação, e por isso não toca o contrato"],
     ["Configurações e logs",
      "Valores, prazos e regras da temporada ajustáveis pela coordenação; todo registro "
      "fica logado"],
 ], larguras=[4.5, 11.5])
+caixa(doc, "O que não está no sistema não aconteceu",
+      "Cada presença, nota, advertência e alteração fica registrada com data, hora e "
+      "autor. É isso que permite ao brincante contestar durante a temporada, e não "
+      "depois; e é isso que sustenta qualquer decisão da coordenação sobre "
+      "bonificação, promoção de fila ou desligamento.", AZUL)
 
 h2(doc, "10.2 Programa de Bonificação")
 p(doc, "O Programa de Bonificação transforma presença e desempenho em um valor "
@@ -707,6 +827,9 @@ tabela(doc, ["Regra", "Como funciona"], [
                  "Itens têm exigência de frequência maior"],
     ["Acúmulo", "Começa ao fim da ativação individual e vai até o Festival. Cada tipo de "
                 "evento tem um valor; eventos podem ter valor específico"],
+    ["Teto da temporada", "Novidade de 2027: o acumulado por brincante para em "
+                          "R$ 80,00. Ao chegar no teto, ele mantém o que tem e deixa "
+                          "de somar. O sistema mostra quanto falta para alcançá-lo"],
     ["Atividades do compromisso", "Arrecadação, braçal e comunitário registram presença, "
                                   "mas não geram valor nem entram na frequência"],
     ["Advertências", "Advertência formal reduz o total acumulado; desligamento por falta "
@@ -716,16 +839,41 @@ tabela(doc, ["Regra", "Como funciona"], [
     ["Destino", "Ao fim da contagem, o brincante escolhe resgatar o valor ou doá-lo à "
                 "quadrilha. A escolha é registrada no sistema"],
 ], larguras=[4.5, 11.5])
+caixa(doc, "Por que o teto de R$ 80",
+      "O programa precisa dar um retorno simbólico a quem se dedicou sem virar uma "
+      "despesa que a quadrilha não sabe de antemão quanto será — o custo dependeria "
+      "de quantos convites de apresentação aparecessem na temporada, e isso ninguém "
+      "controla. Com os valores atuais, o máximo possível por brincante é R$ 44,00; "
+      "o teto é a garantia de que, mudando os valores ou o tamanho da temporada, o "
+      "compromisso máximo continua conhecido. A explicação completa está no "
+      "documento “Contrato e Bonificação — Guia Explicativo”.", AMBAR)
 
 h2(doc, "10.3 Site do Sócio Torcedor")
-p(doc, "Sistema separado, dedicado ao programa de sócios: cadastro, registro e "
-       "confirmação de pagamentos com data real, painel do sócio, troféus e "
-       "transparência financeira. Detalhado no documento próprio do programa.")
+p(doc, "Sistema separado, dedicado ao programa de sócios, e já no ar. A coordenação "
+       "cadastra sócios e confirma pagamentos com data e hora reais; o sócio entra "
+       "com CPF e data de nascimento e encontra carteirinha digital, situação do mês, "
+       "progresso da temporada, histórico, troféus, missões, mural, troca de nível e "
+       "a prestação de contas da quadrilha.")
+tabela(doc, ["Módulo", "Situação"], [
+    ["Painel da coordenação (cadastro, pagamentos, fila de confirmação, lembretes, "
+     "finanças, importação por planilha)", "Pronto"],
+    ["Painel do sócio (carteirinha, situação, progresso, histórico, troca de nível, "
+     "mural, finanças)", "Pronto"],
+    ["Troféus e conquistas — as dez do catálogo", "Pronto"],
+    ["Sorteios, com lista congelada e registro de entrega do prêmio", "Pronto"],
+    ["Missões semanais, com pontos retidos e validação em lote", "Pronto"],
+    ["Ranking da temporada e notificações", "A fazer"],
+    ["Página pública e adesão online", "A fazer"],
+    ["Comprovante de pagamento por imagem", "Depende de conta externa"],
+], larguras=[11.5, 4.5], tam=9.5)
+p(doc, "Tudo detalhado no “Programa Sócio Torcedor — Plano de Implementação”.")
 
 h2(doc, "10.4 O que ainda vai ser construído")
 for rot, txt in [
     ("Votação popular em tempo real: ", "para a competição do Arraial da Explosão, com "
-     "apuração e resultado divulgados na hora."),
+     "apuração e resultado divulgados na hora — com plano B offline obrigatório."),
+    ("Cadastro das bancas do Arraial: ", "formulário de inscrição do edital da feira, "
+     "seleção, confirmação e mapa dos espaços demarcados."),
     ("Painel público de transparência: ", "página aberta com o balanço da temporada, "
      "alimentada pelos registros financeiros."),
     ("Venda de camisa e ingresso: ", "registro de pedidos, pagamento por Pix e controle "
@@ -773,8 +921,15 @@ for rot, txt in [
     ("Como funciona: ", "níveis com valores simbólicos, benefícios progressivos, "
      "carteirinha, conteúdo exclusivo, sorteios com chance igual para todos, descontos e "
      "acesso à prestação de contas."),
+    ("Meta da temporada: ", "100 sócios — cerca de R$ 1.500 por mês e R$ 15.000 nos "
+     "dez meses de contribuição (fevereiro a novembro). Com cinquenta brincantes "
+     "trazendo dois cada, a meta é atingida sem campanha externa."),
+    ("O site já está no ar: ", "a coordenação cadastra e confirma pagamentos; o sócio "
+     "entra com CPF e data de nascimento e acompanha tudo. Falta a página pública "
+     "com adesão online."),
     ("Onde está detalhado: ", "documento “Programa Sócio Torcedor — Plano de "
-     "Implementação”, com metas, operação, papéis, calendário e indicadores."),
+     "Implementação”, com metas, operação, papéis, calendário e indicadores; e o "
+     "material de divulgação, voltado ao público."),
 ]:
     bullet(doc, txt, rotulo=rot)
 
@@ -791,6 +946,13 @@ tabela(doc, ["Evento", "Quando (previsão)", "Função"], [
 ], larguras=[4.0, 4.5, 7.5])
 p(doc, "Cada um desses eventos tem documento próprio, com programação, estrutura, "
        "equipes, receitas, cronograma de produção e checklist.")
+caixa(doc, "O Arraial da Explosão ainda é um projeto",
+      "Ele nunca aconteceu: não há edição anterior, data marcada nem orçamento "
+      "aprovado. O documento dele é a proposta de criação, a ser levada à Diretoria. "
+      "Dois pontos definem se ele sai do papel: a parceria com a Prefeitura — "
+      "pedido formal de recursos, limpeza, segurança, estrutura e apoio às danças "
+      "convidadas — e a feira, com edital de cadastro das bancas e cobrança de uma "
+      "taxa de 5% a 10% sobre a venda ou de um valor fixo pelo espaço.", VERMELHO)
 
 h2(doc, "11.4 Parcerias comerciais reposicionadas")
 p(doc, "As parcerias com o comércio local continuam, mas com outra função. Em vez de "

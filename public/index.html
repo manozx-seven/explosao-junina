@@ -518,6 +518,12 @@ tr:hover td { background:rgba(255,255,255,.03); }
     <div id="configContent"></div>
   </div>
 
+  <div id="pageSocios" class="page">
+    <div class="page-title">Sócios Torcedores</div>
+    <div class="page-subtitle">Missão de captação — quem cada brincante trouxe</div>
+    <div id="sociosContent"></div>
+  </div>
+
   <div id="pageLogs" class="page">
     <div class="page-title">Logs</div>
     <div class="page-subtitle">Registro de ações do sistema</div>
@@ -550,6 +556,15 @@ let _foraDoPeriodo = false;
 
 // Renderiza os ícones Lucide (chamar após atualizar o DOM)
 function icons() { if (window.lucide) window.lucide.createIcons(); }
+
+// Escapa texto antes de entrar em innerHTML. Usado no que é digitado por
+// brincante (nome e telefone de indicação), que é a entrada mais aberta do
+// sistema — sem isso, um nome com "<" quebraria a tela.
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 
 // ============================================================
 // CACHE EM MEMÓRIA + SKELETONS (navegação instantânea)
@@ -795,12 +810,12 @@ function startSessionWatch() {
 // ============================================================
 // NAVIGATION
 // ============================================================
-const adminPages = ['Dashboard','Cadastro','Agenda','Avaliação','Ranking','Bonificação','Configurações','Logs'];
+const adminPages = ['Dashboard','Cadastro','Agenda','Avaliação','Ranking','Bonificação','Sócios','Configurações','Logs'];
 const brincPages = ['Perfil']; // brincante/item veem só o próprio desempenho
 const pageIcons = {
   'Dashboard':'layout-dashboard', 'Cadastro':'users', 'Agenda':'calendar-days',
   'Avaliação':'clipboard-check', 'Ranking':'trophy', 'Bonificação':'hand-coins',
-  'Configurações':'settings', 'Logs':'scroll-text', 'Perfil':'user-round'
+  'Sócios':'megaphone', 'Configurações':'settings', 'Logs':'scroll-text', 'Perfil':'user-round'
 };
 
 function buildNav() {
@@ -822,7 +837,7 @@ function navigateTo(page) {
   const pageMap = {
     'Dashboard':'pageDashboard','Cadastro':'pageCadastro','Agenda':'pageEnsaios',
     'Avaliação':'pageAvaliacao','Ranking':'pageRanking','Bonificação':'pageBonificacao',
-    'Configurações':'pageConfig','Logs':'pageLogs','Perfil':'pagePerfil'
+    'Sócios':'pageSocios','Configurações':'pageConfig','Logs':'pageLogs','Perfil':'pagePerfil'
   };
 
   // Small delay for transition smoothness
@@ -838,6 +853,7 @@ function navigateTo(page) {
   if (page === 'Avaliação') loadEnsaioSelect();
   if (page === 'Ranking') loadRanking();
   if (page === 'Bonificação') loadBonificacao();
+  if (page === 'Sócios') loadCaptacao();
   if (page === 'Configurações') loadConfig();
   if (page === 'Logs') loadLogs();
   if (page === 'Perfil') loadPerfil();
@@ -1989,6 +2005,17 @@ function renderBonificacao(sim) {
       partes.push('Escolha de destino: <strong style="color:'+(lib?'var(--success)':'var(--warn)')+'">'+(lib?'liberada':'bloqueada')+'</strong>'+(lib?'':' (brincantes ainda não escolhem)'));
       return '<div class="alert alert-neutral" style="margin-bottom:14px"><i data-lucide="hand-coins"></i><div style="line-height:1.6">'+partes.join(' &nbsp;•&nbsp; ')+'</div></div>';
     })()+
+    (function(){
+      // Teto da temporada: o número que o Financeiro precisa para reservar o
+      // orçamento é o pior caso (todos os elegíveis no teto), não o acumulado de hoje.
+      if (!sim.teto) return '';
+      const nt = sim.noTeto || 0;
+      return '<div class="alert alert-neutral" style="margin-bottom:14px"><i data-lucide="shield-check"></i><div style="line-height:1.6">'+
+        'Teto por brincante: <strong>R$ '+sim.teto+'</strong> na temporada (contrato, Cláusula Sexta, III, “e”)'+
+        (sim.tetoTotal?' &nbsp;•&nbsp; Compromisso máximo com os elegíveis de hoje: <strong>R$ '+sim.tetoTotal+'</strong>':'')+
+        ' &nbsp;•&nbsp; '+(nt?('<strong style="color:var(--warn)">'+nt+' já no teto</strong>'):'Ninguém chegou ao teto ainda')+
+        '</div></div>';
+    })()+
     '<div class="table-wrap"><table><thead><tr><th>Nome</th><th>Fila</th><th>Status</th><th>Destino</th><th>Ensaios</th><th>Apres.</th><th>Sanção</th><th>Acumulado</th></tr></thead><tbody>'+
     sim.lista.map(l =>
       '<tr style="'+(l.elegivel?'':'opacity:.5')+'"><td>'+l.nome+'</td><td>'+(l.fila||'-')+'</td>'+
@@ -1996,7 +2023,10 @@ function renderBonificacao(sim) {
       '<td>'+destBadge(l.destino)+'</td>'+
       '<td>'+l.ensaiosPresente+'</td><td>'+l.apresentacoesPresente+(l.festivalPresente?' + Festival':'')+'</td>'+
       '<td>'+(l.sancaoPct>0?'<span class="badge" style="background:var(--danger);color:#fff">−'+l.sancaoPct+'%</span>':'-')+'</td>'+
-      '<td style="font-weight:700;color:'+(l.destino==='doar'?'var(--success)':'var(--dourado)')+'">R$ '+l.valorAcumulado+(l.sancaoPct>0?'<div style="font-size:10px;color:var(--text-sec);font-weight:400">bruto R$ '+l.valorBruto+'</div>':'')+'</td></tr>'
+      '<td style="font-weight:700;color:'+(l.destino==='doar'?'var(--success)':'var(--dourado)')+'">R$ '+l.valorAcumulado+
+        (l.sancaoPct>0?'<div style="font-size:10px;color:var(--text-sec);font-weight:400">bruto R$ '+l.valorBruto+'</div>':'')+
+        (l.atingiuTeto?'<div style="font-size:10px;color:var(--warn);font-weight:400">no teto (acumulou R$ '+l.valorSemTeto+')</div>':'')+
+      '</td></tr>'
     ).join('')+'</tbody></table></div>';
   icons();
 }
@@ -2010,6 +2040,200 @@ async function loadBonificacao() {
 // ============================================================
 // CONFIGURAÇÕES
 // ============================================================
+// ============================================================
+// SÓCIOS TORCEDORES — missão de captação
+//
+// Vale desempenho e troféu, nunca dinheiro (Plano de Implementação §6): esta
+// tela não conversa com bonificação, frequência nem ranking de desempenho.
+// Guarda só NOME e TELEFONE de quem foi trazido — nunca CPF ou nascimento,
+// que juntos são a senha do sócio no Site Sócio Torcedor.
+// ============================================================
+function fmtTelefone(t) {
+  const d = String(t||'').replace(/\D/g,'');
+  if (d.length === 11) return '('+d.slice(0,2)+') '+d.slice(2,7)+'-'+d.slice(7);
+  if (d.length === 10) return '('+d.slice(0,2)+') '+d.slice(2,6)+'-'+d.slice(6);
+  return d;
+}
+const IND_STATUS = {
+  pendente:   ['clock','var(--warn)','Aguardando'],
+  confirmada: ['check-circle-2','var(--success)','Confirmada'],
+  recusada:   ['x-circle','var(--danger)','Recusada']
+};
+
+// O nome do sócio é digitado pelo brincante e NÃO viaja dentro do onclick:
+// o navegador decodifica as entidades HTML antes de o JS ser lido, então um
+// nome com apóstrofo (O'Brien) quebraria o handler mesmo escapado. Passamos só
+// o id — que é gerado pelo Firestore — e buscamos o nome aqui.
+function nomeDaIndicacao_(id) {
+  const fontes = [
+    (_cache.captacao && _cache.captacao.indicacoes) || [],
+    (_cache.perfil && _cache.perfil.captacao && _cache.perfil.captacao.indicacoes) || [],
+  ];
+  for (let f = 0; f < fontes.length; f++) {
+    const achou = fontes[f].find(x => x.id === id);
+    if (achou) return achou.Nome;
+  }
+  return 'esta indicação';
+}
+
+function renderCaptacao(c) {
+  const nomes = {};
+  (c.ranking||[]).forEach(r => { nomes[r.id] = r.apelido || r.nome; });
+  const quem = id => esc(nomes[id] || id);
+
+  const pendentes = (c.indicacoes||[]).filter(i => i.Status === 'pendente');
+  const decididas = (c.indicacoes||[]).filter(i => i.Status !== 'pendente');
+
+  const stats = '<div class="stats">'+
+    statCard(c.confirmadas, 'Sócios confirmados', 'user-check')+
+    statCard(c.pendentes, 'Aguardando confirmação', 'clock')+
+    statCard(c.trofeus, esc(c.trofeuNome||'Troféu')+' (bateram a meta)', 'trophy')+
+    statCard(c.meta, 'Meta por brincante', 'target')+
+  '</div>';
+
+  const explica = '<div class="alert alert-neutral" style="margin-bottom:16px"><i data-lucide="info"></i><div>'+
+    'Trazer sócios torcedores é uma <strong>missão</strong>: vale reconhecimento e troféu, <strong>não vira dinheiro</strong> — '+
+    'não entra na frequência, no ranking de desempenho nem na bonificação. Guardamos apenas <strong>nome e telefone</strong> de quem foi trazido; '+
+    'CPF e data de nascimento nunca, porque juntos são a senha do sócio no site do Sócio Torcedor.</div></div>';
+
+  const cardPendentes = '<div class="card"><div class="card-title"><i data-lucide="clock"></i> Aguardando sua confirmação ('+pendentes.length+')</div>'+
+    (pendentes.length === 0
+      ? '<div style="color:var(--text-sec);font-size:13px">Nada pendente por aqui.</div>'
+      : '<div class="table-wrap"><table><thead><tr><th>Trazido por</th><th>Sócio</th><th>Telefone</th><th>Declarado em</th><th>Ações</th></tr></thead><tbody>'+
+        pendentes.map(i =>
+          '<tr><td>'+quem(i.BrincanteID)+'</td><td><strong>'+esc(i.Nome)+'</strong></td>'+
+          '<td>'+esc(fmtTelefone(i.Telefone))+'</td><td>'+formatDate(i.DataDeclaracao)+'</td>'+
+          '<td style="white-space:nowrap">'+
+            '<button class="btn btn-outline btn-sm" onclick="decidirIndicacao(\''+i.id+'\',\'confirmada\')"><i data-lucide="check"></i> Confirmar</button> '+
+            '<button class="btn btn-outline btn-sm" onclick="recusarIndicacao(\''+i.id+'\')"><i data-lucide="x"></i> Recusar</button>'+
+          '</td></tr>'
+        ).join('')+'</tbody></table></div>')+
+  '</div>';
+
+  const cardRanking = '<div class="card"><div class="card-title"><i data-lucide="trophy"></i> Ranking de captação</div>'+
+    '<div class="table-wrap"><table><thead><tr><th>#</th><th>Brincante</th><th>Confirmados</th><th>Pendentes</th><th>Meta</th><th>Troféu</th></tr></thead><tbody>'+
+    (c.ranking||[]).map((r,ix) =>
+      '<tr><td>'+(ix+1)+'</td><td>'+esc(r.apelido || r.nome)+'</td>'+
+      '<td style="font-weight:700;color:'+(r.confirmadas>0?'var(--success)':'var(--text-sec)')+'">'+r.confirmadas+'</td>'+
+      '<td style="color:var(--text-sec)">'+r.pendentes+'</td>'+
+      '<td><div class="progress" style="min-width:70px"><div class="progress-bar '+(r.trofeu?'progress-green':'progress-gold')+'" style="width:'+r.progresso+'%"></div></div></td>'+
+      '<td>'+(r.trofeu?'<span style="color:var(--dourado)" title="'+esc(r.trofeuNome||'')+'"><i data-lucide="award"></i></span>':'<span style="color:var(--text-sec)">—</span>')+'</td></tr>'
+    ).join('')+'</tbody></table></div></div>';
+
+  const cardHistorico = decididas.length === 0 ? '' :
+    '<div class="card"><div class="card-title"><i data-lucide="history"></i> Já avaliadas ('+decididas.length+')</div>'+
+    '<div class="table-wrap"><table><thead><tr><th>Trazido por</th><th>Sócio</th><th>Telefone</th><th>Situação</th><th>Ações</th></tr></thead><tbody>'+
+    decididas.map(i => { const s = IND_STATUS[i.Status] || IND_STATUS.pendente;
+      return '<tr><td>'+quem(i.BrincanteID)+'</td><td>'+esc(i.Nome)+'</td><td>'+esc(fmtTelefone(i.Telefone))+'</td>'+
+        '<td style="color:'+s[1]+'"><i data-lucide="'+s[0]+'"></i> '+s[2]+
+        (i.MotivoRecusa?'<div style="font-size:11px;color:var(--text-sec)">'+esc(i.MotivoRecusa)+'</div>':'')+'</td>'+
+        '<td style="white-space:nowrap">'+
+          '<button class="btn btn-outline btn-sm" onclick="decidirIndicacao(\''+i.id+'\',\'pendente\')" title="Voltar para pendente"><i data-lucide="undo-2"></i></button> '+
+          '<button class="btn btn-outline btn-sm" onclick="removerIndicacao(\''+i.id+'\')" title="Apagar"><i data-lucide="trash-2"></i></button>'+
+        '</td></tr>';
+    }).join('')+'</tbody></table></div></div>';
+
+  document.getElementById('sociosContent').innerHTML =
+    stats + explica +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">'+
+      '<button class="btn btn-gold btn-sm" onclick="showDeclararPorBrincante()"><i data-lucide="user-plus"></i> Registrar indicação</button>'+
+    '</div>'+
+    cardPendentes + cardRanking + cardHistorico;
+  icons();
+}
+
+async function loadCaptacao() {
+  if (!currentUser || currentUser.role !== 'admin') return;
+  if (_cache.captacao) renderCaptacao(_cache.captacao);
+  else document.getElementById('sociosContent').innerHTML = skelStats(4) + skelList(4);
+  try { const c = await srv('getCaptacao'); _cache.captacao = c; renderCaptacao(c); }
+  catch(e) { if (!_cache.captacao) document.getElementById('sociosContent').innerHTML = '<p style="color:var(--text-sec)">Não foi possível carregar a captação.</p>'; }
+}
+
+async function decidirIndicacao(id, decisao, motivo) {
+  try {
+    const r = await srv('decidirIndicacao', id, decisao, motivo || '');
+    if (r && r.success) {
+      _cache.captacao = null; _cache.perfil = null;
+      toast(decisao === 'confirmada' ? 'Sócio confirmado!' : decisao === 'recusada' ? 'Indicação recusada.' : 'Voltou para pendente.');
+      loadCaptacao();
+    } else { toast((r && r.message) || 'Não foi possível salvar', true); }
+  } catch(e) { toast('Não foi possível salvar', true); }
+}
+
+function recusarIndicacao(id) {
+  showModal('Recusar indicação', 'x-circle',
+    '<p style="color:var(--text-sec);font-size:14px;line-height:1.6;margin-bottom:14px">Recusar a indicação de <strong>'+esc(nomeDaIndicacao_(id))+'</strong>. O motivo é opcional e fica registrado.</p>'+
+    '<div class="form-group"><label>Motivo (opcional)</label>'+
+    '<input type="text" class="form-input" id="indMotivo" maxlength="200" placeholder="Ex.: já era sócio antes"></div>'+
+    '<div style="display:flex;gap:10px;justify-content:flex-end">'+
+      '<button class="btn btn-outline" onclick="closeModal()">Cancelar</button>'+
+      '<button class="btn btn-danger" onclick="confirmarRecusa(\''+id+'\')">Recusar</button>'+
+    '</div>');
+}
+function confirmarRecusa(id) {
+  const motivo = (document.getElementById('indMotivo')||{}).value || '';
+  closeModal();
+  decidirIndicacao(id, 'recusada', motivo);
+}
+
+async function removerIndicacao(id) {
+  if (!await confirmDialog({ title:'Apagar indicação', message:'Apagar a indicação de <strong>'+esc(nomeDaIndicacao_(id))+'</strong>? Isso não pode ser desfeito.', okLabel:'Apagar', danger:true })) return;
+  try {
+    const r = await srv('removeIndicacao', id);
+    if (r && r.success) {
+      _cache.captacao = null; _cache.perfil = null;
+      toast('Indicação apagada.');
+      if (currentUser.role === 'admin') loadCaptacao(); else loadPerfil();
+    } else { toast((r && r.message) || 'Não foi possível apagar', true); }
+  } catch(e) { toast('Não foi possível apagar', true); }
+}
+
+// Admin registrando em nome de um brincante (quem chegou pela coordenação, no papel).
+async function showDeclararPorBrincante() {
+  await ensureBrincantesCache();
+  const opts = brincantesCache
+    .filter(b => b.Tipo !== 'coordenacao')
+    .map(b => '<option value="'+esc(b.ID)+'">'+esc((b.Apelido||b.Nome)+' ('+b.ID+')')+'</option>').join('');
+  showModal('Registrar indicação', 'user-plus',
+    '<div class="form-group"><label>Trazido por qual brincante</label>'+
+    '<select class="form-select" id="indBrinc">'+opts+'</select></div>'+
+    formIndicacaoCampos()+
+    '<div style="display:flex;gap:10px;justify-content:flex-end">'+
+      '<button class="btn btn-outline" onclick="closeModal()">Cancelar</button>'+
+      '<button class="btn btn-primary" onclick="salvarIndicacao(this, true)"><i data-lucide="save"></i> Registrar</button>'+
+    '</div>');
+}
+
+// Campos comuns às duas telas (admin e brincante) — um lugar só para mudar.
+function formIndicacaoCampos() {
+  return '<div class="form-group"><label>Nome de quem você trouxe</label>'+
+    '<input type="text" class="form-input" id="indNome" maxlength="60" placeholder="Nome e sobrenome"></div>'+
+    '<div class="form-group"><label>Telefone (com DDD)</label>'+
+    '<input type="tel" class="form-input" id="indTel" maxlength="16" placeholder="(92) 99999-9999" '+
+    'oninput="this.value=this.value.replace(/[^0-9() -]/g,\'\')"></div>'+
+    '<div class="input-hint" style="margin:-6px 0 16px">Só nome e telefone. <strong>Nunca peça CPF ou data de nascimento</strong> — juntos, são a senha do sócio no site do Sócio Torcedor.</div>';
+}
+
+async function salvarIndicacao(btn, comoAdmin) {
+  const dados = {
+    nome: (document.getElementById('indNome')||{}).value || '',
+    telefone: (document.getElementById('indTel')||{}).value || '',
+  };
+  if (comoAdmin) dados.brincanteId = (document.getElementById('indBrinc')||{}).value || '';
+  btnLoading(btn, true);
+  try {
+    const r = await srv('addIndicacao', dados);
+    if (r && r.success) {
+      _cache.captacao = null; _cache.perfil = null;
+      closeModal();
+      toast('Indicação registrada! A coordenação vai confirmar.');
+      if (currentUser.role === 'admin') loadCaptacao(); else loadPerfil();
+    } else { toast((r && r.message) || 'Não foi possível registrar', true); }
+  } catch(e) { toast('Não foi possível registrar', true); }
+  btnLoading(btn, false);
+}
+
 function renderConfig(cfg) {
   const num = (id,label,val,step,hint) => '<div class="form-group"><label>'+label+'</label><input type="number" step="'+(step||'0.01')+'" min="0" class="form-input" id="'+id+'" value="'+(val!=null?val:'')+'">'+(hint?'<div class="input-hint">'+hint+'</div>':'')+'</div>';
   const date = (id,label,val,hint) => '<div class="form-group"><label>'+label+'</label><input type="date" class="form-input" id="'+id+'" value="'+(val||'')+'">'+(hint?'<div class="input-hint">'+hint+'</div>':'')+'</div>';
@@ -2019,11 +2243,13 @@ function renderConfig(cfg) {
     '<div class="card"><div class="card-title"><i data-lucide="coins"></i> Valores da bonificação</div>'+
       '<div class="form-row">'+num('cfgVEnsaio','Por ensaio (R$)',cfg.valorEnsaio)+num('cfgVApres','Por apresentação (R$)',cfg.valorApresentacao)+'</div>'+
       num('cfgVFest','Bônus Festival (R$)',cfg.valorFestival,'0.01','Apresentações para a Igreja nunca geram bonificação (regra fixa do contrato).')+
+      num('cfgTeto','Teto por brincante na temporada (R$)',cfg.tetoBonificacao,'0.01','Contrato, Cláusula Sexta, III, “e”: ao chegar no teto o brincante para de acumular e mantém o que já tem. O desconto por sanção incide depois do teto. Deixe 0 para não haver teto.')+
     '</div>'+
     '<div class="card"><div class="card-title"><i data-lucide="target"></i> Metas de ativação e desempenho</div>'+
       '<div class="form-row">'+num('cfgFreq','Frequência mínima (%)',cfg.frequenciaMinima,'1')+num('cfgFreqItem','Frequência mínima do Item (%)',cfg.frequenciaItem,'1')+'</div>'+
       '<div class="form-row">'+num('cfgNota','Nota mínima',cfg.notaMinima,'1')+num('cfgPercNota','% de ensaios com nota ≥ mínima',cfg.percentualNotaMinima,'1')+'</div>'+
       num('cfgMeses','Meses de ativação',cfg.mesesAtivacao,'1','O Item precisa de mais presença (contrato: 85%).')+
+      num('cfgMetaSocios','Meta de sócios torcedores por brincante',cfg.metaSociosPorBrincante,'1','Missão de captação: quantos sócios cada brincante traz na temporada (Plano do Sócio Torcedor: 2). Vale troféu, não vale dinheiro — não afeta bonificação nem frequência.')+
     '</div>'+
     '<div class="card"><div class="card-title"><i data-lucide="calendar"></i> Datas da temporada</div>'+
       '<div class="form-row">'+date('cfgIniTemp','Início da temporada',cfg.inicioTemporada,'Quando começam os ensaios.')+date('cfgIniCont','Início da contagem da bonificação',cfg.inicioContagem,'Antes disso conta só para ativação.')+'</div>'+
@@ -2054,11 +2280,13 @@ async function saveConfig(btn) {
     valorEnsaio: document.getElementById('cfgVEnsaio').value,
     valorApresentacao: document.getElementById('cfgVApres').value,
     valorFestival: document.getElementById('cfgVFest').value,
+    tetoBonificacao: document.getElementById('cfgTeto').value,
     frequenciaMinima: document.getElementById('cfgFreq').value,
     frequenciaItem: document.getElementById('cfgFreqItem').value,
     notaMinima: document.getElementById('cfgNota').value,
     percentualNotaMinima: document.getElementById('cfgPercNota').value,
     mesesAtivacao: document.getElementById('cfgMeses').value,
+    metaSociosPorBrincante: document.getElementById('cfgMetaSocios').value,
     inicioTemporada: document.getElementById('cfgIniTemp').value,
     inicioContagem: document.getElementById('cfgIniCont').value,
     fimContagem: document.getElementById('cfgFimCont').value,
@@ -2074,7 +2302,7 @@ async function saveConfig(btn) {
   try {
     await srv('updateConfigMap', mapa);
     _cache.config = mapa;
-    _cache.dashboard=null; _cache.ranking=null; _cache.bonificacao=null; _cache.perfil=null;
+    _cache.dashboard=null; _cache.ranking=null; _cache.bonificacao=null; _cache.perfil=null; _cache.captacao=null;
     toast('Configurações salvas!');
   } catch(e) { toast('Erro ao salvar', true); }
   btnLoading(btn, false);
@@ -2123,6 +2351,7 @@ function renderPerfil(p) {
     '<div class="stat-label">Bonificação acumulada</div></div></div>'+
     (p.OptBonificacao==='sim'?buildAtivacaoCard(p.ativacao, p.DataAssinatura):'')+
     buildDestinoCard(p)+
+    buildMissaoCard(p)+
     buildDicasPerfil(p)+
     buildAlertasPerfil(p)+
     '<div class="card"><div class="card-title"><i data-lucide="history"></i> Histórico de avaliações</div>'+
@@ -2207,6 +2436,56 @@ async function escolherDestino(destino) {
     } else { toast((r && r.message) || 'Não foi possível salvar sua escolha', true); }
   } catch(e) { toast('Não foi possível salvar sua escolha', true); }
 }
+// Missão de captação de sócios torcedores. Reconhecimento e troféu — não entra
+// na frequência nem vira dinheiro, e o card diz isso com todas as letras para
+// ninguém esperar pagamento por trazer sócio.
+function buildMissaoCard(p) {
+  const c = p.captacao;
+  if (!c) return '';
+  const lista = c.indicacoes || [];
+  const meta = c.meta || 0;
+  const falta = Math.max(0, meta - c.confirmadas);
+
+  const nomeTrofeu = esc(c.trofeuNome || 'Chamador de Gente');
+  const trofeu = c.trofeu
+    ? '<div class="alert alert-neutral" style="margin-top:10px"><i data-lucide="award" style="color:var(--dourado)"></i><div><strong style="color:var(--dourado)">Troféu '+nomeTrofeu+' conquistado!</strong> Você trouxe '+c.confirmadas+' sócio(s) para a Explosão. Obrigado! 💛</div></div>'
+    : '<div class="alert alert-neutral" style="margin-top:10px"><i data-lucide="target"></i><div>Falta '+falta+' sócio(s) confirmado(s) para você conquistar o troféu <strong>'+nomeTrofeu+'</strong> da temporada.</div></div>';
+
+  const tabela = lista.length === 0 ? '' :
+    '<div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Sócio</th><th>Telefone</th><th>Situação</th><th></th></tr></thead><tbody>'+
+    lista.map(i => { const s = IND_STATUS[i.Status] || IND_STATUS.pendente;
+      return '<tr><td><strong>'+esc(i.Nome)+'</strong></td><td>'+esc(fmtTelefone(i.Telefone))+'</td>'+
+        '<td style="color:'+s[1]+'"><i data-lucide="'+s[0]+'"></i> '+s[2]+
+        (i.MotivoRecusa?'<div style="font-size:11px;color:var(--text-sec)">'+esc(i.MotivoRecusa)+'</div>':'')+'</td>'+
+        '<td>'+(i.Status === 'pendente'
+          ? '<button class="btn btn-outline btn-sm" onclick="removerIndicacao(\''+i.id+'\')" title="Apagar"><i data-lucide="trash-2"></i></button>'
+          : '')+'</td></tr>';
+    }).join('')+'</tbody></table></div>';
+
+  return '<div class="card"><div class="card-title"><i data-lucide="megaphone"></i> Missão: traga a torcida</div>'+
+    '<div style="font-size:13px;color:var(--text-sec);line-height:1.5">Convide gente da sua rede para ser <strong>Sócio Torcedor</strong> da Explosão. Vale <strong>reconhecimento e troféu</strong> — não é dinheiro e não mexe na sua frequência nem na sua bonificação.</div>'+
+    '<div class="stats" style="margin-top:12px">'+
+      statCard(c.confirmadas, 'Confirmados', 'user-check')+
+      statCard(c.pendentes, 'Aguardando coordenação', 'clock')+
+      statCard(meta, 'Meta da temporada', 'target')+
+    '</div>'+
+    '<div class="progress"><div class="progress-bar '+(c.trofeu?'progress-green':'progress-gold')+'" style="width:'+c.progresso+'%"></div></div>'+
+    trofeu +
+    '<div style="margin-top:12px"><button class="btn btn-gold btn-sm" onclick="showDeclararIndicacao()"><i data-lucide="user-plus"></i> Declarar quem eu trouxe</button></div>'+
+    tabela +
+  '</div>';
+}
+
+function showDeclararIndicacao() {
+  showModal('Declarar quem eu trouxe', 'user-plus',
+    '<p style="color:var(--text-sec);font-size:14px;line-height:1.6;margin-bottom:14px">Registre quem você trouxe para o Sócio Torcedor. A coordenação confirma depois — o troféu só conta depois de confirmado.</p>'+
+    formIndicacaoCampos()+
+    '<div style="display:flex;gap:10px;justify-content:flex-end">'+
+      '<button class="btn btn-outline" onclick="closeModal()">Cancelar</button>'+
+      '<button class="btn btn-primary" onclick="salvarIndicacao(this, false)"><i data-lucide="save"></i> Declarar</button>'+
+    '</div>');
+}
+
 function buildDicasPerfil(p) {
   if (!p.dicas || !p.dicas.length) return '';
   const ico = { alerta:['alert-triangle','var(--danger)'], melhorar:['trending-up','var(--warn)'], bom:['party-popper','var(--success)'] };
@@ -2297,6 +2576,24 @@ function buildAlertasPerfil(p) {
       alertas += '<div class="alert alert-success"><i data-lucide="party-popper" style="color:var(--success)"></i><div>'+
         '<strong style="color:var(--success)">Bom desempenho!</strong><br>'+
         'Sua presença e avaliações estão dentro da meta. Continue assim!</div></div>';
+    }
+
+    // Teto da temporada (Cláusula Sexta, III, "e"): mostrado sempre que existe,
+    // porque saber que existe um limite antes de chegar nele evita a conversa
+    // ruim de "por que parou de subir?".
+    if (p.teto) {
+      const semTeto = parseFloat(p.bonificacaoSemTeto || p.bonificacaoBruta || 0);
+      const teto = parseFloat(p.teto);
+      const falta = Math.max(0, teto - semTeto);
+      const pct = teto > 0 ? Math.min(100, Math.round((semTeto / teto) * 100)) : 0;
+      alertas += p.tetoAtingido
+        ? '<div class="alert alert-gold"><i data-lucide="shield-check" style="color:var(--dourado)"></i><div>'+
+          '<strong style="color:var(--dourado)">Você chegou ao teto da temporada: R$ '+p.teto+'</strong><br>'+
+          'A partir daqui o valor não sobe mais — é o limite do programa para todo mundo (contrato, Cláusula Sexta, III, “e”). '+
+          'Presença, nota e conduta continuam contando: são requisitos para receber.</div></div>'
+        : '<div class="alert alert-neutral"><i data-lucide="shield-check" style="color:var(--dourado)"></i><div>'+
+          '<strong style="color:var(--dourado)">Teto da temporada: R$ '+p.teto+'</strong><br>'+
+          'Você acumulou R$ '+semTeto.toFixed(2)+' ('+pct+'% do teto). Faltam R$ '+falta.toFixed(2)+' para alcançá-lo.</div></div>';
     }
 
     // Qualificação extra

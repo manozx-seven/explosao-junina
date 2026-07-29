@@ -28,6 +28,10 @@ const FUNCOES = {
   entrarComoBrincante:     { escopo: 'autenticado', args: 0 },
   getPerfilBrincante:      { escopo: 'autenticado', args: 1 },
   setDestinoBonificacao:   { escopo: 'autenticado', args: 2 },
+  // Missão de captação de sócios: o brincante declara por si (o ID vem da
+  // sessão) e apaga só a própria enquanto pendente — travas em handlers.js.
+  addIndicacao:            { escopo: 'autenticado', args: 1 },
+  removeIndicacao:         { escopo: 'autenticado', args: 1 },
 
   // --- coordenação ---
   getLogs:                 { escopo: 'admin', args: 1 },
@@ -50,6 +54,10 @@ const FUNCOES = {
   getAdvertencias:         { escopo: 'admin', args: 1 },
   addAdvertencia:          { escopo: 'admin', args: 1 },
   removeAdvertencia:       { escopo: 'admin', args: 1 },
+
+  getIndicacoes:           { escopo: 'admin', args: 1 },
+  decidirIndicacao:        { escopo: 'admin', args: 3 },
+  getCaptacao:             { escopo: 'admin', args: 0 },
 
   getDashboard:            { escopo: 'admin', args: 0 },
   getRanking:              { escopo: 'admin', args: 0 },
