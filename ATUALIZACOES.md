@@ -6,6 +6,17 @@
 
 ---
 
+## 2026-07-29 — Bloco "Onde parei" no PENDENCIAS.md
+
+O trabalho passou a ser retomado em máquinas diferentes, e a lista de pendências
+sozinha não diz **por onde começar**. Copiado o padrão que o projeto irmão já
+usa: `PENDENCIAS.md` abre agora com **"▶ Onde parei"** — estado do fim da
+sessão, comandos para subir numa máquina nova e os próximos passos em ordem de
+prioridade. O `CLAUDE.md` manda ler esse bloco primeiro e atualizá-lo ao
+encerrar a sessão. Entraram também duas pendências que faltavam: preencher os
+contatos da coordenação no contrato e o "FALE CONOSCO" do material de
+divulgação do Sócio Torcedor, ambos ainda com texto de placeholder.
+
 ## 2026-07-29 — Teto de R$ 80 na bonificação (contrato e sistema)
 
 Decisão do dono: o Programa de Bonificação passa a ter **teto de R$ 80,00 por

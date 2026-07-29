@@ -13,6 +13,37 @@
 
 ---
 
+## ▶ Onde parei em 29/07/2026 (fim do dia)
+
+Tudo commitado e no ar (`dcf37c0` na `main`; o push redeploya o Netlify). Nada
+ficou pela metade. **Máquina nova:** `git pull` → `npm install` → `npm test`
+(63 asserções). Para mexer nos documentos, `pip install python-docx` e rodar o
+gerador dentro de `documentos explosão/_geradores/`.
+
+**O que fazer primeiro, na ordem:**
+
+1. **Conferir a config viva na aba Configurações.** É o único ponto em que o
+   banco pode divergir do código: `temporada` ainda estava em **2026** e o
+   `tetoBonificacao` (R$ 80) acabou de nascer. Sem isso, a bonificação da
+   temporada inteira calcula errado. Ver §1.
+2. **Reunião da Diretoria (prevista para agosto/2026).** É o próximo passo real
+   do projeto, e não é código. Leva: nomes do organograma (§5), valores e teto
+   da bonificação, valores do Sócio Torcedor e a **chave Pix oficial** do
+   programa, e a condição das bancas do Arraial.
+3. **Ofício de parceria à Prefeitura** para o Arraial da Explosão. O cronograma
+   do evento coloca isso em D-90 e é o que define o tamanho do evento — quanto
+   antes protocolar, maior a chance de entrar no orçamento do município.
+4. **Site do Sócio Torcedor:** faltam ranking da temporada e notificações
+   (§2). O resto do M3 está pronto e o site está no ar.
+
+**Não esquecer:** o `_backup/` dos `.docx` é local e gitignored — em outra
+máquina ele não existe. Os documentos atuais e os geradores estão todos
+versionados, então dá para regerar tudo; só não dá para voltar ao anterior.
+No repositório do **Sócio Torcedor** ficou um arquivo não versionado
+(`ATUALIZACOES-sessao-2026-07-29.md`) que não viaja no clone.
+
+---
+
 ## 1. Sistema de Avaliação (este repositório)
 
 ### Configuração da temporada (fazer antes de fevereiro/2027)
@@ -187,6 +218,10 @@ nunca editar o `.docx` na mão.
 - [ ] **Contrato do brincante** — revisar antes da assinatura prevista para fevereiro de
       2027 (datas da temporada, prazos de adesão e ativação). O teto de R$ 80 já entrou
       (29/07/2026, via `patch_contrato_teto.py`).
+- [ ] **Preencher os campos em branco antes de imprimir/divulgar:** os cinco
+      contatos oficiais da coordenação no contrato (primeira página dos dois termos)
+      e o bloco "FALE CONOSCO" do material de divulgação do Sócio Torcedor, que ainda
+      está com `[Nome do responsável]` e `[Telefone/WhatsApp]`.
 - [ ] **Leitura jurídica do contrato** antes da assinatura de fevereiro/2027 —
       sobretudo imagem, anexos de menor de idade e a natureza não empregatícia da
       bonificação. O guia registra que o texto foi escrito pela própria coordenação.

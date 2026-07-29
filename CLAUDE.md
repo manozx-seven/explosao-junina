@@ -10,7 +10,10 @@
 2. **Leia `ATUALIZACOES.md`** para saber tudo o que já foi feito, do mais recente
    ao mais antigo.
 3. **Leia `PENDENCIAS.md`** para saber o que está em aberto — no sistema, no site
-   do Sócio Torcedor, nos documentos e nas decisões da coordenação.
+   do Sócio Torcedor, nos documentos e nas decisões da coordenação. **Comece pelo
+   bloco “▶ Onde parei”, no topo do arquivo:** é onde fica o estado do fim da
+   última sessão e a ordem do que fazer primeiro. Ao encerrar uma sessão de
+   trabalho, atualize esse bloco.
 
 Faça isso **antes** de responder qualquer pedido sobre o projeto, para trabalhar
 com o contexto completo.
